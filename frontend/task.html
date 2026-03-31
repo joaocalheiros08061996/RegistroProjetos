@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tarefa | Registro de Projetos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="title" id="task-title">Tarefa</h1>
+      <p class="muted" id="task-subtitle">Carregando...</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" id="back-link" href="projects.html">Voltar</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+    </div>
+  </header>
+
+  <section class="section">
+    <h2>Controle da tarefa</h2>
+    <div class="actions">
+      <button type="button" id="start-btn">Iniciar</button>
+      <button type="button" class="secondary" id="stop-btn">Parar</button>
+      <button type="button" class="danger" id="complete-btn">Concluir</button>
+    </div>
+    <p id="action-feedback" class="status"></p>
+  </section>
+
+  <section class="section">
+    <h2>Detalhes</h2>
+    <div id="task-details" class="grid cols-2"></div>
+  </section>
+
+  <section class="section">
+    <h2>Entradas de tempo</h2>
+    <div id="time-entries" class="list"></div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script>
+  requireAuth();
+
+  const projectId = qs("project");
+  const taskName = qs("task");
+
+  if (!projectId || !taskName) {
+    alert("Parametros da tarefa invalidos.");
+    location.href = "projects.html";
+  }
+
+  const decodedTaskName = taskName;
+
+  const taskTitle = document.getElementById("task-title");
+  const taskSubtitle = document.getElementById("task-subtitle");
+  const taskDetails = document.getElementById("task-details");
+  const timeEntries = document.getElementById("time-entries");
+  const actionFeedback = document.getElementById("action-feedback");
+  const backLink = document.getElementById("back-link");
+  const refreshBtn = document.getElementById("refresh-btn");
+
+  backLink.href = `project.html?id=${projectId}`;
+
+  function detailItem(label, value) {
+    return `
+      <article class="item">
+        <p class="item-subtitle">${label}</p>
+        <h3 class="item-title">${value}</h3>
+      </article>
+    `;
+  }
+
+  function renderTimeEntry(entry) {
+    const item = document.createElement("article");
+    item.className = "item";
+
+    const start = formatDateTime(entry.start_time);
+    const end = entry.end_time ? formatDateTime(entry.end_time) : "Em andamento";
+
+    item.innerHTML = `
+      <div class="row">
+        <span class="item-subtitle">Inicio: ${start}</span>
+        <span class="item-subtitle">Fim: ${end}</span>
+      </div>
+    `;
+
+    return item;
+  }
+
+  async function loadTask() {
+    actionFeedback.textContent = "Carregando tarefa...";
+    actionFeedback.className = "status";
+    taskDetails.innerHTML = "";
+    timeEntries.innerHTML = "";
+
+    try {
+      const task = await apiFetch(`/projects/${projectId}/tasks/${encodeURIComponent(decodedTaskName)}`);
+      const entries = await apiFetch(`/projects/${projectId}/tasks/${encodeURIComponent(decodedTaskName)}/time-entries`);
+
+      taskTitle.textContent = task.name;
+      taskSubtitle.textContent = `Projeto #${projectId}`;
+      taskDetails.innerHTML =
+        detailItem("Status", task.status) +
+        detailItem("Progresso", `${task.percent_completed}%`) +
+        detailItem("Inicio planejado", formatDateTime(task.planned_start)) +
+        detailItem("Fim planejado", formatDateTime(task.planned_end)) +
+        detailItem("Custo", Number(task.cost || 0).toFixed(2)) +
+        detailItem("Tempo real", formatSeconds(task.actual_seconds || 0));
+
+      if (!entries.length) {
+        timeEntries.innerHTML = `<article class="item"><p class="item-subtitle">Nenhuma entrada de tempo.</p></article>`;
+      } else {
+        entries.forEach((entry) => timeEntries.appendChild(renderTimeEntry(entry)));
+      }
+
+      actionFeedback.textContent = "";
+    } catch (err) {
+      actionFeedback.textContent = err.message || "Erro ao carregar tarefa.";
+      actionFeedback.className = "error";
+    }
+  }
+
+  async function runAction(action) {
+    actionFeedback.textContent = "Executando acao...";
+    actionFeedback.className = "status";
+
+    try {
+      const result = await apiFetch(`/projects/${projectId}/tasks/${encodeURIComponent(decodedTaskName)}/${action}`, {
+        method: "POST",
+      });
+
+      if (action === "stop" && result && typeof result.duration_seconds !== "undefined") {
+        actionFeedback.textContent = `Tarefa parada. Duracao registrada: ${formatSeconds(result.duration_seconds)}.`;
+      } else if (action === "start") {
+        actionFeedback.textContent = "Tarefa iniciada.";
+      } else if (action === "complete") {
+        actionFeedback.textContent = "Tarefa concluida.";
+      } else {
+        actionFeedback.textContent = "Acao executada.";
+      }
+
+      actionFeedback.className = "success";
+      await loadTask();
+    } catch (err) {
+      actionFeedback.textContent = err.message || "Erro ao executar acao.";
+      actionFeedback.className = "error";
+    }
+  }
+
+  document.getElementById("start-btn").addEventListener("click", () => runAction("start"));
+  document.getElementById("stop-btn").addEventListener("click", () => runAction("stop"));
+  document.getElementById("complete-btn").addEventListener("click", () => runAction("complete"));
+  refreshBtn.addEventListener("click", loadTask);
+
+  loadTask();
+</script>
+</body>
+</html>

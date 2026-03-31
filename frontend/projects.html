@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projetos | Registro de Projetos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Projetos</h1>
+      <p class="muted">Visao geral e cadastro rapido.</p>
+    </div>
+    <div class="actions">
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section">
+    <h2>Lista de projetos</h2>
+    <div id="project-list" class="list"></div>
+    <p id="list-feedback" class="status"></p>
+  </section>
+
+  <section class="section">
+    <h2>Novo projeto</h2>
+    <form id="project-form" class="grid cols-2">
+      <label for="name">
+        Nome
+        <input id="name" required>
+      </label>
+
+      <label for="responsible_login">
+        Responsavel
+        <input id="responsible_login" required>
+      </label>
+
+      <label for="project_type">
+        Tipo
+        <select id="project_type">
+          <option value="LAYOUT">LAYOUT</option>
+          <option value="EXPORTACAO">EXPORTACAO</option>
+          <option value="NORMATIZACAO">NORMATIZACAO</option>
+          <option value="MAPEAMENTO">MAPEAMENTO</option>
+          <option value="MELHORIA">MELHORIA</option>
+          <option value="PECAS">PECAS</option>
+        </select>
+      </label>
+
+      <label for="fte">
+        FTE
+        <input id="fte" type="number" min="0.1" step="0.1" value="1" required>
+      </label>
+
+      <label for="planned_start">
+        Inicio planejado
+        <input id="planned_start" type="datetime-local" required>
+      </label>
+
+      <label for="planned_end">
+        Fim planejado
+        <input id="planned_end" type="datetime-local" required>
+      </label>
+
+      <label for="severity">
+        Gravidade
+        <select id="severity">
+          <option value="Sem gravidade">Sem gravidade</option>
+          <option value="Pouco grave">Pouco grave</option>
+          <option value="Grave">Grave</option>
+          <option value="Muito grave">Muito grave</option>
+          <option value="Gravíssimo">Gravíssimo</option>
+        </select>
+      </label>
+
+      <label for="urgency">
+        Urgencia
+        <select id="urgency">
+          <option value="Pode esperar">Pode esperar</option>
+          <option value="Pouco urgente">Pouco urgente</option>
+          <option value="Urgente">Urgente</option>
+          <option value="Mais rápido possível">Mais rápido possível</option>
+          <option value="Imediatamente">Imediatamente</option>
+        </select>
+      </label>
+
+      <label for="trend">
+        Tendencia
+        <select id="trend">
+          <option value="Não tende a piorar">Não tende a piorar</option>
+          <option value="Piora em longo prazo">Piora em longo prazo</option>
+          <option value="Piora em médio prazo">Piora em médio prazo</option>
+          <option value="Piora em curto prazo">Piora em curto prazo</option>
+          <option value="Piora rapidamente">Piora rapidamente</option>
+        </select>
+      </label>
+
+      <label for="objective_clarity">
+        Objetivo
+        <select id="objective_clarity">
+          <option value="Objetivo totalmente definido">Objetivo totalmente definido</option>
+          <option value="Objetivo claro com pequenas ambiguidades">Objetivo claro com pequenas ambiguidades</option>
+          <option value="Objetivo parcialmente definido">Objetivo parcialmente definido</option>
+          <option value="Objetivo pouco claro">Objetivo pouco claro</option>
+          <option value="Objetivo indefinido ou exploratório">Objetivo indefinido ou exploratório</option>
+        </select>
+      </label>
+
+      <label for="method_clarity">
+        Metodo
+        <select id="method_clarity">
+          <option value="Métodos totalmente definidos e dominados">Métodos totalmente definidos e dominados</option>
+          <option value="Métodos conhecidos com pequenas adaptações">Métodos conhecidos com pequenas adaptações</option>
+          <option value="Métodos parcialmente conhecidos">Métodos parcialmente conhecidos</option>
+          <option value="Métodos pouco definidos">Métodos pouco definidos</option>
+          <option value="Métodos desconhecidos ou inexistentes">Métodos desconhecidos ou inexistentes</option>
+        </select>
+      </label>
+
+      <label for="estimated_cost">
+        Custo estimado
+        <input id="estimated_cost" type="number" min="0" step="0.01" value="0">
+      </label>
+
+      <div class="actions" style="align-self:end;">
+        <button type="submit">Criar projeto</button>
+      </div>
+    </form>
+    <p id="form-feedback" class="status"></p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script>
+  requireAuth();
+
+  const projectList = document.getElementById("project-list");
+  const listFeedback = document.getElementById("list-feedback");
+  const formFeedback = document.getElementById("form-feedback");
+  const projectForm = document.getElementById("project-form");
+  const refreshBtn = document.getElementById("refresh-btn");
+
+  const plannedStartInput = document.getElementById("planned_start");
+  const plannedEndInput = document.getElementById("planned_end");
+
+  const now = new Date();
+  const plus7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  plannedStartInput.value = toLocalInputValue(now);
+  plannedEndInput.value = toLocalInputValue(plus7);
+
+  function renderProjectItem(project) {
+    const card = document.createElement("article");
+    card.className = "item";
+
+    const period = `${formatDateTime(project.planned_start)} - ${formatDateTime(project.planned_end)}`;
+    const progress = `${project.percent_completed ?? 0}%`;
+
+    card.innerHTML = `
+      <div class="row">
+        <h3 class="item-title">${project.name}</h3>
+        <span class="item-subtitle">${project.project_type}</span>
+      </div>
+      <p class="item-subtitle">Responsavel: ${project.responsible_login}</p>
+      <p class="item-subtitle">Periodo: ${period}</p>
+      <div class="row">
+        <span class="item-subtitle">Tarefas: ${project.task_count}</span>
+        <span class="item-subtitle">Progresso: ${progress}</span>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <a class="button secondary" href="project.html?id=${project.id}">Abrir projeto</a>
+      </div>
+    `;
+    return card;
+  }
+
+  async function loadProjects() {
+    listFeedback.textContent = "Carregando projetos...";
+    listFeedback.className = "status";
+    projectList.innerHTML = "";
+
+    try {
+      const projects = await apiFetch("/projects/");
+
+      if (!projects.length) {
+        listFeedback.textContent = "Nenhum projeto cadastrado.";
+        return;
+      }
+
+      listFeedback.textContent = `${projects.length} projeto(s) encontrado(s).`;
+      projects.forEach((project) => {
+        projectList.appendChild(renderProjectItem(project));
+      });
+    } catch (err) {
+      listFeedback.textContent = err.message || "Erro ao carregar projetos.";
+      listFeedback.className = "error";
+    }
+  }
+
+  projectForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    formFeedback.textContent = "";
+    formFeedback.className = "status";
+
+    const payload = {
+      name: document.getElementById("name").value.trim(),
+      project_type: document.getElementById("project_type").value,
+      responsible_login: document.getElementById("responsible_login").value.trim(),
+      fte: Number(document.getElementById("fte").value),
+      planned_start: normalizeIsoFromInput(plannedStartInput.value),
+      planned_end: normalizeIsoFromInput(plannedEndInput.value),
+      severity: document.getElementById("severity").value,
+      urgency: document.getElementById("urgency").value,
+      trend: document.getElementById("trend").value,
+      objective_clarity: document.getElementById("objective_clarity").value,
+      method_clarity: document.getElementById("method_clarity").value,
+      estimated_cost: Number(document.getElementById("estimated_cost").value || 0),
+    };
+
+    if (!payload.name || !payload.responsible_login) {
+      formFeedback.textContent = "Preencha nome e responsavel.";
+      formFeedback.className = "error";
+      return;
+    }
+
+    if (!payload.planned_start || !payload.planned_end) {
+      formFeedback.textContent = "Informe inicio e fim planejados.";
+      formFeedback.className = "error";
+      return;
+    }
+
+    try {
+      await apiFetch("/projects/", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      formFeedback.textContent = "Projeto criado com sucesso.";
+      formFeedback.className = "success";
+      projectForm.reset();
+      document.getElementById("fte").value = "1";
+      document.getElementById("estimated_cost").value = "0";
+      plannedStartInput.value = toLocalInputValue(new Date());
+      plannedEndInput.value = toLocalInputValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      await loadProjects();
+    } catch (err) {
+      formFeedback.textContent = err.message || "Erro ao criar projeto.";
+      formFeedback.className = "error";
+    }
+  });
+
+  refreshBtn.addEventListener("click", loadProjects);
+  loadProjects();
+</script>
+</body>
+</html>

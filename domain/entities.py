@@ -1,0 +1,352 @@
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+
+from .enums import (
+    MethodClarity,
+    ObjectiveClarity,
+    ProjectType,
+    Severity,
+    TaskStatus,
+    Trend,
+    Urgency,
+)
+from .exceptions import (
+    TaskAlreadyCompletedError,
+    TaskAlreadyStartedError,
+    TaskNotStartedError,
+    ValidationError,
+)
+
+
+# ============================================================
+# TIME ENTRY
+# ============================================================
+
+class TimeEntry:
+    def __init__(self, start: datetime):
+        self.start: datetime = start
+        self.end: Optional[datetime] = None
+
+    def _normalize_like_start(self, value: datetime) -> datetime:
+        """
+        Normaliza `value` para o mesmo "tipo de timezone" de `self.start`.
+        - Se `start` for aware, tratamos naive como UTC.
+        - Se `start` for naive, convertendo aware para naive em UTC.
+        """
+        start_is_aware = self.start.tzinfo is not None and self.start.tzinfo.utcoffset(self.start) is not None
+        value_is_aware = value.tzinfo is not None and value.tzinfo.utcoffset(value) is not None
+
+        if start_is_aware:
+            if not value_is_aware:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(self.start.tzinfo)
+
+        if value_is_aware:
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
+
+    def stop(self, end: datetime) -> None:
+        end = self._normalize_like_start(end)
+        if self.end is not None:
+            raise ValidationError("TimeEntry ja finalizado.")
+        if end < self.start:
+            raise ValidationError("End < start para TimeEntry.")
+        self.end = end
+
+    @property
+    def duration(self) -> timedelta:
+        if self.end is None:
+            if self.start.tzinfo is not None and self.start.tzinfo.utcoffset(self.start) is not None:
+                return datetime.now(tz=self.start.tzinfo) - self.start
+            return datetime.utcnow() - self.start
+        return self.end - self.start
+
+
+# ============================================================
+# TASK
+# ============================================================
+
+class Task:
+    def __init__(
+        self,
+        name: str,
+        planned_start: datetime,
+        planned_end: datetime,
+        cost: float = 0.0,
+    ):
+        if not name or not name.strip():
+            raise ValidationError("Nome da tarefa obrigatorio.")
+        if planned_end < planned_start:
+            raise ValidationError("Data final planejada anterior a inicial.")
+
+        self._id: Optional[int] = None
+        self._name: str = name.strip()
+        self._planned_start: datetime = planned_start
+        self._planned_end: datetime = planned_end
+        self.cost: float = float(cost)
+
+        self._status: TaskStatus = TaskStatus.PLANNED
+        self._time_entries: List[TimeEntry] = []
+        self._current_entry: Optional[TimeEntry] = None
+
+    # ---------- Identidade ----------
+
+    @property
+    def id(self) -> Optional[int]:
+        return self._id
+
+    def _set_id(self, id_value: int) -> None:
+        if self._id is not None:
+            raise ValidationError("Id ja definido.")
+        self._id = int(id_value)
+
+    # ---------- Hidratação (repositórios) ----------
+
+    def _set_status(self, status: TaskStatus | str) -> None:
+        self._status = TaskStatus(status)
+        if self._status != TaskStatus.IN_PROGRESS:
+            self._current_entry = None
+
+    def _add_time_entry(self, entry: TimeEntry) -> None:
+        self._time_entries.append(entry)
+        if entry.end is None:
+            self._current_entry = entry
+            self._status = TaskStatus.IN_PROGRESS
+
+    # ---------- Propriedades ----------
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def planned_start(self) -> datetime:
+        return self._planned_start
+
+    @property
+    def planned_end(self) -> datetime:
+        return self._planned_end
+
+    @property
+    def status(self) -> TaskStatus:
+        return self._status
+
+    # ---------- Controle de tempo ----------
+
+    def start(self, when: Optional[datetime] = None) -> None:
+        if self._status == TaskStatus.COMPLETED:
+            raise TaskAlreadyCompletedError("Tarefa ja concluida.")
+        if self._current_entry is not None:
+            raise TaskAlreadyStartedError("Tarefa ja iniciada.")
+
+        now = when or datetime.utcnow()
+        entry = TimeEntry(start=now)
+        self._time_entries.append(entry)
+        self._current_entry = entry
+        self._status = TaskStatus.IN_PROGRESS
+
+    def stop(self, when: Optional[datetime] = None) -> timedelta:
+        if self._current_entry is None:
+            raise TaskNotStartedError("Nenhuma entrada em andamento para parar.")
+
+        now = when or datetime.utcnow()
+        self._current_entry.stop(now)
+        duration = self._current_entry.duration
+        self._current_entry = None
+
+        if self._status != TaskStatus.COMPLETED:
+            self._status = TaskStatus.PAUSED
+
+        return duration
+
+    def add_manual_entry(self, start: datetime, end: datetime) -> None:
+        if end < start:
+            raise ValidationError("End < start em add_manual_entry.")
+        entry = TimeEntry(start=start)
+        entry.stop(end)
+        self._time_entries.append(entry)
+
+    # ---------- Métricas de tempo ----------
+
+    @property
+    def time_entries(self) -> List[TimeEntry]:
+        return list(self._time_entries)
+
+    @property
+    def actual_time(self) -> timedelta:
+        total = timedelta()
+        for te in self._time_entries:
+            total += te.duration
+        return total
+
+    @property
+    def planned_duration(self) -> timedelta:
+        return self._planned_end - self._planned_start
+
+    # ---------- Progresso (SEMÂNTICO) ----------
+
+    @property
+    def is_completed(self) -> bool:
+        return self._status == TaskStatus.COMPLETED
+
+    @property
+    def percent_completed(self) -> float:
+        return 100.0 if self.is_completed else 0.0
+
+    def mark_completed(self) -> None:
+        if self._status == TaskStatus.COMPLETED:
+            raise TaskAlreadyCompletedError("Tarefa ja esta concluida.")
+        if self._current_entry is not None:
+            self.stop()
+        self._status = TaskStatus.COMPLETED
+
+
+# ============================================================
+# PROJECT
+# ============================================================
+
+class Project:
+    def __init__(
+        self,
+        *,
+        user_id: str,
+        name: str,
+        project_type: ProjectType,
+        responsible_login: str,
+        fte: float,
+        planned_start: datetime,
+        planned_end: datetime,
+        severity: Severity = Severity.NONE,
+        urgency: Urgency = Urgency.CAN_WAIT,
+        trend: Trend = Trend.STABLE,
+        objective_clarity: ObjectiveClarity = ObjectiveClarity.FULLY_DEFINED,
+        method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED,
+        estimated_cost: float = 0.0,
+    ):
+        if not user_id or not user_id.strip():
+            raise ValidationError("User ID do projeto e obrigatorio.")
+
+        if not name or not name.strip():
+            raise ValidationError("Nome do projeto obrigatorio.")
+
+        if planned_end < planned_start:
+            raise ValidationError("Data final do projeto anterior a inicial.")
+
+        if fte <= 0:
+            raise ValidationError("FTE deve ser maior que zero.")
+
+        self._id: Optional[int] = None
+
+        self.user_id: str = user_id.strip()
+        self._name: str = name.strip()
+
+        self.project_type: ProjectType = project_type
+        self.responsible_login: str = responsible_login
+        self.fte: float = float(fte)
+
+        self.planned_start: datetime = planned_start
+        self.planned_end: datetime = planned_end
+
+        # Classificação GUT
+        self.severity: Severity = severity
+        self.urgency: Urgency = urgency
+        self.trend: Trend = trend
+
+        # NOVOS CAMPOS
+        self.objective_clarity: ObjectiveClarity = objective_clarity
+        self.method_clarity: MethodClarity = method_clarity
+
+        self.estimated_cost: float = float(estimated_cost)
+
+        self._tasks: List[Task] = []
+
+        self.created_at: datetime = datetime.utcnow()
+
+    # ---------- Identidade ----------
+
+    @property
+    def id(self) -> Optional[int]:
+        return self._id
+
+    def _set_id(self, id_value: int) -> None:
+        if self._id is not None:
+            raise ValidationError("Id do projeto ja definido.")
+        self._id = int(id_value)
+
+    # ---------- Propriedades ----------
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def task_count(self) -> int:
+        return len(self._tasks)
+
+    # ---------- Tarefas ----------
+
+    def add_task(self, task: Task) -> None:
+        for existing in self._tasks:
+            if existing.name == task.name:
+                raise ValidationError(
+                    f"Tarefa com nome '{task.name}' ja existe no projeto."
+                )
+        self._tasks.append(task)
+
+    def remove_task(self, task_name: str) -> None:
+        self._tasks = [t for t in self._tasks if t.name != task_name]
+
+    def list_tasks(self) -> List[Task]:
+        return list(self._tasks)
+
+    def active_tasks(self) -> List[Task]:
+        return [t for t in self._tasks if not t.is_completed]
+
+    def completed_tasks(self) -> List[Task]:
+        return [t for t in self._tasks if t.is_completed]
+
+    # ---------- Planejamento vs execução ----------
+
+    @property
+    def planned_duration(self) -> timedelta:
+        return self.planned_end - self.planned_start
+
+    def actual_days(self) -> float:
+        total = timedelta()
+        for task in self._tasks:
+            total += task.actual_time
+        return total.total_seconds() / 86400.0
+
+    # ---------- Progresso (SEMÂNTICO) ----------
+
+    @property
+    def percent_completed(self) -> float:
+        total = len(self._tasks)
+        if total == 0:
+            return 0.0
+
+        completed = sum(1 for t in self._tasks if t.is_completed)
+        return round((completed / total) * 100.0, 2)
+
+    # ---------- Fábrica ----------
+
+    def start_new_task(
+        self,
+        name: str,
+        planned_start: datetime,
+        planned_end: datetime,
+        cost: float = 0.0,
+    ) -> Task:
+
+        task = Task(
+            name=name,
+            planned_start=planned_start,
+            planned_end=planned_end,
+            cost=cost,
+        )
+
+        self.add_task(task)
+
+        return task

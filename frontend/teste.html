@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Teste de Tela</title>
+</head>
+<body>
+
+  <h1>TELA FUNCIONANDO</h1>
+
+  <button onclick="salvar()">Salvar token</button>
+  <button onclick="ler()">Ler token</button>
+  <button onclick="sair()">Logout</button>
+
+  <script src="app.js"></script>
+  <script>
+    function salvar() {
+      setToken("TOKEN_TESTE");
+      alert("Token salvo");
+    }
+
+    function ler() {
+      alert("Token atual: " + getToken());
+    }
+
+    function sair() {
+      logout();
+    }
+  </script>
+
+</body>
+</html>

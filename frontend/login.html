@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | Registro de Projetos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Entrar</h1>
+      <p class="muted">Use sua conta para acessar projetos e tarefas.</p>
+    </div>
+  </header>
+
+  <form id="login-form" class="grid">
+    <label for="email">
+      Email
+      <input id="email" type="email" autocomplete="username" required>
+    </label>
+
+    <label for="password">
+      Senha
+      <input id="password" type="password" autocomplete="current-password" required>
+    </label>
+
+    <div class="actions">
+      <button type="submit">Entrar</button>
+      <a class="button secondary" href="register.html">Criar conta</a>
+    </div>
+
+    <p id="feedback" class="error" role="alert"></p>
+  </form>
+</main>
+
+<script src="app.js"></script>
+<script>
+  requireGuest();
+
+  const form = document.getElementById("login-form");
+  const feedback = document.getElementById("feedback");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    feedback.textContent = "";
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      feedback.textContent = "Informe email e senha.";
+      return;
+    }
+
+    try {
+      await signIn(email, password);
+      location.href = "projects.html";
+    } catch (err) {
+      feedback.textContent = err.message || "Falha no login.";
+    }
+  });
+</script>
+</body>
+</html>
