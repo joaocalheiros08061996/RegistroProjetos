@@ -171,8 +171,29 @@
       </div>
       <div class="actions" style="margin-top:10px;">
         <a class="button secondary" href="project.html?id=${project.id}">Abrir projeto</a>
+        <button type="button" class="danger delete-project-btn">Excluir projeto</button>
       </div>
     `;
+
+    const deleteButton = card.querySelector(".delete-project-btn");
+    deleteButton.addEventListener("click", async () => {
+      const confirmed = confirm(`Deseja excluir o projeto "${project.name}"? Essa acao nao pode ser desfeita.`);
+      if (!confirmed) {
+        return;
+      }
+
+      listFeedback.textContent = "Excluindo projeto...";
+      listFeedback.className = "status";
+
+      try {
+        await apiFetch(`/projects/${project.id}`, { method: "DELETE" });
+        await loadProjects();
+      } catch (err) {
+        listFeedback.textContent = err.message || "Erro ao excluir projeto.";
+        listFeedback.className = "error";
+      }
+    });
+
     return card;
   }
 

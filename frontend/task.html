@@ -24,7 +24,8 @@
     <div class="actions">
       <button type="button" id="start-btn">Iniciar</button>
       <button type="button" class="secondary" id="stop-btn">Parar</button>
-      <button type="button" class="danger" id="complete-btn">Concluir</button>
+      <button type="button" class="secondary" id="complete-btn">Concluir</button>
+      <button type="button" class="danger" id="delete-btn">Excluir tarefa</button>
     </div>
     <p id="action-feedback" class="status"></p>
   </section>
@@ -153,6 +154,25 @@
   document.getElementById("start-btn").addEventListener("click", () => runAction("start"));
   document.getElementById("stop-btn").addEventListener("click", () => runAction("stop"));
   document.getElementById("complete-btn").addEventListener("click", () => runAction("complete"));
+  document.getElementById("delete-btn").addEventListener("click", async () => {
+    const confirmed = confirm(`Deseja excluir a tarefa "${decodedTaskName}"? Essa acao nao pode ser desfeita.`);
+    if (!confirmed) {
+      return;
+    }
+
+    actionFeedback.textContent = "Excluindo tarefa...";
+    actionFeedback.className = "status";
+
+    try {
+      await apiFetch(`/projects/${projectId}/tasks/${encodeURIComponent(decodedTaskName)}`, {
+        method: "DELETE",
+      });
+      location.href = `project.html?id=${projectId}`;
+    } catch (err) {
+      actionFeedback.textContent = err.message || "Erro ao excluir tarefa.";
+      actionFeedback.className = "error";
+    }
+  });
   refreshBtn.addEventListener("click", loadTask);
 
   loadTask();

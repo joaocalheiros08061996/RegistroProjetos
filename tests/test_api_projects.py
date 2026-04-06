@@ -131,3 +131,44 @@ def test_project_detail_api_returns_full_payload(client):
     assert detail["name"] == "Projeto Detalhe API"
     assert detail["task_count"] == 1
     assert detail["tasks"][0]["name"] == "task-detalhe"
+
+
+def test_delete_project_api_removes_project_and_tasks(client):
+    project_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Delete API",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-04-01T00:00:00",
+            "planned_end": "2026-04-30T00:00:00",
+        },
+    )
+    assert project_response.status_code == 200
+    project_id = project_response.json()["id"]
+
+    task_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "task-remover",
+            "planned_start": "2026-04-02T00:00:00",
+            "planned_end": "2026-04-10T00:00:00",
+            "cost": 20.0,
+        },
+    )
+    assert task_response.status_code == 200
+
+    delete_response = client.delete(f"/projects/{project_id}", headers=AUTH_HEADER)
+    assert delete_response.status_code == 200
+    assert delete_response.json()["status"] == "deleted"
+
+    list_response = client.get("/projects/", headers=AUTH_HEADER)
+    assert list_response.status_code == 200
+    projects = list_response.json()
+    assert not any(project["id"] == project_id for project in projects)
+
+    detail_response = client.get(f"/projects/{project_id}/detail", headers=AUTH_HEADER)
+    assert detail_response.status_code == 422

@@ -81,6 +81,16 @@ class ProjectService:
             "active_tasks": [t.name for t in project.active_tasks()],
         }
 
+    def delete_project(self, project_id: int, user_id: str) -> None:
+        project = self.project_repo.find_by_id(project_id, user_id)
+        if not project:
+            raise ValidationError("Projeto não encontrado.")
+
+        self.task_repo.delete_by_project(project_id, user_id)
+        deleted = self.project_repo.delete(project_id, user_id)
+        if not deleted:
+            raise ValidationError("Projeto não encontrado.")
+
 
 # ============================================================
 # TASK SERVICE
@@ -170,6 +180,18 @@ class TaskService:
 
         # garante que não exista entrada aberta
         self.task_repo.close_open_time_entry(task.id, datetime.utcnow())
+
+    def delete_task(self, project_id: int, user_id: str, task_name: str) -> None:
+        project = self.project_repo.find_by_id(project_id, user_id)
+        if not project:
+            raise ValidationError("Projeto não encontrado.")
+
+        self.get_task(project_id, user_id, task_name)
+        deleted = self.task_repo.delete_by_name(project_id, user_id, task_name)
+        if not deleted:
+            raise ValidationError("Tarefa não encontrada.")
+
+        project.remove_task(task_name)
 
     def get_time_entries(self, project_id: int, user_id: str, task_name: str):
         task = self.get_task(project_id, user_id, task_name)

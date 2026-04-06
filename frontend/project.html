@@ -16,6 +16,7 @@
     <div class="actions">
       <a class="button secondary" href="projects.html">Voltar para projetos</a>
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" id="delete-project-btn">Excluir projeto</button>
     </div>
   </header>
 
@@ -79,6 +80,7 @@
   const taskForm = document.getElementById("task-form");
   const taskFormFeedback = document.getElementById("task-form-feedback");
   const refreshBtn = document.getElementById("refresh-btn");
+  const deleteProjectBtn = document.getElementById("delete-project-btn");
 
   const taskStartInput = document.getElementById("task_planned_start");
   const taskEndInput = document.getElementById("task_planned_end");
@@ -114,8 +116,31 @@
       </div>
       <div class="actions" style="margin-top:10px;">
         <a class="button secondary" href="task.html?project=${projectId}&task=${encodedTask}">Abrir tarefa</a>
+        <button type="button" class="danger delete-task-btn">Excluir tarefa</button>
       </div>
     `;
+
+    const deleteTaskBtn = card.querySelector(".delete-task-btn");
+    deleteTaskBtn.addEventListener("click", async () => {
+      const confirmed = confirm(`Deseja excluir a tarefa "${task.name}"? Essa acao nao pode ser desfeita.`);
+      if (!confirmed) {
+        return;
+      }
+
+      projectFeedback.textContent = "Excluindo tarefa...";
+      projectFeedback.className = "status";
+
+      try {
+        await apiFetch(`/projects/${projectId}/tasks/${encodedTask}`, {
+          method: "DELETE",
+        });
+        await loadProjectDetail();
+      } catch (err) {
+        projectFeedback.textContent = err.message || "Erro ao excluir tarefa.";
+        projectFeedback.className = "error";
+      }
+    });
+
     return card;
   }
 
@@ -198,6 +223,23 @@
   });
 
   refreshBtn.addEventListener("click", loadProjectDetail);
+  deleteProjectBtn.addEventListener("click", async () => {
+    const confirmed = confirm("Deseja excluir este projeto? Todas as tarefas e entradas de tempo serao removidas.");
+    if (!confirmed) {
+      return;
+    }
+
+    projectFeedback.textContent = "Excluindo projeto...";
+    projectFeedback.className = "status";
+
+    try {
+      await apiFetch(`/projects/${projectId}`, { method: "DELETE" });
+      location.href = "projects.html";
+    } catch (err) {
+      projectFeedback.textContent = err.message || "Erro ao excluir projeto.";
+      projectFeedback.className = "error";
+    }
+  });
   loadProjectDetail();
 </script>
 </body>

@@ -18,6 +18,10 @@ class IProjectRepository(ABC):
     def list_by_user(self, user_id: str) -> List[Project]:
         """Lista todos os projetos de um usuário."""
 
+    @abstractmethod
+    def delete(self, project_id: int, user_id: str) -> bool:
+        """Remove um projeto do usuário. Retorna se houve exclusão."""
+
 
 class ITaskRepository(ABC):
     @abstractmethod
@@ -29,6 +33,14 @@ class ITaskRepository(ABC):
         self, task_id: int, project_id: int, user_id: str
     ) -> Optional[Task]:
         """Retorna a task se pertencer ao projeto e ao usuário."""
+
+    @abstractmethod
+    def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:
+        """Remove uma task por nome dentro do projeto do usuário."""
+
+    @abstractmethod
+    def delete_by_project(self, project_id: int, user_id: str) -> int:
+        """Remove todas as tasks de um projeto do usuário."""
 
     @abstractmethod
     def append_time_entry(

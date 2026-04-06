@@ -82,6 +82,20 @@ def list_projects(
 
 
 # ------------------------------------------------------------------
+# Delete Project
+# ------------------------------------------------------------------
+
+@router.delete("/{project_id}")
+def delete_project(
+    project_id: int,
+    service: ProjectService = Depends(get_project_service),
+    user_id: str = Depends(get_current_user_id),
+):
+    service.delete_project(project_id, user_id)
+    return {"status": "deleted"}
+
+
+# ------------------------------------------------------------------
 # Project Metrics
 # ------------------------------------------------------------------
 

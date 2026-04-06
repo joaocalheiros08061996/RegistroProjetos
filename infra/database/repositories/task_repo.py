@@ -91,6 +91,32 @@ class SupabaseTaskRepository(ITaskRepository):
             self._load_time_entries(conn, task)
             return task
 
+    def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                delete from tasks
+                where project_id = %s and user_id = %s and name = %s
+                """,
+                (project_id, user_id, task_name),
+            )
+            deleted = cur.rowcount > 0
+            conn.commit()
+        return deleted
+
+    def delete_by_project(self, project_id: int, user_id: str) -> int:
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                delete from tasks
+                where project_id = %s and user_id = %s
+                """,
+                (project_id, user_id),
+            )
+            deleted_count = cur.rowcount
+            conn.commit()
+        return deleted_count
+
     def append_time_entry(
         self,
         task_id: int,

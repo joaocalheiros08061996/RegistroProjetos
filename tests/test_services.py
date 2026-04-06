@@ -140,3 +140,47 @@ def test_add_task_to_nonexistent_project_raises_error(services):
             planned_start=datetime(2026, 1, 1),
             planned_end=datetime(2026, 1, 2),
         )
+
+
+def test_delete_task_service(services):
+    project_service, task_service = services
+
+    project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Delete Task",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 31),
+    )
+
+    task_service.add_task(
+        user_id=USER_ID,
+        project_id=project.id,
+        name="Remover tarefa",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+
+    task_service.delete_task(project.id, USER_ID, "Remover tarefa")
+    assert project_service.get_project(project.id, USER_ID).task_count == 0
+
+
+def test_delete_project_service(services):
+    project_service, _ = services
+
+    project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Delete",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 31),
+    )
+
+    project_service.delete_project(project.id, USER_ID)
+
+    with pytest.raises(ValidationError):
+        project_service.get_project(project.id, USER_ID)

@@ -131,3 +131,38 @@ def test_complete_task_api(client):
 
     assert response.status_code == 200
     assert response.json()["status"] == "completed"
+
+
+def test_delete_task_api(client):
+    project_id = create_project(client)
+
+    create_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "task-delete",
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+        },
+    )
+    assert create_response.status_code == 200
+
+    delete_response = client.delete(
+        f"/projects/{project_id}/tasks/task-delete",
+        headers=AUTH_HEADER,
+    )
+    assert delete_response.status_code == 200
+    assert delete_response.json()["status"] == "deleted"
+
+    list_response = client.get(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+    )
+    assert list_response.status_code == 200
+    assert list_response.json() == []
+
+    detail_response = client.get(
+        f"/projects/{project_id}/tasks/task-delete",
+        headers=AUTH_HEADER,
+    )
+    assert detail_response.status_code == 422

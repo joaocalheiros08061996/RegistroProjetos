@@ -83,3 +83,42 @@ def test_supabase_task_time_entry():
 
     assert loaded is not None
     assert loaded.actual_time.total_seconds() == 5400
+
+
+def test_supabase_delete_task_by_name():
+    task_repo = SupabaseTaskRepository()
+
+    user_id = f"test-user-{uuid.uuid4()}"
+    project_id = create_project_for_test(user_id)
+
+    task = Task(
+        name="Task Delete DB",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    task_id = task_repo.save(task, project_id, user_id)
+
+    deleted = task_repo.delete_by_name(project_id, user_id, "Task Delete DB")
+    assert deleted is True
+    assert task_repo.find_by_id(task_id, project_id, user_id) is None
+
+
+def test_supabase_delete_project_cascades_tasks():
+    project_repo = SupabaseProjectRepository()
+    task_repo = SupabaseTaskRepository()
+
+    user_id = f"test-user-{uuid.uuid4()}"
+    project_id = create_project_for_test(user_id)
+
+    task = Task(
+        name="Task Cascade DB",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    task_id = task_repo.save(task, project_id, user_id)
+    assert task_repo.find_by_id(task_id, project_id, user_id) is not None
+
+    deleted_project = project_repo.delete(project_id, user_id)
+    assert deleted_project is True
+    assert project_repo.find_by_id(project_id, user_id) is None
+    assert task_repo.find_by_id(task_id, project_id, user_id) is None

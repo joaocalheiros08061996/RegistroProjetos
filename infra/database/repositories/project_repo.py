@@ -1,3 +1,5 @@
+import unicodedata
+
 from domain.entities import Project, Task, TimeEntry
 from domain.enums import (
     MethodClarity,
@@ -13,6 +15,15 @@ from infra.database.connection import get_connection
 from psycopg2.extras import RealDictCursor
 
 
+def _normalize_enum_token(raw_value) -> str:
+    normalized = unicodedata.normalize("NFKD", str(raw_value).strip())
+    normalized = "".join(
+        char for char in normalized if not unicodedata.combining(char)
+    )
+    normalized = normalized.casefold().replace("-", " ").replace("_", " ")
+    return " ".join(normalized.split())
+
+
 class SupabaseProjectRepository(IProjectRepository):
     @staticmethod
     def _coerce_enum(enum_cls, raw_value):
@@ -24,10 +35,27 @@ class SupabaseProjectRepository(IProjectRepository):
         if raw_value is None:
             raise ValueError(f"Valor ausente para enum {enum_cls.__name__}")
 
+        value = str(raw_value).strip()
+
         try:
-            return enum_cls(raw_value)
+            return enum_cls(value)
         except ValueError:
-            return enum_cls[str(raw_value)]
+            pass
+
+        if value in enum_cls.__members__:
+            return enum_cls[value]
+
+        normalized = _normalize_enum_token(value)
+        for member in enum_cls:
+            if normalized in {
+                _normalize_enum_token(member.value),
+                _normalize_enum_token(member.name),
+            }:
+                return member
+
+        raise ValueError(
+            f"Valor invalido para enum {enum_cls.__name__}: {raw_value!r}"
+        )
 
     @staticmethod
     def _coerce_task_status(raw_value) -> TaskStatus:
@@ -158,6 +186,24 @@ class SupabaseProjectRepository(IProjectRepository):
                 projects.append(project)
 
             return projects
+
+    # ============================================================
+    # DELETE
+    # ============================================================
+
+    def delete(self, project_id: int, user_id: str) -> bool:
+        with get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                delete from projects
+                where id = %s and user_id = %s
+                """,
+                (project_id, user_id),
+            )
+            deleted = cur.rowcount > 0
+            conn.commit()
+
+        return deleted
 
     # ============================================================
     # BUILD PROJECT (HYDRATION)

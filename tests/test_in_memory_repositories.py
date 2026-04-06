@@ -85,6 +85,26 @@ def test_list_projects_by_user():
     assert len(user1_projects) == 1
     assert user1_projects[0].name == "Projeto 1"
 
+
+def test_delete_project_by_user():
+    repo = InMemoryProjectRepository()
+
+    project = Project(
+        user_id=USER_1,
+        name="Projeto Delete",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="joao",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 10),
+    )
+    project_id = repo.save(project)
+
+    assert repo.delete(project_id, USER_1) is True
+    assert repo.find_by_id(project_id, USER_1) is None
+    assert repo.delete(project_id, USER_1) is False
+    assert repo.delete(project_id, USER_2) is False
+
 # ============================
 # Task Repository Tests
 # ============================
@@ -129,3 +149,40 @@ def test_append_time_entry_to_task():
 
     assert len(found._time_entries) == 1
     assert found._time_entries[0].duration.total_seconds() == 3600
+
+
+def test_delete_task_by_name():
+    repo = InMemoryTaskRepository()
+
+    task = Task(
+        name="Task Delete",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    repo.save(task, project_id=1, user_id=USER_1)
+
+    assert repo.delete_by_name(project_id=1, user_id=USER_1, task_name="Task Delete") is True
+    assert repo.delete_by_name(project_id=1, user_id=USER_1, task_name="Task Delete") is False
+    assert repo.delete_by_name(project_id=1, user_id=USER_2, task_name="Task Delete") is False
+
+
+def test_delete_all_tasks_by_project():
+    repo = InMemoryTaskRepository()
+
+    task_a = Task(
+        name="Task A",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    task_b = Task(
+        name="Task B",
+        planned_start=datetime(2026, 1, 6),
+        planned_end=datetime(2026, 1, 7),
+    )
+    repo.save(task_a, project_id=11, user_id=USER_1)
+    repo.save(task_b, project_id=11, user_id=USER_1)
+
+    deleted_count = repo.delete_by_project(project_id=11, user_id=USER_1)
+    assert deleted_count == 2
+    assert repo.find_by_id(task_a.id, project_id=11, user_id=USER_1) is None
+    assert repo.delete_by_project(project_id=11, user_id=USER_1) == 0

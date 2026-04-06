@@ -31,15 +31,24 @@ class InMemoryProjectRepository(IProjectRepository):
             if project.user_id == user_id
         ]
 
+    def delete(self, project_id: int, user_id: str) -> bool:
+        project = self._storage.get(project_id)
+        if not project or project.user_id != user_id:
+            return False
+        del self._storage[project_id]
+        return True
+
 
 class InMemoryTaskRepository(ITaskRepository):
     def __init__(self):
         self._storage: Dict[int, Dict[int, Task]] = {}
+        self._project_owners: Dict[int, str] = {}
         self._next_id = 1
 
     def save(self, task: Task, project_id: int, user_id: str) -> int:
         if project_id not in self._storage:
             self._storage[project_id] = {}
+            self._project_owners[project_id] = user_id
 
         if task.id is None:
             task._set_id(self._next_id)
@@ -54,7 +63,38 @@ class InMemoryTaskRepository(ITaskRepository):
         project_id: int,
         user_id: str,
     ) -> Optional[Task]:
+        owner = self._project_owners.get(project_id)
+        if owner is not None and owner != user_id:
+            return None
         return self._storage.get(project_id, {}).get(task_id)
+
+    def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:
+        owner = self._project_owners.get(project_id)
+        if owner is not None and owner != user_id:
+            return False
+
+        tasks = self._storage.get(project_id, {})
+        task_id_to_remove = next(
+            (task_id for task_id, task in tasks.items() if task.name == task_name),
+            None,
+        )
+        if task_id_to_remove is None:
+            return False
+
+        del tasks[task_id_to_remove]
+        if not tasks:
+            self._storage.pop(project_id, None)
+            self._project_owners.pop(project_id, None)
+        return True
+
+    def delete_by_project(self, project_id: int, user_id: str) -> int:
+        owner = self._project_owners.get(project_id)
+        if owner is not None and owner != user_id:
+            return 0
+
+        tasks = self._storage.pop(project_id, {})
+        self._project_owners.pop(project_id, None)
+        return len(tasks)
 
     def append_time_entry(
         self,

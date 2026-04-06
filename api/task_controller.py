@@ -144,6 +144,24 @@ def complete_task(
 
 
 # --------------------------------------------------
+# Delete Task
+# --------------------------------------------------
+
+@router.delete("/{task_name}")
+def delete_task(
+    project_id: int,
+    task_name: str,
+    service: TaskService = Depends(get_task_service),
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Exclui uma tarefa do projeto.
+    """
+    service.delete_task(project_id, user_id, task_name)
+    return {"status": "deleted"}
+
+
+# --------------------------------------------------
 # Time Entries
 # --------------------------------------------------
 
