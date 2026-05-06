@@ -7,8 +7,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from application.services import ProjectService, TaskService
+from application.services import ProjectService, RoutineActivityService, TaskService
 from infra.database.repositories.project_repo import SupabaseProjectRepository
+from infra.database.repositories.routine_activity_repo import (
+    SupabaseRoutineActivityRepository,
+)
 from infra.database.repositories.task_repo import SupabaseTaskRepository
 
 # ---------------------------------------------------------------------
@@ -46,6 +49,10 @@ def get_task_repository() -> SupabaseTaskRepository:
     return SupabaseTaskRepository()
 
 
+def get_routine_activity_repository() -> SupabaseRoutineActivityRepository:
+    return SupabaseRoutineActivityRepository()
+
+
 # ---------------------------------------------------------------------
 # Service factories (request-safe)
 # ---------------------------------------------------------------------
@@ -62,6 +69,12 @@ def get_task_service(
     task_repo: SupabaseTaskRepository = Depends(get_task_repository),
 ) -> TaskService:
     return TaskService(project_repo, task_repo)
+
+
+def get_routine_activity_service(
+    routine_repo: SupabaseRoutineActivityRepository = Depends(get_routine_activity_repository),
+) -> RoutineActivityService:
+    return RoutineActivityService(routine_repo)
 
 
 # ---------------------------------------------------------------------

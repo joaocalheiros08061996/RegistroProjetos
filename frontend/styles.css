@@ -168,6 +168,40 @@ button.danger:hover {
   background: #fff;
 }
 
+.module-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.module-card {
+  display: grid;
+  gap: 10px;
+}
+
+.routine-types {
+  display: grid;
+  gap: 10px;
+}
+
+.routine-type-btn {
+  text-align: left;
+}
+
+.routine-type-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.active-box {
+  margin-top: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
 .item-title {
   margin: 0 0 6px;
   font-size: 1rem;
@@ -222,6 +256,10 @@ hr {
   }
 
   .grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .module-grid {
     grid-template-columns: 1fr;
   }
 

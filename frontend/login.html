@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260410">
 </head>
 <body>
 <main class="page">
@@ -17,7 +17,7 @@
 
   <form id="login-form" class="grid">
     <label for="email">
-      Email
+      E-mail
       <input id="email" type="email" autocomplete="username" required>
     </label>
 
@@ -35,7 +35,7 @@
   </form>
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?v=20260505"></script>
 <script>
   requireGuest();
 
@@ -50,13 +50,13 @@
     const password = document.getElementById("password").value;
 
     if (!email || !password) {
-      feedback.textContent = "Informe email e senha.";
+      feedback.textContent = "Informe e-mail e senha.";
       return;
     }
 
     try {
       await signIn(email, password);
-      location.href = "projects.html";
+      location.href = "module-select.html";
     } catch (err) {
       feedback.textContent = err.message || "Falha no login.";
     }

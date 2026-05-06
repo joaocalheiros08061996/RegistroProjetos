@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cadastro | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260410">
 </head>
 <body>
 <main class="page">
   <header class="page-header">
     <div>
       <h1 class="title">Criar conta</h1>
-      <p class="muted">Cadastro simples com email e senha.</p>
+      <p class="muted">Cadastro simples com e-mail e senha.</p>
     </div>
   </header>
 
   <form id="register-form" class="grid">
     <label for="email">
-      Email
+      E-mail
       <input id="email" type="email" autocomplete="username" required>
     </label>
 
@@ -35,7 +35,7 @@
   </form>
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?v=20260505"></script>
 <script>
   requireGuest();
 
@@ -51,14 +51,24 @@
     const password = document.getElementById("password").value;
 
     if (!email || !password) {
-      feedback.textContent = "Informe email e senha.";
+      feedback.textContent = "Informe e-mail e senha.";
       feedback.className = "error";
       return;
     }
 
     try {
       await signUp(email, password);
-      feedback.textContent = "Conta criada com sucesso. Agora faca login.";
+
+      if (getToken()) {
+        feedback.textContent = "Conta criada e autenticada. Redirecionando...";
+        feedback.className = "success";
+        setTimeout(() => {
+          location.href = "module-select.html";
+        }, 500);
+        return;
+      }
+
+      feedback.textContent = "Conta criada com sucesso. Agora faça login.";
       feedback.className = "success";
       setTimeout(() => {
         location.href = "login.html";

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projetos | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260410">
 </head>
 <body>
 <main class="page">
   <header class="page-header">
     <div>
       <h1 class="title">Projetos</h1>
-      <p class="muted">Visao geral e cadastro rapido.</p>
+      <p class="muted">Visão geral e cadastro rápido.</p>
     </div>
     <div class="actions">
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
@@ -34,7 +34,7 @@
       </label>
 
       <label for="responsible_login">
-        Responsavel
+        Responsável
         <input id="responsible_login" required>
       </label>
 
@@ -42,11 +42,13 @@
         Tipo
         <select id="project_type">
           <option value="LAYOUT">LAYOUT</option>
-          <option value="EXPORTACAO">EXPORTACAO</option>
-          <option value="NORMATIZACAO">NORMATIZACAO</option>
+          <option value="EXPORTACAO">EXPORTAÇÃO</option>
+          <option value="NORMATIZACAO">NORMATIZAÇÃO</option>
+          <option value="PADRONIZACAO">PADRONIZAÇÃO</option>
+          <option value="TRY_OUT">TRY OUT</option>
           <option value="MAPEAMENTO">MAPEAMENTO</option>
           <option value="MELHORIA">MELHORIA</option>
-          <option value="PECAS">PECAS</option>
+          <option value="PECAS">PEÇAS</option>
         </select>
       </label>
 
@@ -56,7 +58,7 @@
       </label>
 
       <label for="planned_start">
-        Inicio planejado
+        Início planejado
         <input id="planned_start" type="datetime-local" required>
       </label>
 
@@ -77,7 +79,7 @@
       </label>
 
       <label for="urgency">
-        Urgencia
+        Urgência
         <select id="urgency">
           <option value="Pode esperar">Pode esperar</option>
           <option value="Pouco urgente">Pouco urgente</option>
@@ -88,7 +90,7 @@
       </label>
 
       <label for="trend">
-        Tendencia
+        Tendência
         <select id="trend">
           <option value="Não tende a piorar">Não tende a piorar</option>
           <option value="Piora em longo prazo">Piora em longo prazo</option>
@@ -110,7 +112,7 @@
       </label>
 
       <label for="method_clarity">
-        Metodo
+        Método
         <select id="method_clarity">
           <option value="Métodos totalmente definidos e dominados">Métodos totalmente definidos e dominados</option>
           <option value="Métodos conhecidos com pequenas adaptações">Métodos conhecidos com pequenas adaptações</option>
@@ -133,7 +135,7 @@
   </section>
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?v=20260505"></script>
 <script>
   requireAuth();
 
@@ -151,6 +153,27 @@
   plannedStartInput.value = toLocalInputValue(now);
   plannedEndInput.value = toLocalInputValue(plus7);
 
+  const PROJECT_TYPE_LABELS = {
+    LAYOUT: "LAYOUT",
+    EXPORTACAO: "EXPORTAÇÃO",
+    NORMATIZACAO: "NORMATIZAÇÃO",
+    PADRONIZACAO: "PADRONIZAÇÃO",
+    TRY_OUT: "TRY OUT",
+    MAPEAMENTO: "MAPEAMENTO",
+    MELHORIA: "MELHORIA",
+    PECAS: "PEÇAS",
+  };
+
+  function formatProjectTypeSafe(projectType) {
+    if (typeof formatProjectType === "function") {
+      return formatProjectType(projectType);
+    }
+    if (PROJECT_TYPE_LABELS[projectType]) {
+      return PROJECT_TYPE_LABELS[projectType];
+    }
+    return String(projectType || "").split("_").join(" ").toUpperCase();
+  }
+
   function renderProjectItem(project) {
     const card = document.createElement("article");
     card.className = "item";
@@ -161,10 +184,10 @@
     card.innerHTML = `
       <div class="row">
         <h3 class="item-title">${project.name}</h3>
-        <span class="item-subtitle">${project.project_type}</span>
+        <span class="item-subtitle">${formatProjectTypeSafe(project.project_type)}</span>
       </div>
-      <p class="item-subtitle">Responsavel: ${project.responsible_login}</p>
-      <p class="item-subtitle">Periodo: ${period}</p>
+      <p class="item-subtitle">Responsável: ${project.responsible_login}</p>
+      <p class="item-subtitle">Período: ${period}</p>
       <div class="row">
         <span class="item-subtitle">Tarefas: ${project.task_count}</span>
         <span class="item-subtitle">Progresso: ${progress}</span>
@@ -177,7 +200,7 @@
 
     const deleteButton = card.querySelector(".delete-project-btn");
     deleteButton.addEventListener("click", async () => {
-      const confirmed = confirm(`Deseja excluir o projeto "${project.name}"? Essa acao nao pode ser desfeita.`);
+      const confirmed = confirm(`Deseja excluir o projeto "${project.name}"? Essa ação não pode ser desfeita.`);
       if (!confirmed) {
         return;
       }
@@ -241,13 +264,13 @@
     };
 
     if (!payload.name || !payload.responsible_login) {
-      formFeedback.textContent = "Preencha nome e responsavel.";
+      formFeedback.textContent = "Preencha nome e responsável.";
       formFeedback.className = "error";
       return;
     }
 
     if (!payload.planned_start || !payload.planned_end) {
-      formFeedback.textContent = "Informe inicio e fim planejados.";
+      formFeedback.textContent = "Informe início e fim planejados.";
       formFeedback.className = "error";
       return;
     }

@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from .entities import Project, Task, TimeEntry
+from .routine_activity import RoutineActivity
 
 
 class IProjectRepository(ABC):
@@ -79,3 +80,22 @@ class ITaskRepository(ABC):
     @abstractmethod
     def list_time_entries(self, task_id: int) -> list[tuple]:
         """Lista as entradas de tempo (start, end) de uma task."""
+
+
+class IRoutineActivityRepository(ABC):
+    @abstractmethod
+    def save(self, activity: RoutineActivity) -> int:
+        """Persiste uma nova atividade de rotina."""
+
+    @abstractmethod
+    def get_current(self, user_id: str) -> Optional[RoutineActivity]:
+        """Retorna atividade em andamento do usuario, se existir."""
+
+    @abstractmethod
+    def finish_current(
+        self,
+        user_id: str,
+        finished_at: datetime,
+        hours: float,
+    ) -> Optional[RoutineActivity]:
+        """Finaliza a atividade em andamento e retorna o registro atualizado."""

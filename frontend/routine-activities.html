@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atividades de Rotina | Registro</title>
+  <link rel="stylesheet" href="styles.css?v=20260410">
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Atividades de Rotina</h1>
+      <p class="muted">Selecione o tipo de atividade, inicie e finalize quando concluir.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section">
+    <h2>Atividade atual</h2>
+    <p id="status-label" class="status">Pronto para iniciar.</p>
+    <div id="active-box" class="item active-box hidden">
+      <p class="item-subtitle" id="active-label"></p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Tipo de atividade</h2>
+    <p id="selected-label" class="status">Nenhuma atividade selecionada.</p>
+    <div id="activity-types" class="routine-types"></div>
+  </section>
+
+  <section class="section">
+    <h2>Descrição</h2>
+    <label for="descricao">
+      Detalhe opcional
+      <textarea id="descricao" rows="3" placeholder="Descreva o que será feito"></textarea>
+    </label>
+  </section>
+
+  <section class="section">
+    <div class="actions">
+      <button type="button" id="start-btn">Iniciar</button>
+      <button type="button" class="secondary" id="finish-btn">Finalizar</button>
+    </div>
+    <p id="feedback" class="status"></p>
+  </section>
+</main>
+
+<script src="app.js?v=20260505"></script>
+<script>
+  requireAuth();
+
+  const ACTIVITY_TYPES = [
+    "Atendimento de Fábrica",
+    "Cadastro",
+    "Atualização de Custos",
+    "Finame",
+    "Reuniões",
+    "Análise de Processos",
+  ];
+
+  const statusLabel = document.getElementById("status-label");
+  const activeBox = document.getElementById("active-box");
+  const activeLabel = document.getElementById("active-label");
+  const selectedLabel = document.getElementById("selected-label");
+  const activityTypesEl = document.getElementById("activity-types");
+  const descricaoInput = document.getElementById("descricao");
+  const startBtn = document.getElementById("start-btn");
+  const finishBtn = document.getElementById("finish-btn");
+  const feedback = document.getElementById("feedback");
+
+  let selectedType = null;
+  let currentActivity = null;
+
+  function setFeedback(message, type = "status") {
+    feedback.textContent = message || "";
+    feedback.className = type;
+  }
+
+  function updateTypeButtons() {
+    const buttons = activityTypesEl.querySelectorAll("button");
+    buttons.forEach((button) => {
+      const isSelected = button.dataset.value === selectedType;
+      button.classList.toggle("active", isSelected);
+      button.disabled = Boolean(currentActivity) && !isSelected;
+    });
+  }
+
+  function setSelection(value) {
+    selectedType = value;
+    selectedLabel.textContent = selectedType
+      ? `Selecionado: ${selectedType}`
+      : "Nenhuma atividade selecionada.";
+    updateTypeButtons();
+    if (!currentActivity) {
+      startBtn.disabled = !selectedType;
+    }
+  }
+
+  function renderActivityTypeButtons() {
+    activityTypesEl.innerHTML = "";
+    ACTIVITY_TYPES.forEach((activityType) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary routine-type-btn";
+      button.dataset.value = activityType;
+      button.textContent = activityType;
+      button.addEventListener("click", () => {
+        if (currentActivity) {
+          return;
+        }
+        setSelection(activityType);
+      });
+      activityTypesEl.appendChild(button);
+    });
+    updateTypeButtons();
+  }
+
+  function renderCurrentActivity(activity) {
+    currentActivity = activity;
+
+    if (currentActivity) {
+      setSelection(currentActivity.tipo_atividade);
+      descricaoInput.value = currentActivity.descricao || "";
+      descricaoInput.disabled = true;
+      startBtn.disabled = true;
+      finishBtn.disabled = false;
+      statusLabel.textContent = `Em andamento: ${currentActivity.tipo_atividade}`;
+      activeLabel.textContent = `Atividade em andamento: ${currentActivity.tipo_atividade}`;
+      activeBox.classList.remove("hidden");
+      return;
+    }
+
+    descricaoInput.disabled = false;
+    finishBtn.disabled = true;
+    statusLabel.textContent = "Pronto para iniciar.";
+    activeLabel.textContent = "";
+    activeBox.classList.add("hidden");
+    setSelection(null);
+    descricaoInput.value = "";
+  }
+
+  async function loadCurrentActivity() {
+    try {
+      const current = await apiFetch("/routine-activities/current");
+      renderCurrentActivity(current);
+      setFeedback("");
+    } catch (err) {
+      setFeedback(err.message || "Erro ao carregar atividade atual.", "error");
+    }
+  }
+
+  startBtn.addEventListener("click", async () => {
+    if (!selectedType) {
+      setFeedback("Selecione um tipo de atividade.", "error");
+      return;
+    }
+
+    setFeedback("Iniciando atividade...");
+
+    try {
+      const created = await apiFetch("/routine-activities/start", {
+        method: "POST",
+        body: JSON.stringify({
+          tipo_atividade: selectedType,
+          descricao: descricaoInput.value.trim(),
+        }),
+      });
+      renderCurrentActivity(created);
+      setFeedback("Atividade iniciada com sucesso.", "success");
+    } catch (err) {
+      setFeedback(err.message || "Erro ao iniciar atividade.", "error");
+    }
+  });
+
+  finishBtn.addEventListener("click", async () => {
+    setFeedback("Finalizando atividade...");
+
+    try {
+      const finished = await apiFetch("/routine-activities/finish-current", {
+        method: "POST",
+      });
+      renderCurrentActivity(null);
+      const hours = Number(finished.horas_trabalhadas || 0).toFixed(4);
+      setFeedback(`Atividade finalizada. Horas trabalhadas: ${hours}.`, "success");
+    } catch (err) {
+      setFeedback(err.message || "Erro ao finalizar atividade.", "error");
+    }
+  });
+
+  renderActivityTypeButtons();
+  loadCurrentActivity();
+</script>
+</body>
+</html>

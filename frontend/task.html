@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tarefa | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260410">
 </head>
 <body>
 <main class="page">
@@ -41,7 +41,7 @@
   </section>
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?v=20260505"></script>
 <script>
   requireAuth();
 
@@ -49,7 +49,7 @@
   const taskName = qs("task");
 
   if (!projectId || !taskName) {
-    alert("Parametros da tarefa invalidos.");
+    alert("Parâmetros da tarefa inválidos.");
     location.href = "projects.html";
   }
 
@@ -83,7 +83,7 @@
 
     item.innerHTML = `
       <div class="row">
-        <span class="item-subtitle">Inicio: ${start}</span>
+        <span class="item-subtitle">Início: ${start}</span>
         <span class="item-subtitle">Fim: ${end}</span>
       </div>
     `;
@@ -106,7 +106,7 @@
       taskDetails.innerHTML =
         detailItem("Status", task.status) +
         detailItem("Progresso", `${task.percent_completed}%`) +
-        detailItem("Inicio planejado", formatDateTime(task.planned_start)) +
+        detailItem("Início planejado", formatDateTime(task.planned_start)) +
         detailItem("Fim planejado", formatDateTime(task.planned_end)) +
         detailItem("Custo", Number(task.cost || 0).toFixed(2)) +
         detailItem("Tempo real", formatSeconds(task.actual_seconds || 0));
@@ -125,7 +125,7 @@
   }
 
   async function runAction(action) {
-    actionFeedback.textContent = "Executando acao...";
+    actionFeedback.textContent = "Executando ação...";
     actionFeedback.className = "status";
 
     try {
@@ -134,19 +134,19 @@
       });
 
       if (action === "stop" && result && typeof result.duration_seconds !== "undefined") {
-        actionFeedback.textContent = `Tarefa parada. Duracao registrada: ${formatSeconds(result.duration_seconds)}.`;
+        actionFeedback.textContent = `Tarefa parada. Duração registrada: ${formatSeconds(result.duration_seconds)}.`;
       } else if (action === "start") {
         actionFeedback.textContent = "Tarefa iniciada.";
       } else if (action === "complete") {
-        actionFeedback.textContent = "Tarefa concluida.";
+        actionFeedback.textContent = "Tarefa concluída.";
       } else {
-        actionFeedback.textContent = "Acao executada.";
+        actionFeedback.textContent = "Ação executada.";
       }
 
       actionFeedback.className = "success";
       await loadTask();
     } catch (err) {
-      actionFeedback.textContent = err.message || "Erro ao executar acao.";
+      actionFeedback.textContent = err.message || "Erro ao executar ação.";
       actionFeedback.className = "error";
     }
   }
@@ -155,7 +155,7 @@
   document.getElementById("stop-btn").addEventListener("click", () => runAction("stop"));
   document.getElementById("complete-btn").addEventListener("click", () => runAction("complete"));
   document.getElementById("delete-btn").addEventListener("click", async () => {
-    const confirmed = confirm(`Deseja excluir a tarefa "${decodedTaskName}"? Essa acao nao pode ser desfeita.`);
+    const confirmed = confirm(`Deseja excluir a tarefa "${decodedTaskName}"? Essa ação não pode ser desfeita.`);
     if (!confirmed) {
       return;
     }

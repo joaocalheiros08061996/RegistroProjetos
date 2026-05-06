@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel
 
 from domain.enums import (
@@ -176,3 +177,24 @@ class ProjectDetailResponseDTO(BaseModel):
 
     # todas as tarefas
     tasks: list[TaskResponseDTO]
+
+
+# ============================================================
+# ROUTINE ACTIVITIES
+# ============================================================
+
+class StartRoutineActivityDTO(BaseModel):
+    tipo_atividade: str
+    descricao: str = ""
+
+
+class RoutineActivityResponseDTO(BaseModel):
+    id: int
+    tipo_atividade: str
+    descricao: str
+    inicio: datetime
+    fim: Optional[datetime]
+    ano: int
+    mes: int
+    dia: int
+    horas_trabalhadas: Optional[float]

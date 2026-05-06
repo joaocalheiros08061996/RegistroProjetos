@@ -22,7 +22,10 @@ SUPABASE_ANON_KEY=<anon-key>
 
 ## Banco de dados
 
-Execute o schema em [`infra/database/schema.sql`](/c:/Users/Joao.calheiros/Desktop/Resgistro%20de%20Atividades/RegistroProjetos/infra/database/schema.sql).
+Execute os scripts SQL:
+
+- `infra/database/schema.sql`
+- `infra/database/schema_routine_activities.sql`
 
 ## Rodar API
 
@@ -38,13 +41,13 @@ O frontend agora e servido pelo proprio FastAPI:
 - Redirecionamento: `http://127.0.0.1:8000/ -> /app`
 - Docs Swagger: `http://127.0.0.1:8000/docs`
 
-No painel React:
+No frontend:
 
 1. Faça cadastro (`/register`) com usuario (email) e senha.
 2. Faça login (`/login`) com o mesmo usuario e senha.
-3. Acesse `/projects` para listar projetos do usuario autenticado.
-4. Abra um projeto para ver detalhes, tarefas e criar novas tarefas.
-5. Abra uma tarefa para iniciar, parar e encerrar.
+3. Apos login, escolha o modulo desejado (`Projetos` ou `Atividades de Rotina`).
+4. Em `Projetos`, o fluxo de projetos e tarefas segue igual.
+5. Em `Atividades de Rotina`, selecione o tipo, inicie e finalize manualmente.
 
 ## Testes
 
@@ -54,6 +57,7 @@ python -m pytest tests/test_in_memory_repositories.py -v
 python -m pytest tests/test_services.py -v
 python -m pytest tests/test_api_projects.py -v
 python -m pytest tests/test_api_tasks.py -v
+python -m pytest tests/test_api_routine_activities.py -v
 python -m pytest -v
 ```
 

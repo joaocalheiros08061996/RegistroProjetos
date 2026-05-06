@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Escolha o Módulo | Registro</title>
+  <link rel="stylesheet" href="styles.css?v=20260410">
+</head>
+<body>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Escolha o módulo</h1>
+      <p class="muted">Selecione a área que deseja acessar.</p>
+    </div>
+    <div class="actions">
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section module-grid">
+    <article class="item module-card">
+      <h2 class="item-title">Registro de Projetos</h2>
+      <p class="item-subtitle">Fluxo atual de projetos e tarefas.</p>
+      <div class="actions">
+        <a class="button" href="projects.html">Ir para Projetos</a>
+      </div>
+    </article>
+
+    <article class="item module-card">
+      <h2 class="item-title">Atividades de Rotina</h2>
+      <p class="item-subtitle">Inicie e finalize atividades diárias.</p>
+      <div class="actions">
+        <a class="button" href="routine-activities.html">Ir para Rotina</a>
+      </div>
+    </article>
+  </section>
+</main>
+
+<script src="app.js?v=20260505"></script>
+<script>
+  requireAuth();
+</script>
+</body>
+</html>

@@ -2,8 +2,14 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from domain.entities import Project, Task, TimeEntry
+from domain.exceptions import ValidationError
 from domain.enums import TaskStatus
-from domain.repositories import IProjectRepository, ITaskRepository
+from domain.repositories import (
+    IProjectRepository,
+    IRoutineActivityRepository,
+    ITaskRepository,
+)
+from domain.routine_activity import RoutineActivity
 
 
 class InMemoryProjectRepository(IProjectRepository):
@@ -140,3 +146,47 @@ class InMemoryTaskRepository(ITaskRepository):
             if task_id in tasks:
                 return tasks[task_id]
         return None
+
+
+class InMemoryRoutineActivityRepository(IRoutineActivityRepository):
+    def __init__(self):
+        self._storage: Dict[int, RoutineActivity] = {}
+        self._next_id = 1
+
+    def save(self, activity: RoutineActivity) -> int:
+        current = self.get_current(activity.user_id)
+        if current is not None:
+            raise ValidationError("Ja existe uma atividade em andamento para este usuario.")
+
+        if activity.id is None:
+            activity._set_id(self._next_id)
+            self._next_id += 1
+
+        self._storage[activity.id] = activity
+        return activity.id
+
+    def get_current(self, user_id: str) -> Optional[RoutineActivity]:
+        active_items = [
+            item
+            for item in self._storage.values()
+            if item.user_id == user_id and item.fim is None
+        ]
+        if not active_items:
+            return None
+
+        active_items.sort(key=lambda item: item.id or 0, reverse=True)
+        return active_items[0]
+
+    def finish_current(
+        self,
+        user_id: str,
+        finished_at: datetime,
+        hours: float,
+    ) -> Optional[RoutineActivity]:
+        current = self.get_current(user_id)
+        if current is None:
+            return None
+
+        current.fim = finished_at
+        current.horas_trabalhadas = hours
+        return current

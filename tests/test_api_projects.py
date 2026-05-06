@@ -1,3 +1,6 @@
+import pytest
+
+
 AUTH_HEADER = {"Authorization": "Bearer test-user-123"}
 
 
@@ -172,3 +175,28 @@ def test_delete_project_api_removes_project_and_tasks(client):
 
     detail_response = client.get(f"/projects/{project_id}/detail", headers=AUTH_HEADER)
     assert detail_response.status_code == 422
+
+
+@pytest.mark.parametrize("project_type", ["PADRONIZACAO", "TRY_OUT"])
+def test_create_project_api_accepts_new_project_types(client, project_type):
+    create_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": f"Projeto {project_type}",
+            "project_type": project_type,
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-05-01T00:00:00",
+            "planned_end": "2026-05-31T00:00:00",
+        },
+    )
+
+    assert create_response.status_code == 200
+    created_id = create_response.json()["id"]
+
+    list_response = client.get("/projects/", headers=AUTH_HEADER)
+    assert list_response.status_code == 200
+    projects = list_response.json()
+    created = next(project for project in projects if project["id"] == created_id)
+    assert created["project_type"] == project_type

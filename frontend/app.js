@@ -1,5 +1,6 @@
 const API_BASE = "";
 const TOKEN_KEY = "access_token";
+const AUTHENTICATED_HOME = "module-select.html";
 
 let appConfigCache = null;
 
@@ -34,7 +35,7 @@ function requireAuth() {
 
 function requireGuest() {
   if (isAuthenticated()) {
-    location.href = "projects.html";
+    location.href = AUTHENTICATED_HOME;
     return false;
   }
   return true;
@@ -47,7 +48,7 @@ async function getAppConfig() {
 
   const res = await fetch("/app/config");
   if (!res.ok) {
-    throw new Error("Nao foi possivel carregar a configuracao da aplicacao.");
+    throw new Error("Não foi possível carregar a configuração da aplicação.");
   }
 
   appConfigCache = await res.json();
@@ -75,7 +76,7 @@ async function apiFetch(path, options = {}) {
 
   if (res.status === 401) {
     logout();
-    throw new Error("Sessao expirada. Faca login novamente.");
+    throw new Error("Sessão expirada. Faça login novamente.");
   }
 
   if (res.status === 204) {
@@ -130,24 +131,45 @@ function formatSeconds(totalSeconds) {
   return `${hh}:${mm}:${ss}`;
 }
 
-async function supabaseAuth(path, payload) {
-  const cfg = await getAppConfig();
-  if (!cfg.supabase_url || !cfg.supabase_anon_key) {
-    throw new Error("Supabase nao configurado no backend.");
+function formatProjectType(projectType) {
+  const labels = {
+    LAYOUT: "LAYOUT",
+    EXPORTACAO: "EXPORTAÇÃO",
+    NORMATIZACAO: "NORMATIZAÇÃO",
+    PADRONIZACAO: "PADRONIZAÇÃO",
+    TRY_OUT: "TRY OUT",
+    MAPEAMENTO: "MAPEAMENTO",
+    MELHORIA: "MELHORIA",
+    PECAS: "PEÇAS",
+  };
+
+  if (labels[projectType]) {
+    return labels[projectType];
   }
 
-  const res = await fetch(`${cfg.supabase_url}/auth/v1/${path}`, {
+  return String(projectType || "")
+    .replaceAll("_", " ")
+    .toUpperCase();
+}
+
+async function supabaseAuth(path, payload) {
+  const action = path.startsWith("token") ? "login" : "signup";
+  const res = await fetch(`/auth/${action}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: cfg.supabase_anon_key,
     },
     body: JSON.stringify(payload),
   });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error_description || data.msg || "Falha na autenticacao.");
+    throw new Error(
+      data.detail ||
+      data.error_description ||
+      data.msg ||
+      "Falha na autenticação."
+    );
   }
 
   return data;
@@ -157,7 +179,7 @@ async function signIn(email, password) {
   const data = await supabaseAuth("token?grant_type=password", { email, password });
 
   if (!data.access_token) {
-    throw new Error("Token de acesso nao retornado pelo Supabase.");
+    throw new Error("Token de acesso não retornado pelo Supabase.");
   }
 
   setToken(data.access_token);
@@ -165,7 +187,20 @@ async function signIn(email, password) {
 }
 
 async function signUp(email, password) {
-  return supabaseAuth("signup", { email, password });
+  const data = await supabaseAuth("signup", { email, password });
+
+  // Em projetos Supabase sem confirmação obrigatória de e-mail,
+  // o signup pode devolver token imediatamente.
+  const tokenFromResponse =
+    data?.access_token ||
+    data?.session?.access_token ||
+    null;
+
+  if (tokenFromResponse) {
+    setToken(tokenFromResponse);
+  }
+
+  return data;
 }
 
 function qs(name) {
@@ -184,6 +219,7 @@ window.normalizeIsoFromInput = normalizeIsoFromInput;
 window.toLocalInputValue = toLocalInputValue;
 window.formatDateTime = formatDateTime;
 window.formatSeconds = formatSeconds;
+window.formatProjectType = formatProjectType;
 window.signIn = signIn;
 window.signUp = signUp;
 window.qs = qs;
