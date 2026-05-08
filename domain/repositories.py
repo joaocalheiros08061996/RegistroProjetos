@@ -99,3 +99,99 @@ class IRoutineActivityRepository(ABC):
         hours: float,
     ) -> Optional[RoutineActivity]:
         """Finaliza a atividade em andamento e retorna o registro atualizado."""
+
+
+class IDashboardRepository(ABC):
+    @abstractmethod
+    def list_avg_real_days_by_project_type(self) -> list[dict]:
+        """
+        Retorna média global de dias reais por tipo de projeto.
+        Cada item deve conter:
+        - project_type (str)
+        - average_days (float)
+        """
+
+    @abstractmethod
+    def list_avg_planned_vs_real_days_by_project_type(self) -> list[dict]:
+        """
+        Retorna média global de dias planejados vs reais por tipo de projeto.
+        Cada item deve conter:
+        - project_type (str)
+        - planned_average_days (float)
+        - real_average_days (float)
+        """
+
+    @abstractmethod
+    def list_routine_total_days_by_month(self) -> list[dict]:
+        """
+        Retorna dias totais globais de atividades de rotina por tipo, ano e mes.
+        Cada item deve conter:
+        - user_id (str)
+        - activity_type (str)
+        - year (int)
+        - month (int)
+        - total_days (float)
+        """
+
+    @abstractmethod
+    def list_project_monthly_kpis(self) -> list[dict]:
+        """
+        Retorna KPIs mensais globais de projetos por tipo, responsavel, ano e mes.
+        Cada item deve conter os campos agregados usados pelo dashboard mensal.
+        """
+
+    @abstractmethod
+    def list_project_complexity_counts(self) -> list[dict]:
+        """
+        Retorna contagem global de projetos por tipo e score de complexidade.
+        Cada item deve conter:
+        - project_type (str)
+        - complexity_score (int)
+        - project_count (int)
+        """
+
+    @abstractmethod
+    def list_project_complexity_counts_by_month(self) -> list[dict]:
+        """
+        Retorna contagem global de projetos por mes/ano e score de complexidade.
+        Cada item deve conter:
+        - project_type (str)
+        - responsible_login (str)
+        - year (int)
+        - month (int)
+        - complexity_score (int)
+        - project_count (int)
+        """
+
+    @abstractmethod
+    def list_project_earned_value(self) -> list[dict]:
+        """
+        Retorna dados de valor agregado por projeto.
+        Cada item deve conter:
+        - project_id (int)
+        - project_name (str)
+        - project_type (str)
+        - responsible_login (str)
+        - year (int)
+        - month (int)
+        - estimated_cost (float)
+        - planned_value (float)
+        - earned_value (float)
+        - total_task_cost (float)
+        - task_count (int)
+        - completed_task_count (int)
+        """
+
+    @abstractmethod
+    def list_project_effort_deviation(self) -> list[dict]:
+        """
+        Retorna dados de desvio de esforço por tipo, responsavel, ano e mes.
+        Cada item deve conter:
+        - project_type (str)
+        - responsible_login (str)
+        - year (int)
+        - month (int)
+        - task_count (int)
+        - planned_effort_hours (float)
+        - actual_effort_hours (float)
+        """

@@ -208,6 +208,43 @@ class Task:
 # ============================================================
 
 class Project:
+    _GUT_SEVERITY_WEIGHTS = {
+        Severity.NONE.value: 1,
+        Severity.NONE.name: 1,
+        Severity.LOW.value: 2,
+        Severity.LOW.name: 2,
+        Severity.MEDIUM.value: 3,
+        Severity.MEDIUM.name: 3,
+        Severity.HIGH.value: 4,
+        Severity.HIGH.name: 4,
+        Severity.CRITICAL.value: 5,
+        Severity.CRITICAL.name: 5,
+    }
+    _GUT_URGENCY_WEIGHTS = {
+        Urgency.CAN_WAIT.value: 1,
+        Urgency.CAN_WAIT.name: 1,
+        Urgency.LOW.value: 2,
+        Urgency.LOW.name: 2,
+        Urgency.MEDIUM.value: 3,
+        Urgency.MEDIUM.name: 3,
+        Urgency.FAST.value: 4,
+        Urgency.FAST.name: 4,
+        Urgency.IMMEDIATE.value: 5,
+        Urgency.IMMEDIATE.name: 5,
+    }
+    _GUT_TREND_WEIGHTS = {
+        Trend.STABLE.value: 1,
+        Trend.STABLE.name: 1,
+        Trend.LONG_TERM.value: 2,
+        Trend.LONG_TERM.name: 2,
+        Trend.MEDIUM_TERM.value: 3,
+        Trend.MEDIUM_TERM.name: 3,
+        Trend.SHORT_TERM.value: 4,
+        Trend.SHORT_TERM.name: 4,
+        Trend.RAPID.value: 5,
+        Trend.RAPID.name: 5,
+    }
+
     def __init__(
         self,
         *,
@@ -318,6 +355,45 @@ class Project:
         for task in self._tasks:
             total += task.actual_time
         return total.total_seconds() / 86400.0
+
+    @staticmethod
+    def _gut_weight(raw_value, mapping: dict[str, int]) -> int:
+        if hasattr(raw_value, "value"):
+            raw_value = raw_value.value
+        return mapping.get(str(raw_value).strip(), 1)
+
+    @property
+    def gut_score(self) -> int:
+        severity_weight = self._gut_weight(
+            self.severity,
+            self._GUT_SEVERITY_WEIGHTS,
+        )
+        urgency_weight = self._gut_weight(
+            self.urgency,
+            self._GUT_URGENCY_WEIGHTS,
+        )
+        trend_weight = self._gut_weight(
+            self.trend,
+            self._GUT_TREND_WEIGHTS,
+        )
+        return severity_weight * urgency_weight * trend_weight
+
+    @property
+    def priority_level(self) -> int:
+        score = self.gut_score
+        if score >= 101:
+            return 1
+        if score >= 76:
+            return 2
+        if score >= 51:
+            return 3
+        if score >= 26:
+            return 4
+        return 5
+
+    @property
+    def priority_label(self) -> str:
+        return f"Prioridade {self.priority_level}"
 
     # ---------- Progresso (SEMÂNTICO) ----------
 

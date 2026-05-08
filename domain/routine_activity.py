@@ -28,6 +28,7 @@ class RoutineActivity:
         *,
         user_id: str,
         tipo_atividade: str,
+        user_email: str = "",
         descricao: str = "",
         inicio: Optional[datetime] = None,
         fim: Optional[datetime] = None,
@@ -51,6 +52,7 @@ class RoutineActivity:
 
         self._id: Optional[int] = None
         self.user_id = user_id.strip()
+        self.user_email = (user_email or "").strip()
         self.tipo_atividade = tipo
         self.descricao = (descricao or "").strip()
         self.inicio = started_at

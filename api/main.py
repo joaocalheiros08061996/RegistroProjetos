@@ -12,6 +12,7 @@ from api.project_controller import router as project_router
 from api.routine_activity_controller import router as routine_activity_router
 from api.task_controller import router as task_router
 from api.auth_controller import router as auth_router
+from api.dashboard_controller import router as dashboard_router
 from domain.exceptions import ValidationError
 
 app = FastAPI(title="Registro de Projetos")
@@ -55,3 +56,4 @@ app.include_router(auth_router)
 app.include_router(project_router)
 app.include_router(task_router)
 app.include_router(routine_activity_router)
+app.include_router(dashboard_router)

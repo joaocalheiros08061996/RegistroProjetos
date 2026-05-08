@@ -1,13 +1,20 @@
 import json
 import os
 import time
+from dataclasses import dataclass
 from urllib.request import urlopen
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from application.services import ProjectService, RoutineActivityService, TaskService
+from application.services import (
+    DashboardService,
+    ProjectService,
+    RoutineActivityService,
+    TaskService,
+)
+from infra.database.repositories.dashboard_repo import SupabaseDashboardRepository
 from infra.database.repositories.project_repo import SupabaseProjectRepository
 from infra.database.repositories.routine_activity_repo import (
     SupabaseRoutineActivityRepository,
@@ -17,6 +24,12 @@ from infra.database.repositories.task_repo import SupabaseTaskRepository
 # ---------------------------------------------------------------------
 # Auth / JWT (SEM MUDANÇA DE REGRA)
 # ---------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: str
+    email: str
+
 
 ALGORITHM = "RS256"
 security = HTTPBearer(auto_error=True)
@@ -53,6 +66,10 @@ def get_routine_activity_repository() -> SupabaseRoutineActivityRepository:
     return SupabaseRoutineActivityRepository()
 
 
+def get_dashboard_repository() -> SupabaseDashboardRepository:
+    return SupabaseDashboardRepository()
+
+
 # ---------------------------------------------------------------------
 # Service factories (request-safe)
 # ---------------------------------------------------------------------
@@ -75,6 +92,12 @@ def get_routine_activity_service(
     routine_repo: SupabaseRoutineActivityRepository = Depends(get_routine_activity_repository),
 ) -> RoutineActivityService:
     return RoutineActivityService(routine_repo)
+
+
+def get_dashboard_service(
+    dashboard_repo: SupabaseDashboardRepository = Depends(get_dashboard_repository),
+) -> DashboardService:
+    return DashboardService(dashboard_repo)
 
 
 # ---------------------------------------------------------------------
@@ -162,14 +185,38 @@ def _decode_supabase_token(token: str) -> dict:
 # Dependency: current user
 # ---------------------------------------------------------------------
 
-def get_current_user_id(
+def _test_email_from_token(token: str) -> str:
+    return token.strip() if "@" in token else f"{token.strip()}@test.local"
+
+
+def _extract_email(payload: dict, fallback: str) -> str:
+    email = str(payload.get("email") or "").strip()
+    if email:
+        return email
+
+    metadata = payload.get("user_metadata")
+    if isinstance(metadata, dict):
+        email = str(metadata.get("email") or "").strip()
+        if email:
+            return email
+
+    app_metadata = payload.get("app_metadata")
+    if isinstance(app_metadata, dict):
+        email = str(app_metadata.get("email") or "").strip()
+        if email:
+            return email
+
+    return fallback
+
+
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> str:
+) -> AuthenticatedUser:
     token = credentials.credentials
 
     # Facilita testes locais
     if os.getenv("ENV", "").lower() == "test" and token.count(".") != 2:
-        return token
+        return AuthenticatedUser(id=token, email=_test_email_from_token(token))
 
     try:
         payload = _decode_supabase_token(token)
@@ -191,4 +238,14 @@ def get_current_user_id(
             detail="User ID nao encontrado no token",
         )
 
-    return user_id
+    user_id = str(user_id)
+    return AuthenticatedUser(
+        id=user_id,
+        email=_extract_email(payload, fallback=user_id),
+    )
+
+
+def get_current_user_id(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+) -> str:
+    return current_user.id

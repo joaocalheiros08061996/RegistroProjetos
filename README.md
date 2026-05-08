@@ -45,9 +45,21 @@ No frontend:
 
 1. Faça cadastro (`/register`) com usuario (email) e senha.
 2. Faça login (`/login`) com o mesmo usuario e senha.
-3. Apos login, escolha o modulo desejado (`Projetos` ou `Atividades de Rotina`).
+3. Apos login, escolha o modulo desejado (`Projetos`, `Atividades de Rotina` ou `Dashboard`).
 4. Em `Projetos`, o fluxo de projetos e tarefas segue igual.
 5. Em `Atividades de Rotina`, selecione o tipo, inicie e finalize manualmente.
+6. Em `Dashboard`, visualize:
+   - grafico de media global de dias reais por tipo de projeto;
+   - grafico de lead time medio planejado vs real por tipo de projeto.
+   - grafico de dias totais para atividades de rotina por mes/ano.
+   - graficos mensais de projetos: lead time, atraso, eficiencia e taxa de estouro de prazo.
+
+Endpoint do Dashboard:
+
+- `GET /dashboard/avg-real-days-by-project-type` (requer token; retorna media global de todos os usuarios).
+- `GET /dashboard/avg-planned-vs-real-days-by-project-type` (requer token; retorna media planejada vs real por tipo).
+- `GET /dashboard/routine-total-days-by-month` (requer token; retorna dias totais globais de rotina por tipo, ano e mes).
+- `GET /dashboard/project-monthly-kpis` (requer token; retorna KPIs mensais de projetos por tipo, responsavel, ano e mes).
 
 ## Testes
 
@@ -58,6 +70,8 @@ python -m pytest tests/test_services.py -v
 python -m pytest tests/test_api_projects.py -v
 python -m pytest tests/test_api_tasks.py -v
 python -m pytest tests/test_api_routine_activities.py -v
+python -m pytest tests/test_api_dashboard.py -v
+python -m pytest tests/test_dashboard_service.py -v
 python -m pytest -v
 ```
 

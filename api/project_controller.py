@@ -76,6 +76,9 @@ def list_projects(
             estimated_cost=project.estimated_cost,
             task_count=project.task_count,
             percent_completed=project.percent_completed,
+            gut_score=project.gut_score,
+            priority_level=project.priority_level,
+            priority_label=project.priority_label,
         )
         for project in projects
     ]

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from api.deps import get_current_user_id, get_routine_activity_service
+from api.deps import AuthenticatedUser, get_current_user, get_routine_activity_service
 from api.dtos import RoutineActivityResponseDTO, StartRoutineActivityDTO
 from application.services import RoutineActivityService
 
@@ -13,6 +13,7 @@ router = APIRouter(
 def to_routine_response(activity) -> RoutineActivityResponseDTO:
     return RoutineActivityResponseDTO(
         id=activity.id,
+        user_email=activity.user_email,
         tipo_atividade=activity.tipo_atividade,
         descricao=activity.descricao,
         inicio=activity.inicio,
@@ -28,10 +29,11 @@ def to_routine_response(activity) -> RoutineActivityResponseDTO:
 def start_routine_activity(
     dto: StartRoutineActivityDTO,
     service: RoutineActivityService = Depends(get_routine_activity_service),
-    user_id: str = Depends(get_current_user_id),
+    current_user: AuthenticatedUser = Depends(get_current_user),
 ):
     activity = service.start_activity(
-        user_id=user_id,
+        user_id=current_user.id,
+        user_email=current_user.email,
         tipo_atividade=dto.tipo_atividade,
         descricao=dto.descricao,
     )
@@ -41,9 +43,9 @@ def start_routine_activity(
 @router.get("/current", response_model=RoutineActivityResponseDTO | None)
 def get_current_routine_activity(
     service: RoutineActivityService = Depends(get_routine_activity_service),
-    user_id: str = Depends(get_current_user_id),
+    current_user: AuthenticatedUser = Depends(get_current_user),
 ):
-    activity = service.get_current_activity(user_id)
+    activity = service.get_current_activity(current_user.id)
     if activity is None:
         return None
     return to_routine_response(activity)
@@ -52,7 +54,7 @@ def get_current_routine_activity(
 @router.post("/finish-current", response_model=RoutineActivityResponseDTO)
 def finish_current_routine_activity(
     service: RoutineActivityService = Depends(get_routine_activity_service),
-    user_id: str = Depends(get_current_user_id),
+    current_user: AuthenticatedUser = Depends(get_current_user),
 ):
-    activity = service.finish_current_activity(user_id)
+    activity = service.finish_current_activity(current_user.id)
     return to_routine_response(activity)

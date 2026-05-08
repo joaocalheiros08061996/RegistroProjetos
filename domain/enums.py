@@ -13,6 +13,7 @@ class ProjectType(str, Enum):
     TRY_OUT = "TRY_OUT"
     MAPEAMENTO = "MAPEAMENTO"
     MELHORIA = "MELHORIA"
+    MELHORIA_PROC_NOVOS = "MELHORIA_PROC_NOVOS"
     PECAS = "PECAS"
 
 

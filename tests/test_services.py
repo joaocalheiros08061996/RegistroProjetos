@@ -8,7 +8,7 @@ from datetime import datetime
 
 from application.services import ProjectService, TaskService
 from infra.in_memory_repos import InMemoryProjectRepository, InMemoryTaskRepository
-from domain.enums import ProjectType
+from domain.enums import ProjectType, Severity, Trend, Urgency
 from domain.exceptions import ValidationError
 
 USER_ID = "user-123"
@@ -65,6 +65,43 @@ def test_list_projects_for_user(services):
 
     assert len(projects) == 1
     assert projects[0].name == "Projeto A"
+
+
+def test_project_gut_score_and_priority_level(services):
+    project_service, _ = services
+
+    critical_project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Critico",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 10),
+        severity=Severity.CRITICAL,
+        urgency=Urgency.IMMEDIATE,
+        trend=Trend.RAPID,
+    )
+    low_project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Baixa Prioridade",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 10),
+        severity=Severity.NONE,
+        urgency=Urgency.CAN_WAIT,
+        trend=Trend.STABLE,
+    )
+
+    assert critical_project.gut_score == 125
+    assert critical_project.priority_level == 1
+    assert critical_project.priority_label == "Prioridade 1"
+
+    assert low_project.gut_score == 1
+    assert low_project.priority_level == 5
+    assert low_project.priority_label == "Prioridade 5"
 
 
 # -------------------------

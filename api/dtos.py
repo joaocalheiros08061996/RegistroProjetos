@@ -118,6 +118,11 @@ class ProjectListItemResponseDTO(BaseModel):
     # progresso semântico
     percent_completed: float
 
+    # matriz GUT / priorizacao
+    gut_score: int
+    priority_level: int
+    priority_label: str
+
 
 # ============================================================
 # PROJECT OUTPUT (METRICS / DETAIL)
@@ -190,6 +195,7 @@ class StartRoutineActivityDTO(BaseModel):
 
 class RoutineActivityResponseDTO(BaseModel):
     id: int
+    user_email: Optional[str] = None
     tipo_atividade: str
     descricao: str
     inicio: datetime
@@ -198,3 +204,139 @@ class RoutineActivityResponseDTO(BaseModel):
     mes: int
     dia: int
     horas_trabalhadas: Optional[float]
+
+
+# ============================================================
+# DASHBOARD
+# ============================================================
+
+class DashboardAvgRealDaysByTypeItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    average_days: float
+
+
+class DashboardAvgRealDaysByTypeResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardAvgRealDaysByTypeItemDTO]
+
+
+class DashboardAvgPlannedVsRealDaysByTypeItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    planned_average_days: float
+    real_average_days: float
+
+
+class DashboardAvgPlannedVsRealDaysByTypeResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardAvgPlannedVsRealDaysByTypeItemDTO]
+
+
+class DashboardRoutineTotalDaysByMonthItemDTO(BaseModel):
+    user_id: str
+    user_label: str
+    activity_type: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    total_days: float
+
+
+class DashboardRoutineTotalDaysByMonthResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardRoutineTotalDaysByMonthItemDTO]
+
+
+class DashboardProjectMonthlyKpiItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    responsible_login: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    project_count: int
+    planned_days_sum: float
+    planned_days_count: int
+    real_days_sum: float
+    real_days_count: int
+    sla_breach_count: int
+    sla_project_count: int
+
+
+class DashboardProjectMonthlyKpisResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectMonthlyKpiItemDTO]
+
+
+class DashboardProjectComplexityCountItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    complexity_score: int
+    project_count: int
+
+
+class DashboardProjectComplexityCountsResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectComplexityCountItemDTO]
+
+
+class DashboardProjectComplexityByMonthItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    responsible_login: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    complexity_score: int
+    project_count: int
+
+
+class DashboardProjectComplexityByMonthResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectComplexityByMonthItemDTO]
+
+
+class DashboardProjectEarnedValueItemDTO(BaseModel):
+    project_id: int
+    project_name: str
+    project_type: str
+    project_type_label: str
+    responsible_login: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    estimated_cost: float
+    planned_value: float
+    earned_value: float
+    total_task_cost: float
+    task_count: int
+    completed_task_count: int
+
+
+class DashboardProjectEarnedValueResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectEarnedValueItemDTO]
+
+
+class DashboardProjectEffortDeviationItemDTO(BaseModel):
+    project_type: str
+    project_type_label: str
+    responsible_login: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    task_count: int
+    planned_effort_hours: float
+    actual_effort_hours: float
+    effort_deviation_hours: float
+
+
+class DashboardProjectEffortDeviationResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectEffortDeviationItemDTO]

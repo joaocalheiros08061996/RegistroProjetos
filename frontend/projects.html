@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Projetos | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css?v=20260410">
+  <link rel="stylesheet" href="styles.css?v=20260524">
 </head>
 <body>
 <main class="page">
@@ -14,6 +14,7 @@
       <p class="muted">Visão geral e cadastro rápido.</p>
     </div>
     <div class="actions">
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
       <button class="danger" type="button" onclick="logout()">Sair</button>
     </div>
@@ -47,7 +48,8 @@
           <option value="PADRONIZACAO">PADRONIZAÇÃO</option>
           <option value="TRY_OUT">TRY OUT</option>
           <option value="MAPEAMENTO">MAPEAMENTO</option>
-          <option value="MELHORIA">MELHORIA</option>
+          <option value="MELHORIA">MELHORIA DE PROC. EXISTENTES</option>
+          <option value="MELHORIA_PROC_NOVOS">MELHORIA DE PROC. NOVOS</option>
           <option value="PECAS">PEÇAS</option>
         </select>
       </label>
@@ -160,7 +162,8 @@
     PADRONIZACAO: "PADRONIZAÇÃO",
     TRY_OUT: "TRY OUT",
     MAPEAMENTO: "MAPEAMENTO",
-    MELHORIA: "MELHORIA",
+    MELHORIA: "MELHORIA DE PROC. EXISTENTES",
+    MELHORIA_PROC_NOVOS: "MELHORIA DE PROC. NOVOS",
     PECAS: "PEÇAS",
   };
 
@@ -174,16 +177,38 @@
     return String(projectType || "").split("_").join(" ").toUpperCase();
   }
 
+  function getProjectPriority(project) {
+    const level = Number(project.priority_level || 5);
+    const normalizedLevel = Number.isInteger(level) && level >= 1 && level <= 5
+      ? level
+      : 5;
+
+    return {
+      level: normalizedLevel,
+      label: project.priority_label || `Prioridade ${normalizedLevel}`,
+      gutScore: Number(project.gut_score || 0),
+    };
+  }
+
   function renderProjectItem(project) {
     const card = document.createElement("article");
     card.className = "item";
 
     const period = `${formatDateTime(project.planned_start)} - ${formatDateTime(project.planned_end)}`;
     const progress = `${project.percent_completed ?? 0}%`;
+    const priority = getProjectPriority(project);
 
     card.innerHTML = `
-      <div class="row">
-        <h3 class="item-title">${project.name}</h3>
+      <div class="row project-heading">
+        <div class="project-title-stack">
+          <div class="project-title-with-priority">
+            <span class="priority-dot priority-${priority.level}" aria-label="${priority.label}"></span>
+            <h3 class="item-title">${project.name}</h3>
+          </div>
+          <p class="project-priority-label priority-text-${priority.level}">
+            ${priority.label}
+          </p>
+        </div>
         <span class="item-subtitle">${formatProjectTypeSafe(project.project_type)}</span>
       </div>
       <p class="item-subtitle">Responsável: ${project.responsible_login}</p>

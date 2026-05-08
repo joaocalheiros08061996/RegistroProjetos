@@ -96,7 +96,10 @@ def test_list_projects_api_returns_user_projects(client):
     list_response = client.get("/projects/", headers=AUTH_HEADER)
     assert list_response.status_code == 200
     projects = list_response.json()
-    assert any(project["id"] == created["id"] for project in projects)
+    listed_project = next(project for project in projects if project["id"] == created["id"])
+    assert listed_project["gut_score"] == 1
+    assert listed_project["priority_level"] == 5
+    assert listed_project["priority_label"] == "Prioridade 5"
 
 
 def test_project_detail_api_returns_full_payload(client):
@@ -177,7 +180,7 @@ def test_delete_project_api_removes_project_and_tasks(client):
     assert detail_response.status_code == 422
 
 
-@pytest.mark.parametrize("project_type", ["PADRONIZACAO", "TRY_OUT"])
+@pytest.mark.parametrize("project_type", ["PADRONIZACAO", "TRY_OUT", "MELHORIA_PROC_NOVOS"])
 def test_create_project_api_accepts_new_project_types(client, project_type):
     create_response = client.post(
         "/projects/",

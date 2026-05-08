@@ -171,12 +171,267 @@ button.danger:hover {
 .module-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .module-card {
   display: grid;
   gap: 10px;
+}
+
+.dashboard-page {
+  width: min(1220px, 96vw);
+}
+
+.dashboard-chart {
+  width: 100%;
+  min-height: 640px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+#dashboard-chart {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+#dashboard-chart-2 {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+#dashboard-chart-8 {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+#dashboard-chart-9 {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+#dashboard-chart-10,
+#dashboard-chart-11,
+#dashboard-chart-12,
+#dashboard-chart-13 {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.dashboard-panel {
+  min-width: 0;
+}
+
+.dashboard-panel h2 {
+  margin-bottom: 10px;
+}
+
+.dashboard-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.dashboard-panel-header h2 {
+  margin-bottom: 6px;
+}
+
+.dashboard-panel-header .status {
+  margin: 0;
+}
+
+.routine-dashboard-chart {
+  min-height: 520px;
+}
+
+.complexity-dashboard-chart {
+  min-height: 600px;
+}
+
+.complexity-monthly-dashboard-chart {
+  min-height: 560px;
+}
+
+.earned-value-dashboard-chart {
+  min-height: 560px;
+}
+
+.schedule-performance-dashboard-chart {
+  min-height: 520px;
+}
+
+.cost-performance-dashboard-chart {
+  min-height: 520px;
+}
+
+.effort-deviation-dashboard-chart {
+  min-height: 520px;
+}
+
+.dashboard-kpi-methodology {
+  max-width: 1080px;
+  margin: 0 auto 12px;
+  padding: 12px 14px;
+  border: 1px solid #cfe1f5;
+  border-left: 4px solid var(--primary);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f6faff);
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.dashboard-kpi-methodology strong {
+  color: var(--text);
+}
+
+.routine-dashboard-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.routine-dashboard-visual {
+  min-width: 0;
+  width: 100%;
+}
+
+.routine-dashboard-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 200px));
+  gap: 10px;
+  justify-content: center;
+  align-items: start;
+}
+
+.routine-dashboard-filters label {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.routine-dashboard-filters select {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+}
+
+.routine-dashboard-filters option {
+  padding: 4px;
+}
+
+#dashboard-chart-3 {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+
+.project-monthly-section {
+  display: grid;
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.project-monthly-section > .dashboard-panel-header {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f6faff);
+}
+
+.project-monthly-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 200px));
+  gap: 10px;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.project-monthly-filters label {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 6px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.project-monthly-filters select {
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+}
+
+.project-monthly-filters option {
+  padding: 4px;
+}
+
+.project-monthly-chart {
+  min-height: 460px;
+}
+
+.project-monthly-section > .dashboard-panel {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f9fcff);
+  box-shadow: 0 10px 26px rgba(17, 35, 56, 0.08);
+  padding: 16px;
+}
+
+.project-monthly-section > .dashboard-panel h2 {
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.project-monthly-section .dashboard-chart {
+  border-color: var(--line);
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .routine-types {
@@ -205,6 +460,82 @@ button.danger:hover {
 .item-title {
   margin: 0 0 6px;
   font-size: 1rem;
+}
+
+.project-heading {
+  align-items: flex-start;
+}
+
+.project-title-stack {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.project-title-with-priority {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.project-title-with-priority .item-title {
+  margin-bottom: 0;
+}
+
+.priority-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(17, 35, 56, 0.06);
+}
+
+.priority-1 {
+  background: #d7263d;
+}
+
+.priority-2 {
+  background: #f97316;
+}
+
+.priority-3 {
+  background: #facc15;
+}
+
+.priority-4 {
+  background: #2563eb;
+}
+
+.priority-5 {
+  background: #16a34a;
+}
+
+.project-priority-label {
+  margin: 0 0 4px 21px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.priority-text-1 {
+  color: #a5112b;
+}
+
+.priority-text-2 {
+  color: #b45309;
+}
+
+.priority-text-3 {
+  color: #9a6700;
+}
+
+.priority-text-4 {
+  color: #1d4ed8;
+}
+
+.priority-text-5 {
+  color: #15803d;
 }
 
 .item-subtitle {
@@ -263,8 +594,42 @@ hr {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-panel-header {
+    flex-direction: column;
+  }
+
+  .routine-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .routine-dashboard-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .project-monthly-filters {
+    grid-template-columns: 1fr;
+  }
+
   .page-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dashboard-chart {
+    min-height: 460px;
+  }
+
+  .project-monthly-chart {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 540px) {
+  .routine-dashboard-filters {
+    grid-template-columns: 1fr;
   }
 }
