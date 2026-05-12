@@ -1,0 +1,40 @@
+{
+  "users": {
+    "Alison Almeida": {
+      "responsavel": "Alison Almeida",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "Dafny Peres": {
+      "responsavel": "Dafny Peres",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "Fernando Pozo": {
+      "responsavel": "Fernando Pozo",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "JACKSON": {
+      "responsavel": "JACKSON",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "JOÃO PAULO": {
+      "responsavel": "JOÃO PAULO",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "João Calheiros": {
+      "responsavel": "João Calheiros",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "William": {
+      "responsavel": "William",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "fagner": {
+      "responsavel": "fagner",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    },
+    "jc": {
+      "responsavel": "jc",
+      "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+    }
+  }
+}

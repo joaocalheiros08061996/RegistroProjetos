@@ -5,3 +5,14 @@ __pycache__/
 .env2
 *.pyc
 .codex
+
+# Dados locais usados nas importacoes historicas
+A3 - Gerenciamento de Projetos.xlsx
+atividades_rows*.csv
+*:Zone.Identifier
+
+# Artefatos gerados pelas automacoes de importacao
+automacoes/import_a3_manifest.json
+automacoes/import_a3_report.json
+automacoes/import_atividades_manifest.json
+automacoes/import_atividades_report.json

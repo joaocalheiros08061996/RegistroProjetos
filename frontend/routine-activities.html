@@ -4,13 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atividades de Rotina | Registro</title>
-  <link rel="stylesheet" href="styles.css?v=20260410">
+  <link rel="stylesheet" href="styles.css?v=20260512">
 </head>
 <body>
 <main class="page">
   <header class="page-header">
-    <div>
+    <div class="routine-header-copy">
       <h1 class="title">Atividades de Rotina</h1>
+      <label class="routine-responsavel-field" for="responsavel">
+        Responsável
+        <input id="responsavel" type="text" placeholder="Informe o responsável pela atividade">
+      </label>
       <p class="muted">Selecione o tipo de atividade, inicie e finalize quando concluir.</p>
     </div>
     <div class="actions">
@@ -68,6 +72,7 @@
   const activeLabel = document.getElementById("active-label");
   const selectedLabel = document.getElementById("selected-label");
   const activityTypesEl = document.getElementById("activity-types");
+  const responsavelInput = document.getElementById("responsavel");
   const descricaoInput = document.getElementById("descricao");
   const startBtn = document.getElementById("start-btn");
   const finishBtn = document.getElementById("finish-btn");
@@ -125,6 +130,8 @@
 
     if (currentActivity) {
       setSelection(currentActivity.tipo_atividade);
+      responsavelInput.value = currentActivity.responsavel || "";
+      responsavelInput.disabled = true;
       descricaoInput.value = currentActivity.descricao || "";
       descricaoInput.disabled = true;
       startBtn.disabled = true;
@@ -135,12 +142,14 @@
       return;
     }
 
+    responsavelInput.disabled = false;
     descricaoInput.disabled = false;
     finishBtn.disabled = true;
     statusLabel.textContent = "Pronto para iniciar.";
     activeLabel.textContent = "";
     activeBox.classList.add("hidden");
     setSelection(null);
+    responsavelInput.value = "";
     descricaoInput.value = "";
   }
 
@@ -167,6 +176,7 @@
         method: "POST",
         body: JSON.stringify({
           tipo_atividade: selectedType,
+          responsavel: responsavelInput.value.trim(),
           descricao: descricaoInput.value.trim(),
         }),
       });

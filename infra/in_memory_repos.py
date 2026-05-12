@@ -342,9 +342,9 @@ class InMemoryDashboardRepository(IDashboardRepository):
 
     @staticmethod
     def _routine_user_label(activity: RoutineActivity) -> str:
-        email = str(getattr(activity, "user_email", "") or "").strip()
-        if email:
-            return email
+        responsavel = str(getattr(activity, "responsavel", "") or "").strip()
+        if responsavel:
+            return responsavel
 
         user_id = str(activity.user_id or "").strip()
         if len(user_id) > 12:

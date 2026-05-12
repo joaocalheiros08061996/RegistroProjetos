@@ -1,0 +1,129 @@
+INSTRUCOES PARA RODAR A AUTOMACAO DE IMPORTACAO A3
+===================================================
+
+Arquivo da automacao:
+automacoes/importar_a3_supabase.py
+
+Planilha usada por padrao:
+A3 - Gerenciamento de Projetos.xlsx
+
+
+1. Verificar dependencias
+------------------------
+
+Voce pode usar o venv de dois jeitos.
+
+Opcao A - ativando o venv primeiro:
+
+source ./venv/bin/activate
+pip install -r requirements.txt
+
+Depois disso, enquanto o venv estiver ativo, use apenas:
+
+python automacoes/importar_a3_supabase.py
+
+Opcao B - sem ativar o venv:
+
+./venv/bin/pip install -r requirements.txt
+
+E rode usando o Python diretamente de dentro do venv:
+
+./venv/bin/python automacoes/importar_a3_supabase.py
+
+Os dois jeitos fazem a mesma coisa. O formato ./venv/bin/python so garante
+explicitamente que estamos usando o Python do ambiente virtual, mesmo se o venv
+nao estiver ativado.
+
+
+2. Conferir configuracao do Supabase
+------------------------------------
+
+A importacao real usa a variavel DATABASE_URL e o usuario dono dos dados.
+
+Ela pode estar no arquivo .env do projeto ou no ambiente do terminal.
+Para nao precisar digitar nada no terminal, deixe estas duas variaveis no .env:
+
+DATABASE_URL=postgresql://usuario:senha@host:porta/banco
+SUPABASE_USER_ID=<id-do-usuario-supabase>
+
+Observacao: SUPABASE_USER_ID nao e a senha. E o ID do usuario que sera gravado
+na coluna user_id das tabelas projects e tasks.
+
+
+3. Rodar em modo seguro, sem gravar no banco
+-------------------------------------------
+
+Use o dry-run primeiro. Ele le a planilha, valida os dados e gera o relatorio,
+mas nao grava nada no Supabase.
+
+Se voce ja ativou o venv e configurou DATABASE_URL e SUPABASE_USER_ID no .env,
+rode assim:
+
+python automacoes/importar_a3_supabase.py
+
+Se nao ativou o venv, rode assim:
+
+./venv/bin/python automacoes/importar_a3_supabase.py
+
+Tambem e possivel informar o user-id manualmente, se preferir:
+
+./venv/bin/python automacoes/importar_a3_supabase.py --user-id <id-do-usuario-supabase>
+
+Depois confira o relatorio:
+
+automacoes/import_a3_report.json
+
+
+4. Rodar a importacao real
+-------------------------
+
+Somente depois de conferir o dry-run, rode com --commit:
+
+Se voce ja ativou o venv e configurou DATABASE_URL e SUPABASE_USER_ID no .env:
+
+python automacoes/importar_a3_supabase.py --commit
+
+Se nao ativou o venv:
+
+./venv/bin/python automacoes/importar_a3_supabase.py --commit
+
+Tambem e possivel informar o user-id manualmente:
+
+./venv/bin/python automacoes/importar_a3_supabase.py --user-id <id-do-usuario-supabase> --commit
+
+
+5. Arquivos gerados/usados
+--------------------------
+
+Manifesto idempotente:
+automacoes/import_a3_manifest.json
+
+Relatorio da ultima execucao:
+automacoes/import_a3_report.json
+
+O manifesto evita duplicar projetos, tarefas e time entries quando a automacao
+for executada novamente para o mesmo usuario.
+
+
+6. Regras importantes da importacao
+-----------------------------------
+
+- Projetos sem classificacao na aba PROJETOS_CLASSIFICADOS sao pulados.
+- IDs do Supabase sao gerados automaticamente pelo banco.
+- IDs originais da planilha ficam registrados no manifesto.
+- O tempo real da planilha, em dias, e convertido para segundos.
+- Como a tabela time_entries usa start_time e end_time, o script grava uma
+  entrada fechada com end_time = start_time + segundos_convertidos.
+- O modo padrao e sempre dry-run. Nada e gravado sem usar --commit.
+
+
+7. Validacao recomendada
+------------------------
+
+Rodar testes antes ou depois de alterar a automacao:
+
+./venv/bin/python -m pytest tests/test_importar_a3_supabase.py -q
+
+Rodar todos os testes do projeto:
+
+./venv/bin/python -m pytest -q

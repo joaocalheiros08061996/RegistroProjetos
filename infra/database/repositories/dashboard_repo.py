@@ -122,8 +122,8 @@ class SupabaseDashboardRepository(IDashboardRepository):
                 end
             """
             user_label_expr = (
-                f"coalesce(nullif(trim(user_email::text), ''), {user_fallback_expr})"
-                if "user_email" in columns
+                f"coalesce(nullif(trim(responsavel::text), ''), {user_fallback_expr})"
+                if "responsavel" in columns
                 else user_fallback_expr
             )
 

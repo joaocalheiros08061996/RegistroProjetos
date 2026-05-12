@@ -13,13 +13,13 @@ def test_start_activity_creates_open_record():
 
     created = service.start_activity(
         user_id="user-1",
-        user_email="joao@example.com",
         tipo_atividade="Análise de Processos",
+        responsavel="João Calheiros",
         descricao="Mapear processo atual",
     )
 
     assert created.id is not None
-    assert created.user_email == "joao@example.com"
+    assert created.responsavel == "João Calheiros"
     assert created.fim is None
     assert created.tipo_atividade == "Análise de Processos"
 

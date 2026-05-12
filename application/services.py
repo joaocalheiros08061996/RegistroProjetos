@@ -220,8 +220,8 @@ class RoutineActivityService:
         self,
         *,
         user_id: str,
-        user_email: str = "",
         tipo_atividade: str,
+        responsavel: str = "",
         descricao: str = "",
     ) -> RoutineActivity:
         current = self.routine_repo.get_current(user_id)
@@ -230,8 +230,8 @@ class RoutineActivityService:
 
         activity = RoutineActivity(
             user_id=user_id,
-            user_email=user_email,
             tipo_atividade=tipo_atividade,
+            responsavel=responsavel,
             descricao=descricao,
         )
         self.routine_repo.save(activity)

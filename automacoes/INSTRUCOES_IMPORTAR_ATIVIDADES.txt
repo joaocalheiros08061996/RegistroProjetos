@@ -1,0 +1,74 @@
+INSTRUCOES PARA IMPORTAR atividades_rows (21).csv
+===================================================
+
+Arquivo da automacao:
+automacoes/importar_atividades_supabase.py
+
+CSV usado por padrao:
+atividades_rows (21).csv
+
+1. Configurar o .env
+--------------------
+
+A importacao real usa DATABASE_URL no .env:
+
+DATABASE_URL=postgresql://usuario:senha@host:porta/banco
+
+2. Preencher o mapa de usuarios
+-------------------------------
+
+Antes de importar, edite:
+
+automacoes/atividades_user_map.json
+
+Preencha user_id com o UUID Supabase correspondente a cada nome historico do CSV.
+Exemplo:
+
+"João Calheiros": {
+  "responsavel": "João Calheiros",
+  "user_id": "36f1e40c-949e-4850-b86d-607dc6a468d3"
+}
+
+Se responsavel ficar vazio, o script usa o nome original como rotulo historico.
+Usuarios sem UUID preenchido sao pulados e aparecem no relatorio.
+
+3. Rodar dry-run
+----------------
+
+Com venv ativado:
+
+python automacoes/importar_atividades_supabase.py
+
+Sem ativar o venv:
+
+./venv/bin/python automacoes/importar_atividades_supabase.py
+
+O dry-run nao grava nada. Ele atualiza:
+
+automacoes/import_atividades_report.json
+
+4. Rodar importacao real
+------------------------
+
+Depois de revisar o relatorio:
+
+python automacoes/importar_atividades_supabase.py --commit
+
+5. Idempotencia
+---------------
+
+O manifesto fica em:
+
+automacoes/import_atividades_manifest.json
+
+Ele evita importar novamente atividades ja processadas. O script tambem consulta
+uma chave natural no banco: user_id + tipo_atividade + inicio + fim + descricao.
+
+6. Regras de limpeza
+--------------------
+
+- O id do CSV nao vira id do Supabase; o banco gera novos ids.
+- Tipos antigos sao preservados como vieram no CSV.
+- Datas sem timezone sao tratadas como America/Sao_Paulo.
+- Linhas abertas, malformadas ou sem mapeamento de usuario sao puladas e relatadas.
+- Se horas_trabalhadas estiver vazia e inicio/fim forem validos, o script calcula as horas.

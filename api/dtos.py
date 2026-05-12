@@ -190,13 +190,14 @@ class ProjectDetailResponseDTO(BaseModel):
 
 class StartRoutineActivityDTO(BaseModel):
     tipo_atividade: str
+    responsavel: str = ""
     descricao: str = ""
 
 
 class RoutineActivityResponseDTO(BaseModel):
     id: int
-    user_email: Optional[str] = None
     tipo_atividade: str
+    responsavel: str
     descricao: str
     inicio: datetime
     fim: Optional[datetime]

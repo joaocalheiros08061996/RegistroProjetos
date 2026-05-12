@@ -18,8 +18,8 @@ class SupabaseRoutineActivityRepository(IRoutineActivityRepository):
                     """
                     insert into atividades (
                         user_id,
-                        user_email,
                         tipo_atividade,
+                        responsavel,
                         descricao,
                         inicio,
                         fim,
@@ -33,8 +33,8 @@ class SupabaseRoutineActivityRepository(IRoutineActivityRepository):
                     """,
                     (
                         activity.user_id,
-                        activity.user_email,
                         activity.tipo_atividade,
+                        activity.responsavel,
                         activity.descricao,
                         activity.inicio,
                         activity.fim,
@@ -113,8 +113,8 @@ class SupabaseRoutineActivityRepository(IRoutineActivityRepository):
     def _build_activity(row: dict) -> RoutineActivity:
         activity = RoutineActivity(
             user_id=row["user_id"],
-            user_email=row.get("user_email") or "",
             tipo_atividade=row["tipo_atividade"],
+            responsavel=row.get("responsavel") or "",
             descricao=row.get("descricao") or "",
             inicio=row["inicio"],
             fim=row.get("fim"),

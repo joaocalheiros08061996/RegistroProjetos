@@ -7,6 +7,7 @@ def test_start_routine_activity_api(client):
         headers=AUTH_HEADER,
         json={
             "tipo_atividade": "Análise de Processos",
+            "responsavel": "João Calheiros",
             "descricao": "Mapeando fluxos.",
         },
     )
@@ -15,6 +16,8 @@ def test_start_routine_activity_api(client):
     body = response.json()
     assert body["id"] > 0
     assert body["tipo_atividade"] == "Análise de Processos"
+    assert body["responsavel"] == "João Calheiros"
+    assert "user_email" not in body
     assert body["fim"] is None
 
 

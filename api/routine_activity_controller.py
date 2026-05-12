@@ -13,8 +13,8 @@ router = APIRouter(
 def to_routine_response(activity) -> RoutineActivityResponseDTO:
     return RoutineActivityResponseDTO(
         id=activity.id,
-        user_email=activity.user_email,
         tipo_atividade=activity.tipo_atividade,
+        responsavel=activity.responsavel,
         descricao=activity.descricao,
         inicio=activity.inicio,
         fim=activity.fim,
@@ -33,8 +33,8 @@ def start_routine_activity(
 ):
     activity = service.start_activity(
         user_id=current_user.id,
-        user_email=current_user.email,
         tipo_atividade=dto.tipo_atividade,
+        responsavel=dto.responsavel,
         descricao=dto.descricao,
     )
     return to_routine_response(activity)

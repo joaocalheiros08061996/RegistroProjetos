@@ -585,7 +585,7 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     routine_repo.save(
         RoutineActivity(
             user_id="u1",
-            user_email="ana@example.com",
+            responsavel="Ana",
             tipo_atividade="Cadastro",
             inicio=datetime(2026, 1, 10, 8, 0, tzinfo=timezone.utc),
             fim=datetime(2026, 1, 10, 20, 0, tzinfo=timezone.utc),
@@ -595,7 +595,7 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     routine_repo.save(
         RoutineActivity(
             user_id="u2",
-            user_email="bruno@example.com",
+            responsavel="Bruno",
             tipo_atividade="Cadastro",
             inicio=datetime(2026, 1, 11, 8, 0, tzinfo=timezone.utc),
             fim=datetime(2026, 1, 11, 20, 0, tzinfo=timezone.utc),
@@ -625,7 +625,7 @@ def test_dashboard_service_returns_routine_total_days_by_month():
 
     assert len(items) == 4
     assert items[0]["user_id"] == "u1"
-    assert items[0]["user_label"] == "ana@example.com"
+    assert items[0]["user_label"] == "Ana"
     assert items[0]["activity_type"] == "Cadastro"
     assert items[0]["year"] == 2026
     assert items[0]["month"] == 1
@@ -634,7 +634,7 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     assert isclose(items[0]["total_days"], 0.5, rel_tol=0, abs_tol=1e-10)
 
     assert items[1]["user_id"] == "u2"
-    assert items[1]["user_label"] == "bruno@example.com"
+    assert items[1]["user_label"] == "Bruno"
     assert items[1]["activity_type"] == "Cadastro"
     assert items[1]["month_label"] == "JAN"
     assert isclose(items[1]["total_days"], 0.5, rel_tol=0, abs_tol=1e-10)

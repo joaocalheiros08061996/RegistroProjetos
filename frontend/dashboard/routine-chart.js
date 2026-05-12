@@ -3,20 +3,20 @@ function buildRoutineFilterOptions(items) {
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-  const usersById = new Map();
+  const responsaveisByLabel = new Map();
   for (const item of items) {
-    const userId = String(item.user_id || "").trim();
-    if (!userId || usersById.has(userId)) {
+    const responsavelLabel = getRoutineUserLabel(item);
+    if (!responsavelLabel || responsaveisByLabel.has(responsavelLabel)) {
       continue;
     }
 
-    usersById.set(userId, {
-      value: userId,
-      label: getRoutineUserLabel(item),
+    responsaveisByLabel.set(responsavelLabel, {
+      value: responsavelLabel,
+      label: responsavelLabel,
     });
   }
 
-  const users = [...usersById.values()].sort((a, b) => (
+  const responsaveis = [...responsaveisByLabel.values()].sort((a, b) => (
     a.label.localeCompare(b.label, "pt-BR")
   ));
 
@@ -37,7 +37,7 @@ function buildRoutineFilterOptions(items) {
     routineUserFilterEl,
     [
       { value: "ALL", label: "Todos" },
-      ...users,
+      ...responsaveis,
     ],
   );
 
@@ -87,13 +87,16 @@ function getRoutineUserLabel(item) {
 }
 
 function getFilteredRoutineItems() {
-  const selectedUser = routineUserFilterEl.value;
+  const selectedResponsavel = routineUserFilterEl.value;
   const selectedType = routineTypeFilterEl.value;
   const selectedYear = routineYearFilterEl.value;
   const selectedMonth = routineMonthFilterEl.value;
 
   return routineItems.filter((item) => {
-    if (selectedUser !== "ALL" && String(item.user_id || "").trim() !== selectedUser) {
+    if (
+      selectedResponsavel !== "ALL"
+      && getRoutineUserLabel(item) !== selectedResponsavel
+    ) {
       return false;
     }
     if (selectedType !== "ALL" && item.activity_type !== selectedType) {

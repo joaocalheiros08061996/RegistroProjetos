@@ -61,6 +61,16 @@ main.page {
   color: var(--muted);
 }
 
+.routine-header-copy {
+  flex: 1;
+  min-width: min(100%, 360px);
+}
+
+.routine-responsavel-field {
+  max-width: 430px;
+  margin-top: 12px;
+}
+
 .grid {
   display: grid;
   gap: 14px;
