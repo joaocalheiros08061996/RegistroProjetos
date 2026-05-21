@@ -11,6 +11,7 @@ def test_create_project_api(client):
         json={
             "name": "Projeto API",
             "project_type": "LAYOUT",
+            "process_classification": "Processos novos",
             "responsible_login": "user1",
             "fte": 1.0,
             "planned_start": "2026-01-01T00:00:00",
@@ -84,6 +85,7 @@ def test_list_projects_api_returns_user_projects(client):
         json={
             "name": "Projeto Listagem API",
             "project_type": "LAYOUT",
+            "process_classification": "Processos existentes",
             "responsible_login": "user1",
             "fte": 1.0,
             "planned_start": "2026-03-01T00:00:00",
@@ -97,9 +99,39 @@ def test_list_projects_api_returns_user_projects(client):
     assert list_response.status_code == 200
     projects = list_response.json()
     listed_project = next(project for project in projects if project["id"] == created["id"])
+    assert listed_project["process_classification"] == "Processos existentes"
     assert listed_project["gut_score"] == 1
     assert listed_project["priority_level"] == 5
     assert listed_project["priority_label"] == "Prioridade 5"
+    assert listed_project["complexity_score"] == 1
+    assert listed_project["complexity_label"] == "Complexidade 1"
+
+
+def test_list_projects_api_returns_project_complexity(client):
+    create_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Complexidade API",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-03-01T00:00:00",
+            "planned_end": "2026-03-31T00:00:00",
+            "objective_clarity": "Objetivo parcialmente definido",
+            "method_clarity": "Métodos pouco definidos",
+        },
+    )
+    assert create_response.status_code == 200
+    created = create_response.json()
+
+    list_response = client.get("/projects/", headers=AUTH_HEADER)
+    assert list_response.status_code == 200
+    projects = list_response.json()
+    listed_project = next(project for project in projects if project["id"] == created["id"])
+
+    assert listed_project["complexity_score"] == 3
+    assert listed_project["complexity_label"] == "Complexidade 3"
 
 
 def test_project_detail_api_returns_full_payload(client):
@@ -109,6 +141,7 @@ def test_project_detail_api_returns_full_payload(client):
         json={
             "name": "Projeto Detalhe API",
             "project_type": "LAYOUT",
+            "process_classification": "Processos novos",
             "responsible_login": "user1",
             "fte": 1.0,
             "planned_start": "2026-04-01T00:00:00",
@@ -135,6 +168,7 @@ def test_project_detail_api_returns_full_payload(client):
     detail = detail_response.json()
     assert detail["id"] == project_id
     assert detail["name"] == "Projeto Detalhe API"
+    assert detail["process_classification"] == "Processos novos"
     assert detail["task_count"] == 1
     assert detail["tasks"][0]["name"] == "task-detalhe"
 
@@ -180,7 +214,18 @@ def test_delete_project_api_removes_project_and_tasks(client):
     assert detail_response.status_code == 422
 
 
-@pytest.mark.parametrize("project_type", ["PADRONIZACAO", "TRY_OUT", "MELHORIA_PROC_NOVOS"])
+@pytest.mark.parametrize(
+    "project_type",
+    [
+        "LAYOUT",
+        "EXPORTACAO",
+        "NORMATIZACAO",
+        "PADRONIZACAO",
+        "TRY_OUT",
+        "MAPEAMENTO",
+        "PECAS",
+    ],
+)
 def test_create_project_api_accepts_new_project_types(client, project_type):
     create_response = client.post(
         "/projects/",
@@ -203,3 +248,40 @@ def test_create_project_api_accepts_new_project_types(client, project_type):
     projects = list_response.json()
     created = next(project for project in projects if project["id"] == created_id)
     assert created["project_type"] == project_type
+
+
+@pytest.mark.parametrize("project_type", ["MELHORIA", "MELHORIA_PROC_NOVOS"])
+def test_create_project_api_rejects_legacy_project_types(client, project_type):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": f"Projeto {project_type}",
+            "project_type": project_type,
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-05-01T00:00:00",
+            "planned_end": "2026-05-31T00:00:00",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "Tipo de projeto legado" in response.json()["detail"]
+
+
+def test_create_project_api_rejects_invalid_process_classification(client):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Classificacao Invalida",
+            "project_type": "LAYOUT",
+            "process_classification": "Processo antigo",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-06-01T00:00:00",
+            "planned_end": "2026-06-30T00:00:00",
+        },
+    )
+
+    assert response.status_code == 422

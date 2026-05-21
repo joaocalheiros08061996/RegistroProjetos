@@ -3,6 +3,7 @@ create table if not exists projects (
     user_id text not null,
     name text not null,
     project_type text not null,
+    process_classification text null,
     responsible_login text not null,
     fte numeric(10,2) not null check (fte > 0),
 

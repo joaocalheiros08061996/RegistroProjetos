@@ -193,6 +193,28 @@ button.danger:hover {
   width: min(1220px, 96vw);
 }
 
+.dashboard-menu-page {
+  width: min(1040px, 94vw);
+}
+
+.dashboard-submodule-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-submodule-grid .module-card {
+  align-content: start;
+  min-height: 180px;
+}
+
+.dashboard-submodule-grid .item-title {
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+
+.dashboard-submodule-grid .actions {
+  margin-top: auto;
+}
+
 .dashboard-chart {
   width: 100%;
   min-height: 640px;
@@ -444,6 +466,120 @@ button.danger:hover {
   background: #ffffff;
 }
 
+.project-responsible-section {
+  display: grid;
+  gap: 16px;
+}
+
+.project-responsible-filters {
+  max-width: 980px;
+}
+
+.dashboard-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.dashboard-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dashboard-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f6faff;
+  color: var(--text);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.dashboard-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-progress {
+  display: grid;
+  gap: 6px;
+  min-width: 112px;
+  font-weight: 800;
+}
+
+.table-progress-bar {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eef7;
+}
+
+.table-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.table-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.priority-pill {
+  background: #f8fbff;
+}
+
+.complexity-pill {
+  color: #ffffff;
+}
+
+.complexity-pill-1 {
+  background: #6a00a8;
+}
+
+.complexity-pill-2 {
+  background: #0077ff;
+}
+
+.complexity-pill-3 {
+  background: #00a676;
+}
+
+.complexity-pill-4 {
+  color: var(--text);
+  background: #ffd400;
+}
+
+.complexity-pill-5 {
+  background: #e6002e;
+}
+
 .routine-types {
   display: grid;
   gap: 10px;
@@ -601,6 +737,10 @@ hr {
   }
 
   .module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-submodule-grid {
     grid-template-columns: 1fr;
   }
 

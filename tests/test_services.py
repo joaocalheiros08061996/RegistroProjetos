@@ -8,7 +8,7 @@ from datetime import datetime
 
 from application.services import ProjectService, TaskService
 from infra.in_memory_repos import InMemoryProjectRepository, InMemoryTaskRepository
-from domain.enums import ProjectType, Severity, Trend, Urgency
+from domain.enums import ProcessClassification, ProjectType, Severity, Trend, Urgency
 from domain.exceptions import ValidationError
 
 USER_ID = "user-123"
@@ -36,6 +36,7 @@ def test_create_project_service(services):
         user_id=USER_ID,
         name="Projeto Service",
         project_type=ProjectType.LAYOUT,
+        process_classification=ProcessClassification.NEW,
         responsible_login="user1",
         fte=1.0,
         planned_start=datetime(2026, 1, 1),
@@ -45,6 +46,7 @@ def test_create_project_service(services):
     assert project.id is not None
     assert project.name == "Projeto Service"
     assert project.user_id == USER_ID
+    assert project.process_classification == ProcessClassification.NEW
     assert project.task_count == 0
 
 

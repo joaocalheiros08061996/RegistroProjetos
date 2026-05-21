@@ -4,6 +4,7 @@ from domain.entities import Project, Task, TimeEntry
 from domain.enums import (
     MethodClarity,
     ObjectiveClarity,
+    ProcessClassification,
     ProjectType,
     Severity,
     TaskStatus,
@@ -99,6 +100,7 @@ class SupabaseProjectRepository(IProjectRepository):
                         user_id,
                         name,
                         project_type,
+                        process_classification,
                         responsible_login,
                         fte,
                         planned_start,
@@ -110,13 +112,18 @@ class SupabaseProjectRepository(IProjectRepository):
                         method,
                         estimated_cost
                     )
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     returning id
                     """,
                     (
                         project.user_id,
                         project.name,
                         project.project_type.value,
+                        (
+                            project.process_classification.value
+                            if project.process_classification
+                            else None
+                        ),
                         project.responsible_login,
                         project.fte,
                         project.planned_start,
@@ -212,11 +219,19 @@ class SupabaseProjectRepository(IProjectRepository):
     def _build_project(self, row: dict) -> Project:
         objective_raw = row.get("objective_clarity", row.get("objective"))
         method_raw = row.get("method_clarity", row.get("method"))
+        process_classification_raw = row.get("process_classification")
+        process_classification = None
+        if process_classification_raw and str(process_classification_raw).strip():
+            process_classification = self._coerce_enum(
+                ProcessClassification,
+                process_classification_raw,
+            )
 
         project = Project(
             user_id=row["user_id"],
             name=row["name"],
             project_type=self._coerce_enum(ProjectType, row["project_type"]),
+            process_classification=process_classification,
             responsible_login=row["responsible_login"],
             fte=row["fte"],
             planned_start=row["planned_start"],

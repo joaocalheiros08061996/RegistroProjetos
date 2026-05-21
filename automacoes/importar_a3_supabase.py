@@ -53,15 +53,18 @@ PROJECT_TYPE_MAP = {
     "try_out": "TRY_OUT",
     "mapeamento": "MAPEAMENTO",
     "mapeamento de processos": "MAPEAMENTO",
-    "melhoria": "MELHORIA",
-    "melhoria continua dos processos": "MELHORIA",
-    "melhoria de proc existentes": "MELHORIA",
-    "melhoria de processos existentes": "MELHORIA",
-    "melhoria proc novos": "MELHORIA_PROC_NOVOS",
-    "melhoria de proc novos": "MELHORIA_PROC_NOVOS",
-    "melhoria de processos novos": "MELHORIA_PROC_NOVOS",
     "pecas": "PECAS",
     "pecas em geral": "PECAS",
+}
+LEGACY_PROJECT_TYPES = {"MELHORIA", "MELHORIA_PROC_NOVOS"}
+LEGACY_PROJECT_TYPE_KEYS = {
+    "melhoria",
+    "melhoria continua dos processos",
+    "melhoria de proc existentes",
+    "melhoria de processos existentes",
+    "melhoria proc novos",
+    "melhoria de proc novos",
+    "melhoria de processos novos",
 }
 
 SEVERITY_LABELS = {
@@ -314,9 +317,15 @@ def parse_excel_datetime(value: Any) -> datetime | None:
 
 def map_project_type(value: Any) -> str:
     raw_key = normalize_key(strip_numbered_label(value))
+    if raw_key in LEGACY_PROJECT_TYPE_KEYS:
+        raise MigrationError(f"Tipo de projeto legado nao permitido: {value!r}")
+
     if raw_key in PROJECT_TYPE_MAP:
         return PROJECT_TYPE_MAP[raw_key]
     enum_key = normalize_spaces(value).strip().upper().replace(" ", "_")
+    if enum_key in LEGACY_PROJECT_TYPES:
+        raise MigrationError(f"Tipo de projeto legado nao permitido: {value!r}")
+
     if enum_key in set(PROJECT_TYPE_MAP.values()):
         return enum_key
     raise MigrationError(f"Tipo de projeto nao mapeado: {value!r}")

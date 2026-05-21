@@ -43,6 +43,7 @@ def create_project(
         # novos campos
         objective_clarity=dto.objective_clarity,
         method_clarity=dto.method_clarity,
+        process_classification=dto.process_classification,
 
         estimated_cost=dto.estimated_cost,
     )
@@ -70,6 +71,11 @@ def list_projects(
             id=project.id,
             name=project.name,
             project_type=project.project_type.value,
+            process_classification=(
+                project.process_classification.value
+                if project.process_classification
+                else None
+            ),
             responsible_login=project.responsible_login,
             planned_start=project.planned_start,
             planned_end=project.planned_end,
@@ -79,6 +85,8 @@ def list_projects(
             gut_score=project.gut_score,
             priority_level=project.priority_level,
             priority_label=project.priority_label,
+            complexity_score=project.complexity_score,
+            complexity_label=project.complexity_label,
         )
         for project in projects
     ]
@@ -135,6 +143,11 @@ def get_project_detail(
         id=project.id,
         name=project.name,
         project_type=project.project_type.value,
+        process_classification=(
+            project.process_classification.value
+            if project.process_classification
+            else None
+        ),
         responsible_login=project.responsible_login,
         fte=project.fte,
         planned_start=project.planned_start,

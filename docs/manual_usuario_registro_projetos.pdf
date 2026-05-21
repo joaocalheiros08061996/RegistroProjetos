@@ -1,0 +1,428 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R 18 0 R 20 0 R 22 0 R] /Count 9 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 3062 >>
+stream
+BT /F2 22 Tf 54.00 783.89 Td (Manual do Usuário - Registro de Projetos) Tj ET
+54.00 765.89 m 541.28 765.89 l S
+BT /F1 10 Tf 54.00 739.89 Td (Versão: 1.0) Tj ET
+BT /F1 10 Tf 54.00 719.89 Td (Data: 19/05/2026) Tj ET
+BT /F2 15 Tf 54.00 687.89 Td (1. Finalidade do sistema) Tj ET
+BT /F1 10 Tf 54.00 661.89 Td (O Registro de Projetos é uma aplicação para acompanhar projetos, tarefas, atividades de rotina e) Tj ET
+BT /F1 10 Tf 54.00 647.89 Td (indicadores de desempenho. O objetivo é centralizar o planejamento, registrar o tempo real de execução,) Tj ET
+BT /F1 10 Tf 54.00 633.89 Td (organizar responsáveis e facilitar a análise dos resultados por meio de gráficos.) Tj ET
+BT /F1 10 Tf 54.00 609.89 Td (O sistema possui três módulos principais:) Tj ET
+BT /F1 10 Tf 72.00 585.89 Td (- Registro de Projetos: cadastro e acompanhamento de projetos, tarefas, prazos, custos e tempos) Tj ET
+BT /F1 10 Tf 82.00 571.89 Td (registrados.) Tj ET
+BT /F1 10 Tf 72.00 555.89 Td (- Atividades de Rotina: apontamento de atividades diárias que não pertencem necessariamente a um) Tj ET
+BT /F1 10 Tf 82.00 541.89 Td (projeto.) Tj ET
+BT /F1 10 Tf 72.00 525.89 Td (- Dashboard: consulta de gráficos e indicadores de desempenho.) Tj ET
+BT /F1 10 Tf 54.00 505.89 Td (Este manual foi escrito para usuários finais. Ele explica como usar a aplicação no dia a dia, o que) Tj ET
+BT /F1 10 Tf 54.00 491.89 Td (preencher, como interpretar as telas e quais cuidados tomar para manter os dados confiáveis.) Tj ET
+BT /F2 15 Tf 54.00 459.89 Td (2. Antes de começar) Tj ET
+BT /F1 10 Tf 54.00 433.89 Td (Para usar o sistema, você precisa de:) Tj ET
+BT /F1 10 Tf 72.00 409.89 Td (- Um link de acesso à aplicação.) Tj ET
+BT /F1 10 Tf 72.00 393.89 Td (- Uma conta de usuário com e-mail e senha.) Tj ET
+BT /F1 10 Tf 72.00 377.89 Td (- Um navegador atualizado.) Tj ET
+BT /F1 10 Tf 72.00 361.89 Td (- Orientação interna sobre quais projetos, tarefas e atividades devem ser registrados.) Tj ET
+BT /F1 10 Tf 54.00 341.89 Td (Use sempre a conta correta. Os dados de projetos e atividades são vinculados ao usuário autenticado. Se) Tj ET
+BT /F1 10 Tf 54.00 327.89 Td (você entrar com outra conta, poderá não visualizar os mesmos registros.) Tj ET
+BT /F2 15 Tf 54.00 295.89 Td (3. Acesso, login e saída) Tj ET
+BT /F1 10 Tf 54.00 269.89 Td (Abra o link da aplicação no navegador. Em ambiente local, o endereço padrão é:) Tj ET
+BT /F1 10 Tf 54.00 245.89 Td (http://127.0.0.1:8000/app) Tj ET
+BT /F1 10 Tf 54.00 221.89 Td (Em ambiente online, use o link fornecido pela equipe responsável pelo sistema.) Tj ET
+BT /F1 10 Tf 54.00 197.89 Td (Para entrar:) Tj ET
+BT /F1 10 Tf 72.00 173.89 Td (1. Acesse a tela de login.) Tj ET
+BT /F1 10 Tf 72.00 157.89 Td (2. Informe seu e-mail.) Tj ET
+BT /F1 10 Tf 72.00 141.89 Td (3. Informe sua senha.) Tj ET
+BT /F1 10 Tf 72.00 125.89 Td (4. Clique em Entrar.) Tj ET
+BT /F1 10 Tf 54.00 105.89 Td (Caso ainda não tenha conta:) Tj ET
+BT /F1 10 Tf 72.00 81.89 Td (1. Clique em Criar conta.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 1 de 9) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 2975 >>
+stream
+BT /F1 10 Tf 72.00 783.89 Td (2. Informe um e-mail válido.) Tj ET
+BT /F1 10 Tf 72.00 767.89 Td (3. Informe uma senha com pelo menos 6 caracteres.) Tj ET
+BT /F1 10 Tf 72.00 751.89 Td (4. Clique em Cadastrar.) Tj ET
+BT /F1 10 Tf 72.00 735.89 Td (5. Se necessário, volte para a tela de login e entre com a conta criada.) Tj ET
+BT /F1 10 Tf 54.00 715.89 Td (Para sair do sistema, clique em Sair. Em computadores compartilhados, sempre saia ao terminar o uso.) Tj ET
+BT /F1 10 Tf 54.00 691.89 Td (Faça:) Tj ET
+BT /F1 10 Tf 72.00 667.89 Td (- Use seu próprio usuário.) Tj ET
+BT /F1 10 Tf 72.00 651.89 Td (- Digite o e-mail com atenção.) Tj ET
+BT /F1 10 Tf 72.00 635.89 Td (- Avise o responsável pelo sistema se não conseguir acessar.) Tj ET
+BT /F1 10 Tf 54.00 615.89 Td (Não faça:) Tj ET
+BT /F1 10 Tf 72.00 591.89 Td (- Não compartilhe sua senha.) Tj ET
+BT /F1 10 Tf 72.00 575.89 Td (- Não use a conta de outra pessoa.) Tj ET
+BT /F1 10 Tf 72.00 559.89 Td (- Não deixe a sessão aberta em computadores compartilhados.) Tj ET
+BT /F2 15 Tf 54.00 531.89 Td (4. Tela de escolha do módulo) Tj ET
+BT /F1 10 Tf 54.00 505.89 Td (Após o login, o sistema mostra a tela Escolha o módulo. Nela você pode acessar:) Tj ET
+BT /F1 10 Tf 72.00 481.89 Td (- Registro de Projetos, para criar e acompanhar projetos e tarefas.) Tj ET
+BT /F1 10 Tf 72.00 465.89 Td (- Atividades de Rotina, para registrar atividades diárias.) Tj ET
+BT /F1 10 Tf 72.00 449.89 Td (- Dashboard, para consultar gráficos e indicadores.) Tj ET
+BT /F1 10 Tf 54.00 429.89 Td (Use Trocar módulo para voltar a essa tela a partir de um módulo. Use Sair para encerrar a sessão.) Tj ET
+BT /F2 15 Tf 54.00 397.89 Td (5. Módulo Registro de Projetos) Tj ET
+BT /F1 10 Tf 54.00 371.89 Td (O módulo Projetos apresenta a lista de projetos cadastrados e permite criar novos projetos.) Tj ET
+BT /F2 12 Tf 54.00 343.89 Td (5.1 Lista de projetos) Tj ET
+BT /F1 10 Tf 54.00 321.89 Td (Cada projeto pode exibir:) Tj ET
+BT /F1 10 Tf 72.00 297.89 Td (- Nome do projeto.) Tj ET
+BT /F1 10 Tf 72.00 281.89 Td (- Tipo do projeto.) Tj ET
+BT /F1 10 Tf 72.00 265.89 Td (- Responsável.) Tj ET
+BT /F1 10 Tf 72.00 249.89 Td (- Período planejado.) Tj ET
+BT /F1 10 Tf 72.00 233.89 Td (- Quantidade de tarefas.) Tj ET
+BT /F1 10 Tf 72.00 217.89 Td (- Percentual de progresso.) Tj ET
+BT /F1 10 Tf 72.00 201.89 Td (- Prioridade.) Tj ET
+BT /F1 10 Tf 54.00 181.89 Td (Use Atualizar para recarregar os dados. Use Abrir projeto para acessar os detalhes. Use Excluir projeto) Tj ET
+BT /F1 10 Tf 54.00 167.89 Td (apenas quando tiver certeza de que o registro deve ser removido.) Tj ET
+BT /F2 12 Tf 54.00 139.89 Td (5.2 Criar um projeto) Tj ET
+BT /F1 10 Tf 54.00 117.89 Td (Na seção Novo projeto, preencha os campos:) Tj ET
+BT /F1 10 Tf 72.00 93.89 Td (- Nome: nome claro e identificável do projeto.) Tj ET
+BT /F1 10 Tf 72.00 77.89 Td (- Responsável: pessoa ou login responsável.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 2 de 9) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 3220 >>
+stream
+BT /F1 10 Tf 72.00 783.89 Td (- Tipo: classificação do projeto.) Tj ET
+BT /F1 10 Tf 72.00 767.89 Td (- Classificação do processo: indica se o projeto está relacionado a processos novos ou processos) Tj ET
+BT /F1 10 Tf 82.00 753.89 Td (existentes.) Tj ET
+BT /F1 10 Tf 72.00 737.89 Td (- FTE: capacidade ou dedicação planejada.) Tj ET
+BT /F1 10 Tf 72.00 721.89 Td (- Início planejado: data e hora previstas para o início.) Tj ET
+BT /F1 10 Tf 72.00 705.89 Td (- Fim planejado: data e hora previstas para o término.) Tj ET
+BT /F1 10 Tf 72.00 689.89 Td (- Gravidade, Urgência e Tendência: critérios usados para priorização.) Tj ET
+BT /F1 10 Tf 72.00 673.89 Td (- Objetivo: nível de clareza do objetivo do projeto.) Tj ET
+BT /F1 10 Tf 72.00 657.89 Td (- Método: nível de clareza do método de execução.) Tj ET
+BT /F1 10 Tf 72.00 641.89 Td (- Custo estimado: valor previsto para o projeto.) Tj ET
+BT /F1 10 Tf 54.00 621.89 Td (Depois de preencher os campos obrigatórios, clique em Criar projeto.) Tj ET
+BT /F1 10 Tf 54.00 597.89 Td (Tipos de projeto disponíveis:) Tj ET
+BT /F1 10 Tf 72.00 573.89 Td (- LAYOUT.) Tj ET
+BT /F1 10 Tf 72.00 557.89 Td (- EXPORTAÇÃO.) Tj ET
+BT /F1 10 Tf 72.00 541.89 Td (- NORMATIZAÇÃO.) Tj ET
+BT /F1 10 Tf 72.00 525.89 Td (- PADRONIZAÇÃO.) Tj ET
+BT /F1 10 Tf 72.00 509.89 Td (- TRY OUT.) Tj ET
+BT /F1 10 Tf 72.00 493.89 Td (- MAPEAMENTO.) Tj ET
+BT /F1 10 Tf 72.00 477.89 Td (- PEÇAS.) Tj ET
+BT /F1 10 Tf 54.00 457.89 Td (Observação: tipos de melhoria cadastrados no histórico continuam disponíveis para consulta, mas não) Tj ET
+BT /F1 10 Tf 54.00 443.89 Td (devem ser usados em novos projetos.) Tj ET
+BT /F1 10 Tf 54.00 419.89 Td (Boas práticas:) Tj ET
+BT /F1 10 Tf 72.00 395.89 Td (- Use nomes específicos.) Tj ET
+BT /F1 10 Tf 72.00 379.89 Td (- Confira as datas antes de salvar.) Tj ET
+BT /F1 10 Tf 72.00 363.89 Td (- Padronize o preenchimento do responsável.) Tj ET
+BT /F1 10 Tf 72.00 347.89 Td (- Escolha o tipo de projeto com atenção, pois ele afeta os indicadores.) Tj ET
+BT /F1 10 Tf 72.00 331.89 Td (- Preencha a classificação do processo quando essa informação estiver disponível.) Tj ET
+BT /F1 10 Tf 72.00 315.89 Td (- Use gravidade, urgência e tendência de forma consistente.) Tj ET
+BT /F1 10 Tf 54.00 295.89 Td (Evite:) Tj ET
+BT /F1 10 Tf 72.00 271.89 Td (- Criar projetos duplicados.) Tj ET
+BT /F1 10 Tf 72.00 255.89 Td (- Usar nomes genéricos, como Projeto novo.) Tj ET
+BT /F1 10 Tf 72.00 239.89 Td (- Informar data final anterior à data inicial.) Tj ET
+BT /F1 10 Tf 72.00 223.89 Td (- Excluir projetos para corrigir pequenos erros.) Tj ET
+BT /F2 12 Tf 54.00 199.89 Td (5.3 Excluir um projeto) Tj ET
+BT /F1 10 Tf 54.00 177.89 Td (A exclusão de um projeto pode remover informações importantes, incluindo tarefas e registros) Tj ET
+BT /F1 10 Tf 54.00 163.89 Td (relacionados.) Tj ET
+BT /F1 10 Tf 54.00 139.89 Td (Antes de excluir:) Tj ET
+BT /F1 10 Tf 72.00 115.89 Td (- Confirme se o projeto correto está aberto.) Tj ET
+BT /F1 10 Tf 72.00 99.89 Td (- Verifique se existem tarefas ou tempos registrados.) Tj ET
+BT /F1 10 Tf 72.00 83.89 Td (- Consulte a equipe responsável quando houver dúvida.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 3 de 9) Tj ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 2970 >>
+stream
+BT /F1 10 Tf 54.00 783.89 Td (Não exclua projetos históricos apenas porque eles estão concluídos. Projetos concluídos podem ser) Tj ET
+BT /F1 10 Tf 54.00 769.89 Td (importantes para os indicadores do Dashboard.) Tj ET
+BT /F2 15 Tf 54.00 737.89 Td (6. Detalhes do projeto e tarefas) Tj ET
+BT /F1 10 Tf 54.00 711.89 Td (Ao abrir um projeto, o sistema mostra um resumo com progresso, quantidade de tarefas, dias reais, custo) Tj ET
+BT /F1 10 Tf 54.00 697.89 Td (estimado, início planejado e fim planejado.) Tj ET
+BT /F2 12 Tf 54.00 669.89 Td (6.1 Criar uma tarefa) Tj ET
+BT /F1 10 Tf 54.00 647.89 Td (Na seção Nova tarefa, preencha:) Tj ET
+BT /F1 10 Tf 72.00 623.89 Td (- Nome da tarefa.) Tj ET
+BT /F1 10 Tf 72.00 607.89 Td (- Custo.) Tj ET
+BT /F1 10 Tf 72.00 591.89 Td (- Início planejado.) Tj ET
+BT /F1 10 Tf 72.00 575.89 Td (- Fim planejado.) Tj ET
+BT /F1 10 Tf 54.00 555.89 Td (Clique em Criar tarefa para salvar.) Tj ET
+BT /F1 10 Tf 54.00 531.89 Td (Boas práticas:) Tj ET
+BT /F1 10 Tf 72.00 507.89 Td (- Crie tarefas com escopo claro.) Tj ET
+BT /F1 10 Tf 72.00 491.89 Td (- Separe trabalhos longos em tarefas menores quando fizer sentido.) Tj ET
+BT /F1 10 Tf 72.00 475.89 Td (- Use nomes que expliquem o trabalho a ser realizado.) Tj ET
+BT /F1 10 Tf 72.00 459.89 Td (- Informe datas planejadas realistas.) Tj ET
+BT /F1 10 Tf 54.00 439.89 Td (Evite:) Tj ET
+BT /F1 10 Tf 72.00 415.89 Td (- Criar várias tarefas com o mesmo nome dentro do mesmo projeto.) Tj ET
+BT /F1 10 Tf 72.00 399.89 Td (- Registrar tarefas sem relação com o projeto.) Tj ET
+BT /F1 10 Tf 72.00 383.89 Td (- Usar a tarefa como campo livre para observações.) Tj ET
+BT /F2 12 Tf 54.00 359.89 Td (6.2 Abrir e acompanhar uma tarefa) Tj ET
+BT /F1 10 Tf 54.00 337.89 Td (Ao abrir uma tarefa, você pode:) Tj ET
+BT /F1 10 Tf 72.00 313.89 Td (- Iniciar o registro de tempo.) Tj ET
+BT /F1 10 Tf 72.00 297.89 Td (- Parar o registro de tempo.) Tj ET
+BT /F1 10 Tf 72.00 281.89 Td (- Concluir a tarefa.) Tj ET
+BT /F1 10 Tf 72.00 265.89 Td (- Excluir a tarefa.) Tj ET
+BT /F1 10 Tf 72.00 249.89 Td (- Consultar detalhes e entradas de tempo.) Tj ET
+BT /F1 10 Tf 54.00 229.89 Td (Os detalhes mostram status, progresso, início planejado, fim planejado, custo e tempo real.) Tj ET
+BT /F2 12 Tf 54.00 201.89 Td (6.3 Controle de tempo) Tj ET
+BT /F1 10 Tf 54.00 179.89 Td (Use Iniciar quando começar a trabalhar na tarefa. Use Parar quando interromper ou finalizar aquele) Tj ET
+BT /F1 10 Tf 54.00 165.89 Td (período de trabalho. O sistema registra uma entrada de tempo com início e fim.) Tj ET
+BT /F1 10 Tf 54.00 141.89 Td (Use Concluir somente quando a tarefa estiver realmente finalizada.) Tj ET
+BT /F1 10 Tf 54.00 117.89 Td (Faça:) Tj ET
+BT /F1 10 Tf 72.00 93.89 Td (- Inicie a tarefa apenas quando estiver trabalhando nela.) Tj ET
+BT /F1 10 Tf 72.00 77.89 Td (- Pare a tarefa ao encerrar o trabalho ou fazer uma pausa longa.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 4 de 9) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 15 0 R >>
+endobj
+15 0 obj
+<< /Length 2916 >>
+stream
+BT /F1 10 Tf 72.00 783.89 Td (- Confira se a tarefa correta está aberta antes de iniciar.) Tj ET
+BT /F1 10 Tf 72.00 767.89 Td (- Conclua apenas quando não houver pendências.) Tj ET
+BT /F1 10 Tf 54.00 747.89 Td (Não faça:) Tj ET
+BT /F1 10 Tf 72.00 723.89 Td (- Não deixe uma tarefa rodando por esquecimento.) Tj ET
+BT /F1 10 Tf 72.00 707.89 Td (- Não registre tempo em uma tarefa errada.) Tj ET
+BT /F1 10 Tf 72.00 691.89 Td (- Não conclua uma tarefa apenas para melhorar indicadores.) Tj ET
+BT /F1 10 Tf 72.00 675.89 Td (- Não exclua tarefas com histórico relevante sem validação.) Tj ET
+BT /F2 15 Tf 54.00 647.89 Td (7. Módulo Atividades de Rotina) Tj ET
+BT /F1 10 Tf 54.00 621.89 Td (Use o módulo Atividades de Rotina para registrar atividades diárias que não estão necessariamente) Tj ET
+BT /F1 10 Tf 54.00 607.89 Td (ligadas a um projeto específico.) Tj ET
+BT /F1 10 Tf 54.00 583.89 Td (Tipos disponíveis:) Tj ET
+BT /F1 10 Tf 72.00 559.89 Td (- Atendimento de Fábrica.) Tj ET
+BT /F1 10 Tf 72.00 543.89 Td (- Cadastro.) Tj ET
+BT /F1 10 Tf 72.00 527.89 Td (- Atualização de Custos.) Tj ET
+BT /F1 10 Tf 72.00 511.89 Td (- Finame.) Tj ET
+BT /F1 10 Tf 72.00 495.89 Td (- Reuniões.) Tj ET
+BT /F1 10 Tf 72.00 479.89 Td (- Análise de Processos.) Tj ET
+BT /F2 12 Tf 54.00 455.89 Td (7.1 Iniciar uma atividade) Tj ET
+BT /F1 10 Tf 54.00 433.89 Td (Para iniciar:) Tj ET
+BT /F1 10 Tf 72.00 409.89 Td (1. Informe o responsável.) Tj ET
+BT /F1 10 Tf 72.00 393.89 Td (2. Selecione o tipo de atividade.) Tj ET
+BT /F1 10 Tf 72.00 377.89 Td (3. Opcionalmente, preencha a descrição.) Tj ET
+BT /F1 10 Tf 72.00 361.89 Td (4. Clique em Iniciar.) Tj ET
+BT /F1 10 Tf 54.00 341.89 Td (Enquanto houver uma atividade em andamento, o sistema bloqueia a troca de tipo até que ela seja) Tj ET
+BT /F1 10 Tf 54.00 327.89 Td (finalizada.) Tj ET
+BT /F2 12 Tf 54.00 299.89 Td (7.2 Finalizar uma atividade) Tj ET
+BT /F1 10 Tf 54.00 277.89 Td (Ao terminar a atividade, clique em Finalizar. O sistema calcula as horas trabalhadas e registra a) Tj ET
+BT /F1 10 Tf 54.00 263.89 Td (atividade como concluída.) Tj ET
+BT /F1 10 Tf 54.00 239.89 Td (Boas práticas:) Tj ET
+BT /F1 10 Tf 72.00 215.89 Td (- Informe o responsável de forma padronizada.) Tj ET
+BT /F1 10 Tf 72.00 199.89 Td (- Use a descrição para explicar o contexto quando necessário.) Tj ET
+BT /F1 10 Tf 72.00 183.89 Td (- Finalize a atividade assim que ela terminar.) Tj ET
+BT /F1 10 Tf 72.00 167.89 Td (- Registre atividades de rotina no módulo correto, não como tarefas de projeto.) Tj ET
+BT /F1 10 Tf 54.00 147.89 Td (Evite:) Tj ET
+BT /F1 10 Tf 72.00 123.89 Td (- Deixar atividade aberta ao final do expediente.) Tj ET
+BT /F1 10 Tf 72.00 107.89 Td (- Misturar atividades diferentes em um único registro.) Tj ET
+BT /F1 10 Tf 72.00 91.89 Td (- Selecionar um tipo que não representa o trabalho feito.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 5 de 9) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 17 0 R >>
+endobj
+17 0 obj
+<< /Length 3473 >>
+stream
+BT /F2 15 Tf 54.00 775.89 Td (8. Módulo Dashboard) Tj ET
+BT /F1 10 Tf 54.00 749.89 Td (O Dashboard apresenta indicadores globais de projetos e atividades de rotina. Ele ajuda a analisar) Tj ET
+BT /F1 10 Tf 54.00 735.89 Td (prazos, esforço, complexidade, valor agregado e desempenho.) Tj ET
+BT /F1 10 Tf 54.00 711.89 Td (Principais gráficos:) Tj ET
+BT /F1 10 Tf 72.00 687.89 Td (- Lead Time Médio por Tipo de Projeto.) Tj ET
+BT /F1 10 Tf 72.00 671.89 Td (- Lead Time Médio: Planejado vs Real.) Tj ET
+BT /F1 10 Tf 72.00 655.89 Td (- Dias Totais para Atividades de Rotina.) Tj ET
+BT /F1 10 Tf 72.00 639.89 Td (- Análise Mensal de Projetos.) Tj ET
+BT /F1 10 Tf 72.00 623.89 Td (- Lead Time Mensal por Tipo de Projeto.) Tj ET
+BT /F1 10 Tf 72.00 607.89 Td (- Atraso Médio Mensal por Tipo de Projeto.) Tj ET
+BT /F1 10 Tf 72.00 591.89 Td (- Eficiência Mensal por Tipo de Projeto.) Tj ET
+BT /F1 10 Tf 72.00 575.89 Td (- Taxa de Projetos que Estouram o Prazo.) Tj ET
+BT /F1 10 Tf 72.00 559.89 Td (- Quantidade de Projetos por Complexidade.) Tj ET
+BT /F1 10 Tf 72.00 543.89 Td (- Quantidade de Projetos por Complexidade por Mês.) Tj ET
+BT /F1 10 Tf 72.00 527.89 Td (- Valor Agregado por Mês.) Tj ET
+BT /F1 10 Tf 72.00 511.89 Td (- Índice de Desempenho de Prazo \(IDP\) por Mês.) Tj ET
+BT /F1 10 Tf 72.00 495.89 Td (- Índice de Desempenho de Custo \(IDC\) por Mês.) Tj ET
+BT /F1 10 Tf 72.00 479.89 Td (- Desvio de Esforço por Mês.) Tj ET
+BT /F2 12 Tf 54.00 455.89 Td (8.1 Filtros) Tj ET
+BT /F1 10 Tf 54.00 433.89 Td (Alguns gráficos permitem filtrar por:) Tj ET
+BT /F1 10 Tf 72.00 409.89 Td (- Ano.) Tj ET
+BT /F1 10 Tf 72.00 393.89 Td (- Mês.) Tj ET
+BT /F1 10 Tf 72.00 377.89 Td (- Tipo de projeto.) Tj ET
+BT /F1 10 Tf 72.00 361.89 Td (- Tipo de atividade.) Tj ET
+BT /F1 10 Tf 72.00 345.89 Td (- Usuário ou responsável.) Tj ET
+BT /F1 10 Tf 54.00 325.89 Td (Ao mudar filtros, aguarde o gráfico atualizar. Se não houver dados para o filtro escolhido, o sistema) Tj ET
+BT /F1 10 Tf 54.00 311.89 Td (exibirá uma mensagem informando que não há dados suficientes.) Tj ET
+BT /F2 12 Tf 54.00 283.89 Td (8.2 Interpretação dos indicadores) Tj ET
+BT /F1 10 Tf 72.00 261.89 Td (- Lead time real: tempo registrado nas tarefas, convertido em dias.) Tj ET
+BT /F1 10 Tf 72.00 245.89 Td (- Lead time planejado: diferença entre data final planejada e data inicial planejada.) Tj ET
+BT /F1 10 Tf 72.00 229.89 Td (- Atraso: diferença entre dias reais e dias planejados. Valores positivos indicam estouro.) Tj ET
+BT /F1 10 Tf 72.00 213.89 Td (- Eficiência: comparação entre prazo planejado e tempo real.) Tj ET
+BT /F1 10 Tf 72.00 197.89 Td (- Complexidade: combinação entre clareza do objetivo e clareza do método.) Tj ET
+BT /F1 10 Tf 72.00 181.89 Td (- Valor Agregado \(VA\): valor associado ao escopo efetivamente entregue.) Tj ET
+BT /F1 10 Tf 72.00 165.89 Td (- IDP: indicador de desempenho de prazo. Abaixo de 1 indica atraso.) Tj ET
+BT /F1 10 Tf 72.00 149.89 Td (- IDC: indicador de desempenho de custo. Abaixo de 1 indica desempenho de custo desfavorável.) Tj ET
+BT /F1 10 Tf 72.00 133.89 Td (- Desvio de esforço: diferença entre horas reais e horas planejadas.) Tj ET
+BT /F1 10 Tf 54.00 113.89 Td (Use os gráficos para apoiar análises e decisões. Não use o Dashboard como única fonte para julgar) Tj ET
+BT /F1 10 Tf 54.00 99.89 Td (desempenho sem entender os filtros e a qualidade dos dados cadastrados.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 6 de 9) Tj ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 19 0 R >>
+endobj
+19 0 obj
+<< /Length 2960 >>
+stream
+BT /F2 15 Tf 54.00 775.89 Td (9. Regras importantes de uso) Tj ET
+BT /F1 10 Tf 54.00 749.89 Td (Faça:) Tj ET
+BT /F1 10 Tf 72.00 725.89 Td (- Registre projetos e tarefas o mais próximo possível da execução.) Tj ET
+BT /F1 10 Tf 72.00 709.89 Td (- Mantenha nomes, responsáveis e tipos padronizados.) Tj ET
+BT /F1 10 Tf 72.00 693.89 Td (- Use Atualizar quando suspeitar que a tela está desatualizada.) Tj ET
+BT /F1 10 Tf 72.00 677.89 Td (- Finalize tarefas e atividades quando terminar o trabalho.) Tj ET
+BT /F1 10 Tf 72.00 661.89 Td (- Revise os dados antes de excluir qualquer item.) Tj ET
+BT /F1 10 Tf 72.00 645.89 Td (- Avise rapidamente se encontrar inconsistências.) Tj ET
+BT /F1 10 Tf 54.00 625.89 Td (Não faça:) Tj ET
+BT /F1 10 Tf 72.00 601.89 Td (- Não compartilhe sua conta.) Tj ET
+BT /F1 10 Tf 72.00 585.89 Td (- Não cadastre dados de teste em ambiente de produção.) Tj ET
+BT /F1 10 Tf 72.00 569.89 Td (- Não exclua projetos ou tarefas sem certeza.) Tj ET
+BT /F1 10 Tf 72.00 553.89 Td (- Não use o mesmo nome para tarefas diferentes no mesmo projeto.) Tj ET
+BT /F1 10 Tf 72.00 537.89 Td (- Não deixe timers abertos por longos períodos sem acompanhamento.) Tj ET
+BT /F1 10 Tf 72.00 521.89 Td (- Não interprete gráficos sem considerar os filtros aplicados.) Tj ET
+BT /F2 15 Tf 54.00 493.89 Td (10. Problemas comuns) Tj ET
+BT /F2 12 Tf 54.00 463.89 Td (10.1 O sistema voltou para a tela de login) Tj ET
+BT /F1 10 Tf 54.00 441.89 Td (Isso pode acontecer quando a sessão expira ou quando o token de autenticação não é aceito pelo) Tj ET
+BT /F1 10 Tf 54.00 427.89 Td (servidor.) Tj ET
+BT /F1 10 Tf 54.00 403.89 Td (O que fazer:) Tj ET
+BT /F1 10 Tf 72.00 379.89 Td (1. Entre novamente com e-mail e senha.) Tj ET
+BT /F1 10 Tf 72.00 363.89 Td (2. Se o problema continuar, avise o responsável técnico.) Tj ET
+BT /F1 10 Tf 72.00 347.89 Td (3. Informe em qual módulo o problema aconteceu.) Tj ET
+BT /F2 12 Tf 54.00 323.89 Td (10.2 Fiz login, mas não vejo meus projetos) Tj ET
+BT /F1 10 Tf 54.00 301.89 Td (Os dados são vinculados ao usuário autenticado. Se você entrou com outra conta, pode não ver os mesmos) Tj ET
+BT /F1 10 Tf 54.00 287.89 Td (projetos.) Tj ET
+BT /F1 10 Tf 54.00 263.89 Td (O que fazer:) Tj ET
+BT /F1 10 Tf 72.00 239.89 Td (- Confirme se está usando a conta correta.) Tj ET
+BT /F1 10 Tf 72.00 223.89 Td (- Verifique com a equipe se os dados foram importados ou cadastrados para esse usuário.) Tj ET
+BT /F2 12 Tf 54.00 199.89 Td (10.3 O gráfico não mostra dados) Tj ET
+BT /F1 10 Tf 54.00 177.89 Td (Pode não haver dados suficientes para o filtro escolhido.) Tj ET
+BT /F1 10 Tf 54.00 153.89 Td (O que fazer:) Tj ET
+BT /F1 10 Tf 72.00 129.89 Td (- Revise filtros de ano, mês, tipo e usuário.) Tj ET
+BT /F1 10 Tf 72.00 113.89 Td (- Confira se existem projetos, tarefas ou atividades finalizadas.) Tj ET
+BT /F1 10 Tf 72.00 97.89 Td (- Clique em Atualizar.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 7 de 9) Tj ET
+endstream
+endobj
+20 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 21 0 R >>
+endobj
+21 0 obj
+<< /Length 3369 >>
+stream
+BT /F2 12 Tf 54.00 779.89 Td (10.4 Esqueci uma tarefa ou atividade aberta) Tj ET
+BT /F1 10 Tf 54.00 757.89 Td (Avise a equipe responsável pelo processo. Dependendo das regras internas, pode ser necessário ajustar o) Tj ET
+BT /F1 10 Tf 54.00 743.89 Td (registro no banco ou substituir por um lançamento correto.) Tj ET
+BT /F2 12 Tf 54.00 715.89 Td (10.5 Excluí algo por engano) Tj ET
+BT /F1 10 Tf 54.00 693.89 Td (Entre em contato com o responsável técnico imediatamente. Evite cadastrar muitos dados novos antes de) Tj ET
+BT /F1 10 Tf 54.00 679.89 Td (avisar, pois isso dificulta a verificação.) Tj ET
+BT /F2 15 Tf 54.00 647.89 Td (11. Responsabilidades do usuário) Tj ET
+BT /F1 10 Tf 54.00 621.89 Td (Cada usuário é responsável por:) Tj ET
+BT /F1 10 Tf 72.00 597.89 Td (- Registrar dados de forma correta e honesta.) Tj ET
+BT /F1 10 Tf 72.00 581.89 Td (- Conferir informações antes de salvar ou excluir.) Tj ET
+BT /F1 10 Tf 72.00 565.89 Td (- Usar a conta correta.) Tj ET
+BT /F1 10 Tf 72.00 549.89 Td (- Manter a confidencialidade de sua senha.) Tj ET
+BT /F1 10 Tf 72.00 533.89 Td (- Comunicar erros ou inconsistências rapidamente.) Tj ET
+BT /F2 15 Tf 54.00 505.89 Td (12. Segurança) Tj ET
+BT /F1 10 Tf 72.00 479.89 Td (- Acesse o sistema apenas por links confiáveis.) Tj ET
+BT /F1 10 Tf 72.00 463.89 Td (- Não salve senha em computadores compartilhados.) Tj ET
+BT /F1 10 Tf 72.00 447.89 Td (- Sempre clique em Sair ao terminar em máquinas compartilhadas.) Tj ET
+BT /F1 10 Tf 72.00 431.89 Td (- Não envie capturas de tela com informações sensíveis sem necessidade.) Tj ET
+BT /F1 10 Tf 72.00 415.89 Td (- Em caso de suspeita de acesso indevido, avise imediatamente o responsável pelo sistema.) Tj ET
+BT /F2 15 Tf 54.00 387.89 Td (13. Glossário rápido) Tj ET
+BT /F1 10 Tf 72.00 361.89 Td (- FTE: indicador de capacidade ou dedicação planejada.) Tj ET
+BT /F1 10 Tf 72.00 345.89 Td (- Lead time: tempo total entre início e fim de uma atividade, tarefa ou projeto.) Tj ET
+BT /F1 10 Tf 72.00 329.89 Td (- Tempo real: tempo efetivamente registrado nas entradas de tempo.) Tj ET
+BT /F1 10 Tf 72.00 313.89 Td (- Tempo planejado: tempo previsto no planejamento.) Tj ET
+BT /F1 10 Tf 72.00 297.89 Td (- VA: Valor Agregado. Representa o valor do escopo entregue.) Tj ET
+BT /F1 10 Tf 72.00 281.89 Td (- VP: Valor Planejado. Representa o valor esperado conforme o cronograma.) Tj ET
+BT /F1 10 Tf 72.00 265.89 Td (- IDP: Índice de Desempenho de Prazo.) Tj ET
+BT /F1 10 Tf 72.00 249.89 Td (- IDC: Índice de Desempenho de Custo.) Tj ET
+BT /F1 10 Tf 72.00 233.89 Td (- Complexidade: classificação calculada a partir de objetivo e método.) Tj ET
+BT /F1 10 Tf 72.00 217.89 Td (- Atividade de rotina: atividade diária registrada fora do fluxo de tarefas de projeto.) Tj ET
+BT /F2 15 Tf 54.00 189.89 Td (14. Resumo para uso diário) Tj ET
+BT /F1 10 Tf 72.00 163.89 Td (1. Entre com sua conta.) Tj ET
+BT /F1 10 Tf 72.00 147.89 Td (2. Escolha o módulo correto.) Tj ET
+BT /F1 10 Tf 72.00 131.89 Td (3. Cadastre projetos apenas quando houver informações mínimas confiáveis.) Tj ET
+BT /F1 10 Tf 72.00 115.89 Td (4. Crie tarefas claras dentro do projeto.) Tj ET
+BT /F1 10 Tf 72.00 99.89 Td (5. Inicie e pare o tempo enquanto trabalha.) Tj ET
+BT /F1 10 Tf 72.00 83.89 Td (6. Conclua tarefas finalizadas.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 8 de 9) Tj ET
+endstream
+endobj
+22 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 23 0 R >>
+endobj
+23 0 obj
+<< /Length 398 >>
+stream
+BT /F1 10 Tf 72.00 783.89 Td (7. Registre atividades de rotina no módulo de rotina.) Tj ET
+BT /F1 10 Tf 72.00 767.89 Td (8. Use o Dashboard para acompanhar desempenho.) Tj ET
+BT /F1 10 Tf 72.00 751.89 Td (9. Revise antes de excluir.) Tj ET
+BT /F1 10 Tf 72.00 735.89 Td (10. Saia do sistema ao terminar.) Tj ET
+BT /F3 8 Tf 54.00 32 Td (Manual do Usuário - Registro de Projetos | Página 9 de 9) Tj ET
+endstream
+endobj
+xref
+0 24
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000176 00000 n 
+0000000273 00000 n 
+0000000375 00000 n 
+0000000480 00000 n 
+0000000632 00000 n 
+0000003746 00000 n 
+0000003898 00000 n 
+0000006925 00000 n 
+0000007079 00000 n 
+0000010352 00000 n 
+0000010506 00000 n 
+0000013529 00000 n 
+0000013683 00000 n 
+0000016652 00000 n 
+0000016806 00000 n 
+0000020332 00000 n 
+0000020486 00000 n 
+0000023499 00000 n 
+0000023653 00000 n 
+0000027075 00000 n 
+0000027229 00000 n 
+trailer
+<< /Size 24 /Root 1 0 R >>
+startxref
+27679
+%%EOF

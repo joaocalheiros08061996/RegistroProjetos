@@ -17,6 +17,11 @@ class ProjectType(str, Enum):
     PECAS = "PECAS"
 
 
+class ProcessClassification(str, Enum):
+    NEW = "Processos novos"
+    EXISTING = "Processos existentes"
+
+
 # ---------------------------------------------------------
 # Classificação GUT
 # ---------------------------------------------------------

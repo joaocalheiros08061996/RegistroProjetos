@@ -4,461 +4,67 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard | Registro</title>
-  <link rel="stylesheet" href="styles.css?v=20260525">
+  <link rel="stylesheet" href="styles.css?v=20260531">
 </head>
 <body>
-<main class="page dashboard-page">
+<main class="page dashboard-menu-page">
   <header class="page-header">
     <div>
       <h1 class="title">Dashboard</h1>
-      <p class="muted">Visão global de projetos e atividades de rotina.</p>
+      <p class="muted">Escolha uma visão para carregar somente os gráficos necessários.</p>
     </div>
     <div class="actions">
       <a class="button secondary" href="module-select.html">Trocar módulo</a>
-      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
       <button class="danger" type="button" onclick="logout()">Sair</button>
     </div>
   </header>
 
-  <section class="section dashboard-grid">
-    <article class="dashboard-panel">
-      <h2>Lead Time Médio por Tipo de Projeto</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        para cada projeto, o tempo real é a soma das entradas de tempo fechadas
-        das tarefas vinculadas ao projeto, convertida de segundos para dias
-        (<strong>segundos / 86400</strong>). Depois, calcula-se a média desses
-        dias reais por tipo de projeto, considerando todos os usuários.
-      </div>
-      <p id="dashboard-feedback" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há dados suficientes para calcular a média global.
-        </p>
-      </div>
-      <div id="dashboard-chart" class="dashboard-chart hidden" aria-label="Gráfico de média de dias reais por tipo de projeto"></div>
-    </article>
-
-    <article class="dashboard-panel">
-      <h2>Lead Time Médio: Planejado vs Real</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o lead time planejado é calculado por projeto como
-        <strong>data final planejada - data inicial planejada</strong>. O lead
-        time real usa a soma das entradas de tempo fechadas das tarefas do
-        projeto, convertida para dias. O gráfico compara as médias planejada e
-        real por tipo de projeto.
-      </div>
-      <p id="dashboard-feedback-2" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-2" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há dados suficientes para comparar planejado e real.
-        </p>
-      </div>
-      <div id="dashboard-chart-2" class="dashboard-chart hidden" aria-label="Gráfico de lead time planejado vs real por tipo de projeto"></div>
-    </article>
-
-    <article class="dashboard-panel">
-      <div class="dashboard-panel-header">
-        <div>
-          <h2>Dias Totais para Atividades de Rotina</h2>
-          <div class="dashboard-kpi-methodology">
-            <strong>Metodologia da KPI:</strong>
-            soma-se o tempo trabalhado das atividades de rotina finalizadas,
-            usando as horas registradas ou a diferença entre início e fim quando
-            necessário. O total é convertido para dias
-            (<strong>horas / 24</strong>) e agrupado por mês/ano, respeitando os
-            filtros de responsável, ano, mês e tipo de atividade.
-          </div>
-          <p id="dashboard-feedback-3" class="status">Carregando gráfico...</p>
-        </div>
-      </div>
-
-      <div class="routine-dashboard-layout">
-        <aside class="routine-dashboard-filters" aria-label="Filtros do gráfico de atividades de rotina">
-          <label for="routine-year-filter">
-            Ano
-            <select id="routine-year-filter"></select>
-          </label>
-
-          <label for="routine-month-filter">
-            Mês
-            <select id="routine-month-filter"></select>
-          </label>
-
-          <label for="routine-type-filter">
-            Tipo de atividade
-            <select id="routine-type-filter"></select>
-          </label>
-
-          <label for="routine-user-filter">
-            Responsável
-            <select id="routine-user-filter"></select>
-          </label>
-        </aside>
-
-        <div class="routine-dashboard-visual">
-          <div id="dashboard-empty-3" class="item hidden">
-            <p class="item-subtitle">
-              Ainda não há atividades de rotina finalizadas para exibir.
-            </p>
-          </div>
-          <div id="dashboard-chart-3" class="dashboard-chart routine-dashboard-chart hidden" aria-label="Gráfico de dias totais para atividades de rotina"></div>
-        </div>
+  <section class="section module-grid dashboard-submodule-grid">
+    <article class="item module-card">
+      <h2 class="item-title">Lead Time Médio</h2>
+      <p class="item-subtitle">Lead time médio por tipo de projeto e comparação planejado vs real.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-lead-time.html">Abrir visão</a>
       </div>
     </article>
-  </section>
 
-  <section class="section project-monthly-section">
-    <div class="dashboard-panel-header">
-      <div>
-        <h2>Análise Mensal de Projetos</h2>
-        <p id="project-monthly-feedback" class="status">Carregando gráficos mensais...</p>
+    <article class="item module-card">
+      <h2 class="item-title">Séries Temporais de Atividades de Rotina</h2>
+      <p class="item-subtitle">Dias totais de atividades de rotina por período.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-routine-series.html">Abrir visão</a>
       </div>
-    </div>
-
-    <aside class="project-monthly-filters" aria-label="Filtros dos gráficos mensais de projeto">
-      <label for="project-monthly-year-filter">
-        Ano
-        <select id="project-monthly-year-filter"></select>
-      </label>
-
-      <label for="project-monthly-month-filter">
-        Mês
-        <select id="project-monthly-month-filter"></select>
-      </label>
-
-      <label for="project-monthly-type-filter">
-        Tipo de projeto
-        <select id="project-monthly-type-filter"></select>
-      </label>
-
-      <label for="project-monthly-user-filter">
-        Usuário
-        <select id="project-monthly-user-filter"></select>
-      </label>
-    </aside>
-
-    <article class="dashboard-panel">
-      <h2>Lead Time Mensal por Tipo de Projeto</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        para cada mês/ano, calcula-se a média de dias reais dos projetos com
-        tempo real lançado. O tempo real vem das entradas de tempo fechadas das
-        tarefas (<strong>segundos / 86400</strong>). A linha de referência usa a
-        média de lead time real do gráfico “Lead Time Médio por Tipo de Projeto”.
-      </div>
-      <p id="dashboard-feedback-4" class="status"></p>
-      <div id="dashboard-empty-4" class="item hidden">
-        <p class="item-subtitle">Sem dados mensais para o filtro atual.</p>
-      </div>
-      <div id="dashboard-chart-4" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de lead time mensal por tipo de projeto"></div>
     </article>
 
-    <article class="dashboard-panel">
-      <h2>Atraso Médio Mensal por Tipo de Projeto</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o atraso médio mensal é calculado como
-        <strong>média de dias reais - média de dias planejados</strong> para os
-        projetos do período. Valores positivos indicam estouro do planejado;
-        valores negativos indicam execução abaixo do prazo planejado.
+    <article class="item module-card">
+      <h2 class="item-title">Análise Mensal dos Projetos</h2>
+      <p class="item-subtitle">Indicadores mensais de prazo, eficiência e complexidade dos projetos.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-project-monthly.html">Abrir visão</a>
       </div>
-      <p id="dashboard-feedback-5" class="status"></p>
-      <div id="dashboard-empty-5" class="item hidden">
-        <p class="item-subtitle">Sem dados de atraso para o filtro atual.</p>
-      </div>
-      <div id="dashboard-chart-5" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de atraso médio mensal por tipo de projeto"></div>
     </article>
 
-    <article class="dashboard-panel">
-      <h2>Eficiência Mensal por Tipo de Projeto</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        a eficiência mensal é calculada como
-        <strong>média de dias planejados / média de dias reais</strong>,
-        apresentada em percentual. Quanto maior o percentual, maior a relação
-        entre prazo planejado disponível e tempo real consumido.
+    <article class="item module-card">
+      <h2 class="item-title">KPIs de Valor Agregado, Prazo, Custo e Esforço</h2>
+      <p class="item-subtitle">VA, IDP, IDC e desvio de esforço com filtros dedicados.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-value-kpis.html">Abrir visão</a>
       </div>
-      <p id="dashboard-feedback-6" class="status"></p>
-      <div id="dashboard-empty-6" class="item hidden">
-        <p class="item-subtitle">Sem dados de eficiência para o filtro atual.</p>
-      </div>
-      <div id="dashboard-chart-6" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de eficiência mensal por tipo de projeto"></div>
     </article>
 
-    <article class="dashboard-panel">
-      <h2>Taxa de Projetos que Estouram o Prazo</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        considera-se que um projeto estourou o prazo quando seus dias reais são
-        maiores que seus dias planejados. A taxa mensal é
-        <strong>projetos estourados / projetos com tempo real válido</strong>,
-        exibida em percentual.
+    <article class="item module-card">
+      <h2 class="item-title">Projetos por Responsável</h2>
+      <p class="item-subtitle">Tabela de projetos agrupáveis por responsável, período e status.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-projects-by-responsible.html">Abrir visão</a>
       </div>
-      <p id="dashboard-feedback-7" class="status"></p>
-      <div id="dashboard-empty-7" class="item hidden">
-        <p class="item-subtitle">Sem dados de prazo para o filtro atual.</p>
-      </div>
-      <div id="dashboard-chart-7" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de taxa de projetos que estouram o prazo"></div>
-    </article>
-  </section>
-
-  <section class="section dashboard-grid dashboard-complexity-section">
-    <article class="dashboard-panel">
-      <h2>Quantidade de Projetos por Complexidade</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        cada projeto recebe uma nota de 1 a 5 para clareza do objetivo e outra
-        de 1 a 5 para definição do método. A pontuação bruta é
-        <strong>objetivo x método</strong>, variando de 1 a 25, e depois é
-        agrupada em cinco faixas: Complexidade 1 (1-5), Complexidade 2 (6-10),
-        Complexidade 3 (11-15), Complexidade 4 (16-20) e Complexidade 5
-        (21-25). Quanto maior a faixa, maior a complexidade do projeto.
-      </div>
-      <p id="dashboard-feedback-8" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-8" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há projetos com objetivo e método válidos para exibir.
-        </p>
-      </div>
-      <div id="dashboard-chart-8" class="dashboard-chart complexity-dashboard-chart hidden" aria-label="Gráfico de quantidade de projetos por complexidade"></div>
-    </article>
-
-    <article class="dashboard-panel">
-      <h2>Quantidade de Projetos por Complexidade por Mês</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        usa a mesma classificação de complexidade do gráfico anterior. Para cada
-        projeto, calcula-se <strong>objetivo x método</strong>, agrupa-se a
-        pontuação em Complexidade 1 a 5 e conta-se quantos projetos existem em
-        cada mês/ano, usando a data inicial planejada do projeto. Os filtros
-        permitem recortar por ano, mês, tipo de projeto e usuário responsável.
-      </div>
-
-      <aside class="project-monthly-filters complexity-monthly-filters" aria-label="Filtros do gráfico mensal de complexidade">
-        <label for="complexity-monthly-year-filter">
-          Ano
-          <select id="complexity-monthly-year-filter"></select>
-        </label>
-
-        <label for="complexity-monthly-month-filter">
-          Mês
-          <select id="complexity-monthly-month-filter"></select>
-        </label>
-
-        <label for="complexity-monthly-type-filter">
-          Tipo de projeto
-          <select id="complexity-monthly-type-filter"></select>
-        </label>
-
-        <label for="complexity-monthly-user-filter">
-          Usuário
-          <select id="complexity-monthly-user-filter"></select>
-        </label>
-      </aside>
-
-      <p id="dashboard-feedback-9" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-9" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há projetos com complexidade válida para o filtro atual.
-        </p>
-      </div>
-      <div id="dashboard-chart-9" class="dashboard-chart complexity-monthly-dashboard-chart hidden" aria-label="Gráfico de quantidade de projetos por complexidade por mês"></div>
-    </article>
-  </section>
-
-  <section class="section project-monthly-section earned-value-section">
-    <article class="dashboard-panel">
-      <h2>Valor Agregado por Mês</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o <strong>Valor Agregado (VA)</strong> é a soma dos custos estimados das
-        tarefas concluídas, representando o valor do escopo efetivamente
-        entregue. A linha de <strong>Valor Planejado (VP)</strong> aparece
-        apenas como referência do quanto deveria ter sido entregue pelo
-        cronograma até hoje, sem considerar custo real de execução.
-      </div>
-
-      <aside class="project-monthly-filters earned-value-filters" aria-label="Filtros do gráfico de valor agregado">
-        <label for="earned-value-year-filter">
-          Ano
-          <select id="earned-value-year-filter"></select>
-        </label>
-
-        <label for="earned-value-month-filter">
-          Mês
-          <select id="earned-value-month-filter"></select>
-        </label>
-
-        <label for="earned-value-type-filter">
-          Tipo de projeto
-          <select id="earned-value-type-filter"></select>
-        </label>
-
-        <label for="earned-value-user-filter">
-          Usuário
-          <select id="earned-value-user-filter"></select>
-        </label>
-      </aside>
-
-      <p id="dashboard-feedback-10" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-10" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há projetos com custo estimado ou tarefas valorizadas para o filtro atual.
-        </p>
-      </div>
-      <div id="dashboard-chart-10" class="dashboard-chart earned-value-dashboard-chart hidden" aria-label="Gráfico de valor agregado"></div>
-    </article>
-  </section>
-
-  <section class="section project-monthly-section schedule-performance-section">
-    <article class="dashboard-panel">
-      <h2>Índice de Desempenho de Prazo (IDP) por Mês</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o <strong>IDP</strong> mede se o cronograma está atrasado, no prazo ou
-        adiantado a partir da razão <strong>VA ÷ VP</strong>. Valores abaixo de
-        <strong>1</strong> indicam atraso, valores iguais a <strong>1</strong>
-        indicam aderência ao planejado e valores acima de <strong>1</strong>
-        indicam avanço em relação ao cronograma.
-      </div>
-
-      <aside class="project-monthly-filters schedule-performance-filters" aria-label="Filtros do gráfico de IDP">
-        <label for="schedule-performance-year-filter">
-          Ano
-          <select id="schedule-performance-year-filter"></select>
-        </label>
-
-        <label for="schedule-performance-month-filter">
-          Mês
-          <select id="schedule-performance-month-filter"></select>
-        </label>
-
-        <label for="schedule-performance-type-filter">
-          Tipo de projeto
-          <select id="schedule-performance-type-filter"></select>
-        </label>
-
-        <label for="schedule-performance-user-filter">
-          Usuário
-          <select id="schedule-performance-user-filter"></select>
-        </label>
-      </aside>
-
-      <p id="dashboard-feedback-11" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-11" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há dados com VA e VP válidos para calcular o IDP no filtro atual.
-        </p>
-      </div>
-      <div id="dashboard-chart-11" class="dashboard-chart schedule-performance-dashboard-chart hidden" aria-label="Gráfico de índice de desempenho de prazo"></div>
-    </article>
-  </section>
-
-  <section class="section project-monthly-section cost-performance-section">
-    <article class="dashboard-panel">
-      <h2>Índice de Desempenho de Custo (IDC) por Mês</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o <strong>IDC</strong> mede o desempenho de custo a partir da razão
-        <strong>VA ÷ Custo Real</strong>. Valores abaixo de <strong>1</strong>
-        indicam consumo de recursos maior que o valor entregue, valores iguais a
-        <strong>1</strong> indicam aderência ao orçamento e valores acima de
-        <strong>1</strong> indicam consumo menor que o valor entregue.
-      </div>
-
-      <aside class="project-monthly-filters cost-performance-filters" aria-label="Filtros do gráfico de IDC">
-        <label for="cost-performance-year-filter">
-          Ano
-          <select id="cost-performance-year-filter"></select>
-        </label>
-
-        <label for="cost-performance-month-filter">
-          Mês
-          <select id="cost-performance-month-filter"></select>
-        </label>
-
-        <label for="cost-performance-type-filter">
-          Tipo de projeto
-          <select id="cost-performance-type-filter"></select>
-        </label>
-
-        <label for="cost-performance-user-filter">
-          Usuário
-          <select id="cost-performance-user-filter"></select>
-        </label>
-      </aside>
-
-      <p id="dashboard-feedback-12" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-12" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há dados com VA e custo real válidos para calcular o IDC no filtro atual.
-        </p>
-      </div>
-      <div id="dashboard-chart-12" class="dashboard-chart cost-performance-dashboard-chart hidden" aria-label="Gráfico de índice de desempenho de custo"></div>
-    </article>
-  </section>
-
-  <section class="section project-monthly-section effort-deviation-section">
-    <article class="dashboard-panel">
-      <h2>Desvio de Esforço por Mês</h2>
-      <div class="dashboard-kpi-methodology">
-        <strong>Metodologia da KPI:</strong>
-        o <strong>Desvio de Esforço</strong> compara o esforço real registrado
-        em tarefas com o esforço planejado no cronograma. O cálculo usado é
-        <strong>horas reais - horas planejadas</strong>, considerando apenas
-        registros de tempo fechados. Valores positivos indicam consumo acima do
-        estimado; valores negativos indicam consumo abaixo do estimado.
-      </div>
-
-      <aside class="project-monthly-filters effort-deviation-filters" aria-label="Filtros do gráfico de desvio de esforço">
-        <label for="effort-deviation-year-filter">
-          Ano
-          <select id="effort-deviation-year-filter"></select>
-        </label>
-
-        <label for="effort-deviation-month-filter">
-          Mês
-          <select id="effort-deviation-month-filter"></select>
-        </label>
-
-        <label for="effort-deviation-type-filter">
-          Tipo de projeto
-          <select id="effort-deviation-type-filter"></select>
-        </label>
-
-        <label for="effort-deviation-user-filter">
-          Usuário
-          <select id="effort-deviation-user-filter"></select>
-        </label>
-      </aside>
-
-      <p id="dashboard-feedback-13" class="status">Carregando gráfico...</p>
-      <div id="dashboard-empty-13" class="item hidden">
-        <p class="item-subtitle">
-          Ainda não há tarefas com esforço planejado e tempo real fechado para o filtro atual.
-        </p>
-      </div>
-      <div id="dashboard-chart-13" class="dashboard-chart effort-deviation-dashboard-chart hidden" aria-label="Gráfico de desvio de esforço"></div>
     </article>
   </section>
 </main>
 
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="app.js?v=20260505"></script>
-<script src="dashboard/dom.js?v=20260530"></script>
-<script src="dashboard/formatters.js?v=20260530"></script>
-<script src="dashboard/plotly-common.js?v=20260530"></script>
-<script src="dashboard/static-charts.js?v=20260530"></script>
-<script src="dashboard/routine-chart.js?v=20260530-responsavel"></script>
-<script src="dashboard/project-monthly-data.js?v=20260530"></script>
-<script src="dashboard/project-monthly-charts.js?v=20260530"></script>
-<script src="dashboard/complexity-data.js?v=20260530"></script>
-<script src="dashboard/complexity-charts.js?v=20260530"></script>
-<script src="dashboard/value-data.js?v=20260530"></script>
-<script src="dashboard/value-charts.js?v=20260530"></script>
-<script src="dashboard/effort-deviation-chart.js?v=20260530"></script>
-<script src="dashboard/bootstrap.js?v=20260530"></script>
+<script>
+  requireAuth();
+</script>
 </body>
 </html>

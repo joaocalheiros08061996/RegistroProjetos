@@ -48,9 +48,16 @@
           <option value="PADRONIZACAO">PADRONIZAÇÃO</option>
           <option value="TRY_OUT">TRY OUT</option>
           <option value="MAPEAMENTO">MAPEAMENTO</option>
-          <option value="MELHORIA">MELHORIA DE PROC. EXISTENTES</option>
-          <option value="MELHORIA_PROC_NOVOS">MELHORIA DE PROC. NOVOS</option>
           <option value="PECAS">PEÇAS</option>
+        </select>
+      </label>
+
+      <label for="process_classification">
+        Classificação do processo
+        <select id="process_classification">
+          <option value="">Não informado</option>
+          <option value="Processos novos">Processos novos</option>
+          <option value="Processos existentes">Processos existentes</option>
         </select>
       </label>
 
@@ -177,6 +184,10 @@
     return String(projectType || "").split("_").join(" ").toUpperCase();
   }
 
+  function formatProcessClassification(value) {
+    return value || "Não informado";
+  }
+
   function getProjectPriority(project) {
     const level = Number(project.priority_level || 5);
     const normalizedLevel = Number.isInteger(level) && level >= 1 && level <= 5
@@ -212,6 +223,7 @@
         <span class="item-subtitle">${formatProjectTypeSafe(project.project_type)}</span>
       </div>
       <p class="item-subtitle">Responsável: ${project.responsible_login}</p>
+      ${project.process_classification ? `<p class="item-subtitle">Processo: ${formatProcessClassification(project.process_classification)}</p>` : ""}
       <p class="item-subtitle">Período: ${period}</p>
       <div class="row">
         <span class="item-subtitle">Tarefas: ${project.task_count}</span>
@@ -276,6 +288,7 @@
     const payload = {
       name: document.getElementById("name").value.trim(),
       project_type: document.getElementById("project_type").value,
+      process_classification: document.getElementById("process_classification").value || null,
       responsible_login: document.getElementById("responsible_login").value.trim(),
       fte: Number(document.getElementById("fte").value),
       planned_start: normalizeIsoFromInput(plannedStartInput.value),

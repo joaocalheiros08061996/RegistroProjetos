@@ -6,6 +6,7 @@ from typing import List, Optional
 from .enums import (
     MethodClarity,
     ObjectiveClarity,
+    ProcessClassification,
     ProjectType,
     Severity,
     TaskStatus,
@@ -244,6 +245,30 @@ class Project:
         Trend.RAPID.value: 5,
         Trend.RAPID.name: 5,
     }
+    _COMPLEXITY_OBJECTIVE_WEIGHTS = {
+        ObjectiveClarity.FULLY_DEFINED.value: 1,
+        ObjectiveClarity.FULLY_DEFINED.name: 1,
+        ObjectiveClarity.CLEAR_WITH_AMBIGUITIES.value: 2,
+        ObjectiveClarity.CLEAR_WITH_AMBIGUITIES.name: 2,
+        ObjectiveClarity.PARTIALLY_DEFINED.value: 3,
+        ObjectiveClarity.PARTIALLY_DEFINED.name: 3,
+        ObjectiveClarity.UNCLEAR.value: 4,
+        ObjectiveClarity.UNCLEAR.name: 4,
+        ObjectiveClarity.UNDEFINED.value: 5,
+        ObjectiveClarity.UNDEFINED.name: 5,
+    }
+    _COMPLEXITY_METHOD_WEIGHTS = {
+        MethodClarity.FULLY_DEFINED.value: 1,
+        MethodClarity.FULLY_DEFINED.name: 1,
+        MethodClarity.KNOWN_WITH_ADAPTATIONS.value: 2,
+        MethodClarity.KNOWN_WITH_ADAPTATIONS.name: 2,
+        MethodClarity.PARTIALLY_KNOWN.value: 3,
+        MethodClarity.PARTIALLY_KNOWN.name: 3,
+        MethodClarity.POORLY_DEFINED.value: 4,
+        MethodClarity.POORLY_DEFINED.name: 4,
+        MethodClarity.UNKNOWN.value: 5,
+        MethodClarity.UNKNOWN.name: 5,
+    }
 
     def __init__(
         self,
@@ -260,6 +285,7 @@ class Project:
         trend: Trend = Trend.STABLE,
         objective_clarity: ObjectiveClarity = ObjectiveClarity.FULLY_DEFINED,
         method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED,
+        process_classification: ProcessClassification | None = None,
         estimated_cost: float = 0.0,
     ):
         if not user_id or not user_id.strip():
@@ -294,6 +320,7 @@ class Project:
         # NOVOS CAMPOS
         self.objective_clarity: ObjectiveClarity = objective_clarity
         self.method_clarity: MethodClarity = method_clarity
+        self.process_classification: ProcessClassification | None = process_classification
 
         self.estimated_cost: float = float(estimated_cost)
 
@@ -394,6 +421,29 @@ class Project:
     @property
     def priority_label(self) -> str:
         return f"Prioridade {self.priority_level}"
+
+    @staticmethod
+    def _complexity_weight(raw_value, mapping: dict[str, int]) -> int:
+        if hasattr(raw_value, "value"):
+            raw_value = raw_value.value
+        return mapping.get(str(raw_value).strip(), 1)
+
+    @property
+    def complexity_score(self) -> int:
+        objective_weight = self._complexity_weight(
+            self.objective_clarity,
+            self._COMPLEXITY_OBJECTIVE_WEIGHTS,
+        )
+        method_weight = self._complexity_weight(
+            self.method_clarity,
+            self._COMPLEXITY_METHOD_WEIGHTS,
+        )
+        raw_score = objective_weight * method_weight
+        return max(1, min(5, (raw_score + 4) // 5))
+
+    @property
+    def complexity_label(self) -> str:
+        return f"Complexidade {self.complexity_score}"
 
     # ---------- Progresso (SEMÂNTICO) ----------
 

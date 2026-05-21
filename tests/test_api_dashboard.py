@@ -138,6 +138,131 @@ def test_dashboard_returns_global_average_across_users_and_ignores_open_entries(
     assert layout_item["average_days"] == 3.0
 
 
+def test_dashboard_projects_by_responsible_returns_global_projects(client):
+    user_1 = {"Authorization": "Bearer user-1"}
+    user_2 = {"Authorization": "Bearer user-2"}
+
+    project_1_response = client.post(
+        "/projects/",
+        headers=user_1,
+        json={
+            "name": "Projeto Global Alice",
+            "project_type": "LAYOUT",
+            "responsible_login": "alice",
+            "fte": 1.0,
+            "planned_start": "2026-05-10T00:00:00",
+            "planned_end": "2026-05-20T00:00:00",
+            "objective_clarity": "Objetivo parcialmente definido",
+            "method_clarity": "Métodos pouco definidos",
+            "estimated_cost": 1500.0,
+        },
+    )
+    assert project_1_response.status_code == 200
+    project_1_id = project_1_response.json()["id"]
+
+    project_2_response = client.post(
+        "/projects/",
+        headers=user_2,
+        json={
+            "name": "Projeto Global Bob",
+            "project_type": "PECAS",
+            "responsible_login": "bob",
+            "fte": 1.0,
+            "planned_start": "2026-06-01T00:00:00",
+            "planned_end": "2026-06-10T00:00:00",
+            "severity": "Gravíssimo",
+            "urgency": "Imediatamente",
+            "trend": "Piora rapidamente",
+            "objective_clarity": "Objetivo indefinido ou exploratório",
+            "method_clarity": "Métodos desconhecidos ou inexistentes",
+            "estimated_cost": 200.0,
+        },
+    )
+    assert project_2_response.status_code == 200
+    project_2_id = project_2_response.json()["id"]
+
+    for task_name in ["alice-task-1", "alice-task-2"]:
+        task_response = client.post(
+            f"/projects/{project_1_id}/tasks/",
+            headers=user_1,
+            json={
+                "name": task_name,
+                "planned_start": "2026-05-10T00:00:00",
+                "planned_end": "2026-05-12T00:00:00",
+                "cost": 100.0,
+            },
+        )
+        assert task_response.status_code == 200
+
+    complete_response = client.post(
+        f"/projects/{project_1_id}/tasks/alice-task-1/complete",
+        headers=user_1,
+    )
+    assert complete_response.status_code == 200
+
+    dashboard_response = client.get(
+        "/dashboard/projects-by-responsible",
+        headers=user_1,
+    )
+    assert dashboard_response.status_code == 200
+    payload = dashboard_response.json()
+    assert payload["chart"] == "projects_by_responsible"
+
+    items_by_id = {item["project_id"]: item for item in payload["items"]}
+    assert project_1_id in items_by_id
+    assert project_2_id in items_by_id
+
+    alice_item = items_by_id[project_1_id]
+    assert alice_item["project_name"] == "Projeto Global Alice"
+    assert alice_item["project_type"] == "LAYOUT"
+    assert alice_item["project_type_label"] == "LAYOUT"
+    assert alice_item["responsible_login"] == "alice"
+    assert alice_item["estimated_cost"] == 1500.0
+    assert alice_item["task_count"] == 2
+    assert alice_item["completed_task_count"] == 1
+    assert alice_item["percent_completed"] == 50.0
+    assert alice_item["priority_level"] == 5
+    assert alice_item["priority_label"] == "Prioridade 5"
+    assert alice_item["complexity_score"] == 3
+    assert alice_item["complexity_label"] == "Complexidade 3"
+    assert alice_item["year"] == 2026
+    assert alice_item["month"] == 5
+    assert alice_item["month_label"] == "MAI"
+    assert alice_item["period_label"] == "MAI 2026"
+
+    bob_item = items_by_id[project_2_id]
+    assert bob_item["project_name"] == "Projeto Global Bob"
+    assert bob_item["project_type"] == "PECAS"
+    assert bob_item["responsible_login"] == "bob"
+    assert bob_item["task_count"] == 0
+    assert bob_item["completed_task_count"] == 0
+    assert bob_item["percent_completed"] == 0.0
+    assert bob_item["gut_score"] == 125
+    assert bob_item["priority_level"] == 1
+    assert bob_item["priority_label"] == "Prioridade 1"
+    assert bob_item["complexity_score"] == 5
+    assert bob_item["complexity_label"] == "Complexidade 5"
+    assert bob_item["year"] == 2026
+    assert bob_item["month"] == 6
+
+    second_user_dashboard_response = client.get(
+        "/dashboard/projects-by-responsible",
+        headers=user_2,
+    )
+    assert second_user_dashboard_response.status_code == 200
+    second_user_ids = {
+        item["project_id"]
+        for item in second_user_dashboard_response.json()["items"]
+    }
+    assert {project_1_id, project_2_id}.issubset(second_user_ids)
+
+    user_1_projects = client.get("/projects/", headers=user_1)
+    assert user_1_projects.status_code == 200
+    user_1_project_ids = {project["id"] for project in user_1_projects.json()}
+    assert project_1_id in user_1_project_ids
+    assert project_2_id not in user_1_project_ids
+
+
 def test_dashboard_keeps_small_non_zero_type_values(client, monkeypatch):
     auth = {"Authorization": "Bearer user-1"}
 

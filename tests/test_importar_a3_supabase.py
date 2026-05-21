@@ -26,7 +26,6 @@ def test_excel_serial_and_day_effort_conversion():
 
 def test_portuguese_labels_are_mapped_to_app_enums():
     assert map_project_type("Padronização") == "PADRONIZACAO"
-    assert map_project_type("Melhoria Contínua dos Processos") == "MELHORIA"
     assert map_project_type("Peças em Geral") == "PECAS"
     assert map_severity("4 - Muito grave") == "Muito grave"
     assert map_objective("2 - Objetivo claro com pequenas ambiguidades") == (
@@ -35,6 +34,21 @@ def test_portuguese_labels_are_mapped_to_app_enums():
     assert map_method("3 - Métodos parcialmente conhecidos") == (
         "Métodos parcialmente conhecidos"
     )
+
+
+@pytest.mark.parametrize(
+    "project_type",
+    [
+        "Melhoria",
+        "Melhoria Contínua dos Processos",
+        "Melhoria de Proc Novos",
+        "MELHORIA",
+        "MELHORIA_PROC_NOVOS",
+    ],
+)
+def test_legacy_project_types_are_not_imported_as_new_projects(project_type):
+    with pytest.raises(MigrationError, match="Tipo de projeto legado"):
+        map_project_type(project_type)
 
 
 def test_task_status_mapping_uses_real_effort_for_non_completed_tasks():

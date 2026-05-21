@@ -9,6 +9,7 @@ from domain.enums import (
     Trend,
     ObjectiveClarity,
     MethodClarity,
+    ProcessClassification,
 )
 
 
@@ -37,6 +38,7 @@ class CreateProjectDTO(BaseModel):
     # NOVOS CAMPOS
     objective_clarity: ObjectiveClarity = ObjectiveClarity.FULLY_DEFINED
     method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED
+    process_classification: Optional[ProcessClassification] = None
 
     estimated_cost: float = 0.0
 
@@ -105,6 +107,7 @@ class ProjectListItemResponseDTO(BaseModel):
     id: int
     name: str
     project_type: str
+    process_classification: Optional[str] = None
 
     responsible_login: str
 
@@ -122,6 +125,10 @@ class ProjectListItemResponseDTO(BaseModel):
     gut_score: int
     priority_level: int
     priority_label: str
+
+    # complexidade
+    complexity_score: int
+    complexity_label: str
 
 
 # ============================================================
@@ -154,6 +161,7 @@ class ProjectDetailResponseDTO(BaseModel):
     id: int
     name: str
     project_type: str
+    process_classification: Optional[str] = None
 
     responsible_login: str
     fte: float
@@ -169,6 +177,7 @@ class ProjectDetailResponseDTO(BaseModel):
     # NOVOS CAMPOS
     objective_clarity: str
     method_clarity: str
+    process_classification: Optional[str] = None
 
     estimated_cost: float
 
@@ -299,6 +308,34 @@ class DashboardProjectComplexityByMonthItemDTO(BaseModel):
 class DashboardProjectComplexityByMonthResponseDTO(BaseModel):
     chart: str
     items: list[DashboardProjectComplexityByMonthItemDTO]
+
+
+class DashboardProjectsByResponsibleItemDTO(BaseModel):
+    project_id: int
+    project_name: str
+    project_type: str
+    project_type_label: str
+    responsible_login: str
+    planned_start: datetime
+    planned_end: datetime
+    estimated_cost: float
+    task_count: int
+    completed_task_count: int
+    percent_completed: float
+    gut_score: int
+    priority_level: int
+    priority_label: str
+    complexity_score: int
+    complexity_label: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+
+
+class DashboardProjectsByResponsibleResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardProjectsByResponsibleItemDTO]
 
 
 class DashboardProjectEarnedValueItemDTO(BaseModel):

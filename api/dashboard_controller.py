@@ -9,6 +9,7 @@ from api.dtos import (
     DashboardProjectEffortDeviationResponseDTO,
     DashboardProjectEarnedValueResponseDTO,
     DashboardProjectMonthlyKpisResponseDTO,
+    DashboardProjectsByResponsibleResponseDTO,
     DashboardRoutineTotalDaysByMonthResponseDTO,
 )
 from application.services import DashboardService
@@ -100,6 +101,20 @@ def get_project_complexity_counts_by_month(
     return {
         "chart": "project_complexity_counts_by_month",
         "items": service.list_project_complexity_counts_by_month(),
+    }
+
+
+@router.get(
+    "/projects-by-responsible",
+    response_model=DashboardProjectsByResponsibleResponseDTO,
+)
+def get_projects_by_responsible(
+    _: str = Depends(get_current_user_id),
+    service: DashboardService = Depends(get_dashboard_service),
+):
+    return {
+        "chart": "projects_by_responsible",
+        "items": service.list_projects_by_responsible(),
     }
 
 

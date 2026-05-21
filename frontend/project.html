@@ -111,6 +111,10 @@
     return String(projectType || "").split("_").join(" ").toUpperCase();
   }
 
+  function formatProcessClassification(value) {
+    return value || "Não informado";
+  }
+
   function metricItem(label, value) {
     return `
       <article class="item">
@@ -176,11 +180,12 @@
       const detail = await apiFetch(`/projects/${projectId}/detail`);
 
       projectTitle.textContent = detail.name;
-      projectSubtitle.textContent = `Responsável: ${detail.responsible_login} | Tipo: ${formatProjectTypeSafe(detail.project_type)}`;
+      projectSubtitle.textContent = `Responsável: ${detail.responsible_login} | Tipo: ${formatProjectTypeSafe(detail.project_type)} | Processo: ${formatProcessClassification(detail.process_classification)}`;
 
       projectMetrics.innerHTML =
         metricItem("Progresso", `${detail.percent_completed}%`) +
         metricItem("Tarefas", String(detail.task_count)) +
+        metricItem("Processo", formatProcessClassification(detail.process_classification)) +
         metricItem("Dias reais", Number(detail.actual_days || 0).toFixed(2)) +
         metricItem("Custo estimado", Number(detail.estimated_cost || 0).toFixed(2)) +
         metricItem("Início", formatDateTime(detail.planned_start)) +

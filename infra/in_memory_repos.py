@@ -648,6 +648,46 @@ class InMemoryDashboardRepository(IDashboardRepository):
         )
         return rows
 
+    def list_projects_by_responsible(self) -> list[dict]:
+        rows: list[dict] = []
+
+        for project in self.project_repo._storage.values():
+            task_count = project.task_count
+            completed_task_count = len(project.completed_tasks())
+
+            rows.append(
+                {
+                    "project_id": project.id or 0,
+                    "project_name": project.name,
+                    "project_type": project.project_type.value,
+                    "responsible_login": (project.responsible_login or "").strip() or "Sem responsável",
+                    "planned_start": project.planned_start,
+                    "planned_end": project.planned_end,
+                    "estimated_cost": max(0.0, float(project.estimated_cost or 0.0)),
+                    "task_count": task_count,
+                    "completed_task_count": completed_task_count,
+                    "percent_completed": project.percent_completed,
+                    "gut_score": project.gut_score,
+                    "priority_level": project.priority_level,
+                    "priority_label": project.priority_label,
+                    "complexity_score": project.complexity_score,
+                    "complexity_label": project.complexity_label,
+                    "year": project.planned_start.year,
+                    "month": project.planned_start.month,
+                }
+            )
+
+        rows.sort(
+            key=lambda item: (
+                item["responsible_login"],
+                item["year"],
+                item["month"],
+                item["priority_level"],
+                item["project_name"],
+            )
+        )
+        return rows
+
     def list_project_effort_deviation(self) -> list[dict]:
         grouped: dict[tuple[str, str, int, int], dict] = {}
 

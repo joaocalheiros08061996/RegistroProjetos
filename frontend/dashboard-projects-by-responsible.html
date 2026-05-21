@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projetos por Responsável | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260531">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Projetos por Responsável</h1>
+      <p class="muted">Tabela de projetos por responsável, período, status, prioridade, complexidade e custo.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section project-responsible-section">
+    <aside class="project-monthly-filters project-responsible-filters" aria-label="Filtros da tabela de projetos por responsável">
+      <label for="responsible-filter">
+        Responsável
+        <select id="responsible-filter"></select>
+      </label>
+
+      <label for="project-year-filter">
+        Ano
+        <select id="project-year-filter"></select>
+      </label>
+
+      <label for="project-month-filter">
+        Mês
+        <select id="project-month-filter"></select>
+      </label>
+
+      <label for="project-status-filter">
+        Status
+        <select id="project-status-filter">
+          <option value="ALL">Todos</option>
+          <option value="COMPLETED">Concluídos</option>
+          <option value="ONGOING">Em andamento</option>
+        </select>
+      </label>
+    </aside>
+
+    <p id="projects-responsible-feedback" class="status">Carregando projetos...</p>
+
+    <div class="dashboard-table-wrapper">
+      <table class="dashboard-table" aria-label="Tabela de projetos por responsável">
+        <thead>
+          <tr>
+            <th>Responsável</th>
+            <th>Projeto</th>
+            <th>Início planejado</th>
+            <th>Fim planejado</th>
+            <th>Conclusão</th>
+            <th>Prioridade</th>
+            <th>Complexidade</th>
+            <th>Custo</th>
+          </tr>
+        </thead>
+        <tbody id="projects-responsible-table-body"></tbody>
+      </table>
+    </div>
+
+    <div id="projects-responsible-empty" class="item hidden">
+      <p class="item-subtitle">Nenhum projeto encontrado para os filtros atuais.</p>
+    </div>
+  </section>
+</main>
+
+<script src="app.js?v=20260505"></script>
+<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="dashboard/projects-by-responsible.js?v=20260601"></script>
+</body>
+</html>

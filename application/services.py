@@ -7,6 +7,7 @@ from domain.entities import Project, Task
 from domain.enums import (
     MethodClarity,
     ObjectiveClarity,
+    ProcessClassification,
     ProjectType,
     Severity,
     TaskStatus,
@@ -28,6 +29,11 @@ from domain.routine_activity import RoutineActivity
 # ============================================================
 
 class ProjectService:
+    LEGACY_PROJECT_TYPES = {
+        ProjectType.MELHORIA,
+        ProjectType.MELHORIA_PROC_NOVOS,
+    }
+
     def __init__(self, project_repo: IProjectRepository, task_repo: ITaskRepository):
         self.project_repo = project_repo
         self.task_repo = task_repo
@@ -47,8 +53,14 @@ class ProjectService:
         trend: Trend = Trend.STABLE,
         objective_clarity: ObjectiveClarity = ObjectiveClarity.FULLY_DEFINED,
         method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED,
+        process_classification: ProcessClassification | None = None,
         estimated_cost: float = 0.0,
     ) -> Project:
+        if project_type in self.LEGACY_PROJECT_TYPES:
+            raise ValidationError(
+                "Tipo de projeto legado nao permitido para novos cadastros."
+            )
+
         project = Project(
             user_id=user_id,
             name=name,
@@ -62,6 +74,7 @@ class ProjectService:
             trend=trend,
             objective_clarity=objective_clarity,
             method_clarity=method_clarity,
+            process_classification=process_classification,
             estimated_cost=estimated_cost,
         )
 
@@ -538,6 +551,86 @@ class DashboardService:
                 item["project_type_label"],
                 item["responsible_login"],
                 item["complexity_score"],
+            )
+        )
+        return items
+
+    def list_projects_by_responsible(self) -> list[dict]:
+        rows = self.dashboard_repo.list_projects_by_responsible()
+
+        items: list[dict] = []
+        for row in rows:
+            project_id = int(row.get("project_id") or 0)
+            project_name = str(row.get("project_name") or "").strip()
+            project_type = str(row.get("project_type") or "").strip().upper()
+            responsible_login = str(row.get("responsible_login") or "").strip()
+            planned_start = row.get("planned_start")
+            planned_end = row.get("planned_end")
+            year = int(row.get("year") or 0)
+            month = int(row.get("month") or 0)
+
+            if project_id <= 0 or not project_name or not project_type:
+                continue
+
+            if not responsible_login:
+                responsible_login = "Sem responsável"
+
+            if year <= 0 or month not in self._MONTH_LABELS:
+                continue
+
+            task_count = max(0, int(row.get("task_count") or 0))
+            completed_task_count = max(0, int(row.get("completed_task_count") or 0))
+            percent_completed = max(0.0, min(100.0, float(row.get("percent_completed") or 0.0)))
+            gut_score = max(1, int(row.get("gut_score") or 1))
+            priority_level = int(row.get("priority_level") or 5)
+            if priority_level < 1 or priority_level > 5:
+                priority_level = 5
+            complexity_score = int(row.get("complexity_score") or 1)
+            if complexity_score < 1 or complexity_score > 5:
+                complexity_score = 1
+
+            month_label = self._MONTH_LABELS[month]
+            items.append(
+                {
+                    "project_id": project_id,
+                    "project_name": project_name,
+                    "project_type": project_type,
+                    "project_type_label": self._PROJECT_TYPE_LABELS.get(
+                        project_type,
+                        project_type.replace("_", " "),
+                    ),
+                    "responsible_login": responsible_login,
+                    "planned_start": planned_start,
+                    "planned_end": planned_end,
+                    "estimated_cost": max(0.0, float(row.get("estimated_cost") or 0.0)),
+                    "task_count": task_count,
+                    "completed_task_count": min(completed_task_count, task_count),
+                    "percent_completed": round(percent_completed, 2),
+                    "gut_score": gut_score,
+                    "priority_level": priority_level,
+                    "priority_label": str(
+                        row.get("priority_label")
+                        or f"Prioridade {priority_level}"
+                    ),
+                    "complexity_score": complexity_score,
+                    "complexity_label": str(
+                        row.get("complexity_label")
+                        or f"Complexidade {complexity_score}"
+                    ),
+                    "year": year,
+                    "month": month,
+                    "month_label": month_label,
+                    "period_label": f"{month_label} {year}",
+                }
+            )
+
+        items.sort(
+            key=lambda item: (
+                item["responsible_login"],
+                item["year"],
+                item["month"],
+                item["priority_level"],
+                item["project_name"],
             )
         )
         return items

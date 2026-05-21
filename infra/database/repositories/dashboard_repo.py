@@ -495,6 +495,163 @@ class SupabaseDashboardRepository(IDashboardRepository):
             for row in rows
         ]
 
+    def list_projects_by_responsible(self) -> list[dict]:
+        with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                with task_counts as (
+                    select
+                        t.project_id,
+                        count(*)::int as task_count,
+                        count(
+                            case
+                                when upper(replace(trim(t.status::text), ' ', '_')) in ('COMPLETED', 'COMPLETE')
+                                    then 1
+                            end
+                        )::int as completed_task_count
+                    from tasks t
+                    group by t.project_id
+                ),
+                classified_projects as (
+                    select
+                        p.id as project_id,
+                        p.name as project_name,
+                        p.project_type,
+                        coalesce(nullif(trim(p.responsible_login::text), ''), 'Sem responsável') as responsible_login,
+                        p.planned_start,
+                        p.planned_end,
+                        extract(year from p.planned_start)::int as year,
+                        extract(month from p.planned_start)::int as month,
+                        greatest(coalesce(p.estimated_cost, 0), 0) as estimated_cost,
+                        coalesce(tc.task_count, 0)::int as task_count,
+                        coalesce(tc.completed_task_count, 0)::int as completed_task_count,
+                        case
+                            when trim(p.severity::text) in ('Sem gravidade', 'NONE') then 1
+                            when trim(p.severity::text) in ('Pouco grave', 'LOW') then 2
+                            when trim(p.severity::text) in ('Grave', 'MEDIUM') then 3
+                            when trim(p.severity::text) in ('Muito grave', 'HIGH') then 4
+                            when trim(p.severity::text) in ('Gravíssimo', 'CRITICAL') then 5
+                            else 1
+                        end as severity_score,
+                        case
+                            when trim(p.urgency::text) in ('Pode esperar', 'CAN_WAIT') then 1
+                            when trim(p.urgency::text) in ('Pouco urgente', 'LOW') then 2
+                            when trim(p.urgency::text) in ('Urgente', 'MEDIUM') then 3
+                            when trim(p.urgency::text) in ('Mais rápido possível', 'FAST') then 4
+                            when trim(p.urgency::text) in ('Imediatamente', 'IMMEDIATE') then 5
+                            else 1
+                        end as urgency_score,
+                        case
+                            when trim(p.trend::text) in ('Não tende a piorar', 'STABLE') then 1
+                            when trim(p.trend::text) in ('Piora em longo prazo', 'LONG_TERM') then 2
+                            when trim(p.trend::text) in ('Piora em médio prazo', 'MEDIUM_TERM') then 3
+                            when trim(p.trend::text) in ('Piora em curto prazo', 'SHORT_TERM') then 4
+                            when trim(p.trend::text) in ('Piora rapidamente', 'RAPID') then 5
+                            else 1
+                        end as trend_score,
+                        case
+                            when trim(p.objective::text) in ('Objetivo totalmente definido', 'FULLY_DEFINED')
+                                then 1
+                            when trim(p.objective::text) in ('Objetivo claro com pequenas ambiguidades', 'CLEAR_WITH_AMBIGUITIES')
+                                then 2
+                            when trim(p.objective::text) in ('Objetivo parcialmente definido', 'PARTIALLY_DEFINED')
+                                then 3
+                            when trim(p.objective::text) in ('Objetivo pouco claro', 'UNCLEAR')
+                                then 4
+                            when trim(p.objective::text) in ('Objetivo indefinido ou exploratório', 'UNDEFINED')
+                                then 5
+                            else 1
+                        end as objective_score,
+                        case
+                            when trim(p.method::text) in ('Métodos totalmente definidos e dominados', 'FULLY_DEFINED')
+                                then 1
+                            when trim(p.method::text) in (
+                                'Métodos conhecidos com pequenas adaptações',
+                                'Métodos definidos com pequenas alterações',
+                                'KNOWN_WITH_ADAPTATIONS'
+                            )
+                                then 2
+                            when trim(p.method::text) in ('Métodos parcialmente conhecidos', 'PARTIALLY_KNOWN')
+                                then 3
+                            when trim(p.method::text) in ('Métodos pouco definidos', 'POORLY_DEFINED')
+                                then 4
+                            when trim(p.method::text) in ('Métodos desconhecidos ou inexistentes', 'UNKNOWN')
+                                then 5
+                            else 1
+                        end as method_score
+                    from projects p
+                    left join task_counts tc on tc.project_id = p.id
+                    where p.planned_start is not null
+                      and p.planned_end is not null
+                      and p.project_type is not null
+                ),
+                scored_projects as (
+                    select
+                        *,
+                        severity_score * urgency_score * trend_score as gut_score,
+                        least(
+                            5,
+                            greatest(
+                                1,
+                                ceil((objective_score * method_score)::numeric / 5.0)::int
+                            )
+                        ) as complexity_score,
+                        case
+                            when task_count > 0
+                                then round((completed_task_count::numeric / task_count::numeric) * 100.0, 2)
+                            else 0
+                        end as percent_completed
+                    from classified_projects
+                )
+                select
+                    project_id,
+                    project_name,
+                    project_type,
+                    responsible_login,
+                    planned_start,
+                    planned_end,
+                    year,
+                    month,
+                    estimated_cost,
+                    task_count,
+                    completed_task_count,
+                    percent_completed,
+                    gut_score,
+                    case
+                        when gut_score >= 101 then 1
+                        when gut_score >= 76 then 2
+                        when gut_score >= 51 then 3
+                        when gut_score >= 26 then 4
+                        else 5
+                    end as priority_level,
+                    complexity_score
+                from scored_projects
+                order by responsible_login asc, year asc, month asc, priority_level asc, project_name asc
+                """
+            )
+            rows = cur.fetchall() or []
+
+        return [
+            {
+                "project_id": int(row["project_id"]),
+                "project_name": row["project_name"],
+                "project_type": row["project_type"],
+                "responsible_login": row["responsible_login"],
+                "planned_start": row["planned_start"],
+                "planned_end": row["planned_end"],
+                "estimated_cost": float(row["estimated_cost"] or 0.0),
+                "task_count": int(row["task_count"] or 0),
+                "completed_task_count": int(row["completed_task_count"] or 0),
+                "percent_completed": float(row["percent_completed"] or 0.0),
+                "gut_score": int(row["gut_score"] or 1),
+                "priority_level": int(row["priority_level"] or 5),
+                "complexity_score": int(row["complexity_score"] or 1),
+                "year": int(row["year"] or 0),
+                "month": int(row["month"] or 0),
+            }
+            for row in rows
+        ]
+
     def list_project_earned_value(self) -> list[dict]:
         with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(

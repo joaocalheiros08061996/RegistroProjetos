@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KPIs de Valor Agregado, Prazo, Custo e Esforço | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260531">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">KPIs de Valor Agregado, Prazo, Custo e Esforço</h1>
+      <p class="muted">Valor agregado, IDP, IDC e desvio de esforço por mês.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section project-monthly-section earned-value-section">
+    <article class="dashboard-panel">
+      <h2>Valor Agregado por Mês</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o <strong>Valor Agregado (VA)</strong> é a soma dos custos estimados das
+        tarefas concluídas, representando o valor do escopo efetivamente
+        entregue. A linha de <strong>Valor Planejado (VP)</strong> aparece
+        apenas como referência do quanto deveria ter sido entregue pelo
+        cronograma até hoje, sem considerar custo real de execução.
+      </div>
+
+      <aside class="project-monthly-filters earned-value-filters" aria-label="Filtros do gráfico de valor agregado">
+        <label for="earned-value-year-filter">
+          Ano
+          <select id="earned-value-year-filter"></select>
+        </label>
+
+        <label for="earned-value-month-filter">
+          Mês
+          <select id="earned-value-month-filter"></select>
+        </label>
+
+        <label for="earned-value-type-filter">
+          Tipo de projeto
+          <select id="earned-value-type-filter"></select>
+        </label>
+
+        <label for="earned-value-user-filter">
+          Usuário
+          <select id="earned-value-user-filter"></select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-10" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-10" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há projetos com custo estimado ou tarefas valorizadas para o filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-10" class="dashboard-chart earned-value-dashboard-chart hidden" aria-label="Gráfico de valor agregado"></div>
+    </article>
+  </section>
+
+  <section class="section project-monthly-section schedule-performance-section">
+    <article class="dashboard-panel">
+      <h2>Índice de Desempenho de Prazo (IDP) por Mês</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o <strong>IDP</strong> mede se o cronograma está atrasado, no prazo ou
+        adiantado a partir da razão <strong>VA ÷ VP</strong>. Valores abaixo de
+        <strong>1</strong> indicam atraso, valores iguais a <strong>1</strong>
+        indicam aderência ao planejado e valores acima de <strong>1</strong>
+        indicam avanço em relação ao cronograma.
+      </div>
+
+      <aside class="project-monthly-filters schedule-performance-filters" aria-label="Filtros do gráfico de IDP">
+        <label for="schedule-performance-year-filter">
+          Ano
+          <select id="schedule-performance-year-filter"></select>
+        </label>
+
+        <label for="schedule-performance-month-filter">
+          Mês
+          <select id="schedule-performance-month-filter"></select>
+        </label>
+
+        <label for="schedule-performance-type-filter">
+          Tipo de projeto
+          <select id="schedule-performance-type-filter"></select>
+        </label>
+
+        <label for="schedule-performance-user-filter">
+          Usuário
+          <select id="schedule-performance-user-filter"></select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-11" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-11" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há dados com VA e VP válidos para calcular o IDP no filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-11" class="dashboard-chart schedule-performance-dashboard-chart hidden" aria-label="Gráfico de índice de desempenho de prazo"></div>
+    </article>
+  </section>
+
+  <section class="section project-monthly-section cost-performance-section">
+    <article class="dashboard-panel">
+      <h2>Índice de Desempenho de Custo (IDC) por Mês</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o <strong>IDC</strong> mede o desempenho de custo a partir da razão
+        <strong>VA ÷ Custo Real</strong>. Valores abaixo de <strong>1</strong>
+        indicam consumo de recursos maior que o valor entregue, valores iguais a
+        <strong>1</strong> indicam aderência ao orçamento e valores acima de
+        <strong>1</strong> indicam consumo menor que o valor entregue.
+      </div>
+
+      <aside class="project-monthly-filters cost-performance-filters" aria-label="Filtros do gráfico de IDC">
+        <label for="cost-performance-year-filter">
+          Ano
+          <select id="cost-performance-year-filter"></select>
+        </label>
+
+        <label for="cost-performance-month-filter">
+          Mês
+          <select id="cost-performance-month-filter"></select>
+        </label>
+
+        <label for="cost-performance-type-filter">
+          Tipo de projeto
+          <select id="cost-performance-type-filter"></select>
+        </label>
+
+        <label for="cost-performance-user-filter">
+          Usuário
+          <select id="cost-performance-user-filter"></select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-12" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-12" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há dados com VA e custo real válidos para calcular o IDC no filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-12" class="dashboard-chart cost-performance-dashboard-chart hidden" aria-label="Gráfico de índice de desempenho de custo"></div>
+    </article>
+  </section>
+
+  <section class="section project-monthly-section effort-deviation-section">
+    <article class="dashboard-panel">
+      <h2>Desvio de Esforço por Mês</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o <strong>Desvio de Esforço</strong> compara o esforço real registrado
+        em tarefas com o esforço planejado no cronograma. O cálculo usado é
+        <strong>horas reais - horas planejadas</strong>, considerando apenas
+        registros de tempo fechados. Valores positivos indicam consumo acima do
+        estimado; valores negativos indicam consumo abaixo do estimado.
+      </div>
+
+      <aside class="project-monthly-filters effort-deviation-filters" aria-label="Filtros do gráfico de desvio de esforço">
+        <label for="effort-deviation-year-filter">
+          Ano
+          <select id="effort-deviation-year-filter"></select>
+        </label>
+
+        <label for="effort-deviation-month-filter">
+          Mês
+          <select id="effort-deviation-month-filter"></select>
+        </label>
+
+        <label for="effort-deviation-type-filter">
+          Tipo de projeto
+          <select id="effort-deviation-type-filter"></select>
+        </label>
+
+        <label for="effort-deviation-user-filter">
+          Usuário
+          <select id="effort-deviation-user-filter"></select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-13" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-13" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há tarefas com esforço planejado e tempo real fechado para o filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-13" class="dashboard-chart effort-deviation-dashboard-chart hidden" aria-label="Gráfico de desvio de esforço"></div>
+    </article>
+  </section>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js?v=20260505"></script>
+<script src="dashboard/dom.js?v=20260531"></script>
+<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="dashboard/plotly-common.js?v=20260531"></script>
+<script src="dashboard/value-data.js?v=20260531"></script>
+<script src="dashboard/value-charts.js?v=20260531"></script>
+<script src="dashboard/effort-deviation-chart.js?v=20260531"></script>
+<script src="dashboard/bootstrap-utils.js?v=20260531"></script>
+<script src="dashboard/bootstrap-value-kpis.js?v=20260531"></script>
+</body>
+</html>

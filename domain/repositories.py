@@ -164,6 +164,14 @@ class IDashboardRepository(ABC):
         """
 
     @abstractmethod
+    def list_projects_by_responsible(self) -> list[dict]:
+        """
+        Retorna projetos globais para a tabela de projetos por responsavel.
+        Cada item deve conter os campos de projeto, progresso, prioridade,
+        complexidade e periodo derivados de planned_start.
+        """
+
+    @abstractmethod
     def list_project_earned_value(self) -> list[dict]:
         """
         Retorna dados de valor agregado por projeto.

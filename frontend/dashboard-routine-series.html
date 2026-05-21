@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Séries Temporais de Atividades de Rotina | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260531">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Séries Temporais de Atividades de Rotina</h1>
+      <p class="muted">Dias totais para atividades de rotina ao longo do tempo.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section dashboard-grid">
+    <article class="dashboard-panel">
+      <div class="dashboard-panel-header">
+        <div>
+          <h2>Dias Totais para Atividades de Rotina</h2>
+          <div class="dashboard-kpi-methodology">
+            <strong>Metodologia da KPI:</strong>
+            soma-se o tempo trabalhado das atividades de rotina finalizadas,
+            usando as horas registradas ou a diferença entre início e fim quando
+            necessário. O total é convertido para dias
+            (<strong>horas / 24</strong>) e agrupado por mês/ano, respeitando os
+            filtros de responsável, ano, mês e tipo de atividade.
+          </div>
+          <p id="dashboard-feedback-3" class="status">Carregando gráfico...</p>
+        </div>
+      </div>
+
+      <div class="routine-dashboard-layout">
+        <aside class="routine-dashboard-filters" aria-label="Filtros do gráfico de atividades de rotina">
+          <label for="routine-year-filter">
+            Ano
+            <select id="routine-year-filter"></select>
+          </label>
+
+          <label for="routine-month-filter">
+            Mês
+            <select id="routine-month-filter"></select>
+          </label>
+
+          <label for="routine-type-filter">
+            Tipo de atividade
+            <select id="routine-type-filter"></select>
+          </label>
+
+          <label for="routine-user-filter">
+            Responsável
+            <select id="routine-user-filter"></select>
+          </label>
+        </aside>
+
+        <div class="routine-dashboard-visual">
+          <div id="dashboard-empty-3" class="item hidden">
+            <p class="item-subtitle">
+              Ainda não há atividades de rotina finalizadas para exibir.
+            </p>
+          </div>
+          <div id="dashboard-chart-3" class="dashboard-chart routine-dashboard-chart hidden" aria-label="Gráfico de dias totais para atividades de rotina"></div>
+        </div>
+      </div>
+    </article>
+  </section>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js?v=20260505"></script>
+<script src="dashboard/dom.js?v=20260531"></script>
+<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="dashboard/plotly-common.js?v=20260531"></script>
+<script src="dashboard/routine-chart.js?v=20260531"></script>
+<script src="dashboard/bootstrap-utils.js?v=20260531"></script>
+<script src="dashboard/bootstrap-routine-series.js?v=20260531"></script>
+</body>
+</html>

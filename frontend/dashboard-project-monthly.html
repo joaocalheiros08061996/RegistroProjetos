@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Análise Mensal dos Projetos | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260531">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Análise Mensal dos Projetos</h1>
+      <p class="muted">Indicadores mensais de prazo, eficiência e complexidade.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section project-monthly-section">
+    <div class="dashboard-panel-header">
+      <div>
+        <h2>Análise Mensal de Projetos</h2>
+        <p id="project-monthly-feedback" class="status">Carregando gráficos mensais...</p>
+      </div>
+    </div>
+
+    <aside class="project-monthly-filters" aria-label="Filtros dos gráficos mensais de projeto">
+      <label for="project-monthly-year-filter">
+        Ano
+        <select id="project-monthly-year-filter"></select>
+      </label>
+
+      <label for="project-monthly-month-filter">
+        Mês
+        <select id="project-monthly-month-filter"></select>
+      </label>
+
+      <label for="project-monthly-type-filter">
+        Tipo de projeto
+        <select id="project-monthly-type-filter"></select>
+      </label>
+
+      <label for="project-monthly-user-filter">
+        Usuário
+        <select id="project-monthly-user-filter"></select>
+      </label>
+    </aside>
+
+    <article class="dashboard-panel">
+      <h2>Lead Time Mensal por Tipo de Projeto</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        para cada mês/ano, calcula-se a média de dias reais dos projetos com
+        tempo real lançado. O tempo real vem das entradas de tempo fechadas das
+        tarefas (<strong>segundos / 86400</strong>). A linha de referência usa a
+        média de lead time real do gráfico “Lead Time Médio por Tipo de Projeto”.
+      </div>
+      <p id="dashboard-feedback-4" class="status"></p>
+      <div id="dashboard-empty-4" class="item hidden">
+        <p class="item-subtitle">Sem dados mensais para o filtro atual.</p>
+      </div>
+      <div id="dashboard-chart-4" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de lead time mensal por tipo de projeto"></div>
+    </article>
+
+    <article class="dashboard-panel">
+      <h2>Atraso Médio Mensal por Tipo de Projeto</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o atraso médio mensal é calculado como
+        <strong>média de dias reais - média de dias planejados</strong> para os
+        projetos do período. Valores positivos indicam estouro do planejado;
+        valores negativos indicam execução abaixo do prazo planejado.
+      </div>
+      <p id="dashboard-feedback-5" class="status"></p>
+      <div id="dashboard-empty-5" class="item hidden">
+        <p class="item-subtitle">Sem dados de atraso para o filtro atual.</p>
+      </div>
+      <div id="dashboard-chart-5" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de atraso médio mensal por tipo de projeto"></div>
+    </article>
+
+    <article class="dashboard-panel">
+      <h2>Eficiência Mensal por Tipo de Projeto</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        a eficiência mensal é calculada como
+        <strong>média de dias planejados / média de dias reais</strong>,
+        apresentada em percentual. Quanto maior o percentual, maior a relação
+        entre prazo planejado disponível e tempo real consumido.
+      </div>
+      <p id="dashboard-feedback-6" class="status"></p>
+      <div id="dashboard-empty-6" class="item hidden">
+        <p class="item-subtitle">Sem dados de eficiência para o filtro atual.</p>
+      </div>
+      <div id="dashboard-chart-6" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de eficiência mensal por tipo de projeto"></div>
+    </article>
+
+    <article class="dashboard-panel">
+      <h2>Taxa de Projetos que Estouram o Prazo</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        considera-se que um projeto estourou o prazo quando seus dias reais são
+        maiores que seus dias planejados. A taxa mensal é
+        <strong>projetos estourados / projetos com tempo real válido</strong>,
+        exibida em percentual.
+      </div>
+      <p id="dashboard-feedback-7" class="status"></p>
+      <div id="dashboard-empty-7" class="item hidden">
+        <p class="item-subtitle">Sem dados de prazo para o filtro atual.</p>
+      </div>
+      <div id="dashboard-chart-7" class="dashboard-chart project-monthly-chart hidden" aria-label="Gráfico de taxa de projetos que estouram o prazo"></div>
+    </article>
+  </section>
+
+  <section class="section dashboard-grid dashboard-complexity-section">
+    <article class="dashboard-panel">
+      <h2>Quantidade de Projetos por Complexidade</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        cada projeto recebe uma nota de 1 a 5 para clareza do objetivo e outra
+        de 1 a 5 para definição do método. A pontuação bruta é
+        <strong>objetivo x método</strong>, variando de 1 a 25, e depois é
+        agrupada em cinco faixas: Complexidade 1 (1-5), Complexidade 2 (6-10),
+        Complexidade 3 (11-15), Complexidade 4 (16-20) e Complexidade 5
+        (21-25). Quanto maior a faixa, maior a complexidade do projeto.
+      </div>
+      <p id="dashboard-feedback-8" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-8" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há projetos com objetivo e método válidos para exibir.
+        </p>
+      </div>
+      <div id="dashboard-chart-8" class="dashboard-chart complexity-dashboard-chart hidden" aria-label="Gráfico de quantidade de projetos por complexidade"></div>
+    </article>
+
+    <article class="dashboard-panel">
+      <h2>Quantidade de Projetos por Complexidade por Mês</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        usa a mesma classificação de complexidade do gráfico anterior. Para cada
+        projeto, calcula-se <strong>objetivo x método</strong>, agrupa-se a
+        pontuação em Complexidade 1 a 5 e conta-se quantos projetos existem em
+        cada mês/ano, usando a data inicial planejada do projeto. Os filtros
+        permitem recortar por ano, mês, tipo de projeto e usuário responsável.
+      </div>
+
+      <aside class="project-monthly-filters complexity-monthly-filters" aria-label="Filtros do gráfico mensal de complexidade">
+        <label for="complexity-monthly-year-filter">
+          Ano
+          <select id="complexity-monthly-year-filter"></select>
+        </label>
+
+        <label for="complexity-monthly-month-filter">
+          Mês
+          <select id="complexity-monthly-month-filter"></select>
+        </label>
+
+        <label for="complexity-monthly-type-filter">
+          Tipo de projeto
+          <select id="complexity-monthly-type-filter"></select>
+        </label>
+
+        <label for="complexity-monthly-user-filter">
+          Usuário
+          <select id="complexity-monthly-user-filter"></select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-9" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-9" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há projetos com complexidade válida para o filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-9" class="dashboard-chart complexity-monthly-dashboard-chart hidden" aria-label="Gráfico de quantidade de projetos por complexidade por mês"></div>
+    </article>
+  </section>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js?v=20260505"></script>
+<script src="dashboard/dom.js?v=20260531"></script>
+<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="dashboard/plotly-common.js?v=20260531"></script>
+<script src="dashboard/project-monthly-data.js?v=20260531"></script>
+<script src="dashboard/project-monthly-charts.js?v=20260531"></script>
+<script src="dashboard/complexity-data.js?v=20260531"></script>
+<script src="dashboard/complexity-charts.js?v=20260531"></script>
+<script src="dashboard/bootstrap-utils.js?v=20260531"></script>
+<script src="dashboard/bootstrap-project-monthly.js?v=20260531"></script>
+</body>
+</html>

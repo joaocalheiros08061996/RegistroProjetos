@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lead Time Médio | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260531">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Lead Time Médio</h1>
+      <p class="muted">Indicadores de lead time por tipo de projeto.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" onclick="logout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="section dashboard-grid">
+    <article class="dashboard-panel">
+      <h2>Lead Time Médio por Tipo de Projeto</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        para cada projeto, o tempo real é a soma das entradas de tempo fechadas
+        das tarefas vinculadas ao projeto, convertida de segundos para dias
+        (<strong>segundos / 86400</strong>). Depois, calcula-se a média desses
+        dias reais por tipo de projeto, considerando todos os usuários.
+      </div>
+      <p id="dashboard-feedback" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há dados suficientes para calcular a média global.
+        </p>
+      </div>
+      <div id="dashboard-chart" class="dashboard-chart hidden" aria-label="Gráfico de média de dias reais por tipo de projeto"></div>
+    </article>
+
+    <article class="dashboard-panel">
+      <h2>Lead Time Médio: Planejado vs Real</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        o lead time planejado é calculado por projeto como
+        <strong>data final planejada - data inicial planejada</strong>. O lead
+        time real usa a soma das entradas de tempo fechadas das tarefas do
+        projeto, convertida para dias. O gráfico compara as médias planejada e
+        real por tipo de projeto.
+      </div>
+      <p id="dashboard-feedback-2" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-2" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há dados suficientes para comparar planejado e real.
+        </p>
+      </div>
+      <div id="dashboard-chart-2" class="dashboard-chart hidden" aria-label="Gráfico de lead time planejado vs real por tipo de projeto"></div>
+    </article>
+  </section>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js?v=20260505"></script>
+<script src="dashboard/dom.js?v=20260531"></script>
+<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="dashboard/plotly-common.js?v=20260531"></script>
+<script src="dashboard/static-charts.js?v=20260531"></script>
+<script src="dashboard/bootstrap-utils.js?v=20260531"></script>
+<script src="dashboard/bootstrap-lead-time.js?v=20260531"></script>
+</body>
+</html>
