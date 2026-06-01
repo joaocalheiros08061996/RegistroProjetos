@@ -8,11 +8,17 @@ __pycache__/
 
 # Dados locais usados nas importacoes historicas
 A3 - Gerenciamento de Projetos.xlsx
+A3 - Gerenciamento de Projetos (2025).xlsx
+A3 - Gerenciamento de Projetos (2026).xlsx
 atividades_rows*.csv
+usuarios_legados*.csv
 *:Zone.Identifier
 
 # Artefatos gerados pelas automacoes de importacao
 automacoes/import_a3_manifest.json
 automacoes/import_a3_report.json
+automacoes/import_a3_2026_report.json
 automacoes/import_atividades_manifest.json
 automacoes/import_atividades_report.json
+automacoes/registrar_privacidade_legado_report.json
+automacoes/substituir_a3_2025_report.json

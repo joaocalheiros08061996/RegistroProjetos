@@ -33,6 +33,10 @@ def pytest_sessionstart(session):
 def set_test_env():
     os.environ["ENV"] = "test"
     os.environ["SUPABASE_JWT_SECRET"] = "test-secret"
+    os.environ["PRIVACY_POLICY_VERSION"] = "2026-06-01"
+    os.environ["PRIVACY_AUDIT_HASH_SECRET"] = "privacy-audit-test-secret"
+    os.environ["PRIVACY_CONTROLLER_NAME"] = "Controlador de Teste"
+    os.environ["PRIVACY_CONTACT_EMAIL"] = "privacidade@example.com"
 
 
 @pytest.fixture

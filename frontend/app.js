@@ -20,8 +20,38 @@ function isAuthenticated() {
   return Boolean(getToken());
 }
 
-function logout() {
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function bindGlobalActions() {
+  document.querySelectorAll('[data-action="logout"]').forEach((button) => {
+    if (button.dataset.actionBound === "true") {
+      return;
+    }
+    button.dataset.actionBound = "true";
+    button.addEventListener("click", logout);
+  });
+}
+
+async function logout() {
+  const token = getToken();
   clearToken();
+
+  try {
+    await fetch("/auth/logout", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  } catch {
+    // Logout local ja foi aplicado; falha remota nao deve prender o usuario.
+  }
+
   location.href = "login.html";
 }
 
@@ -55,7 +85,25 @@ async function getAppConfig() {
   return appConfigCache;
 }
 
-async function apiFetch(path, options = {}) {
+async function refreshAccessToken() {
+  const res = await fetch("/auth/refresh", {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!data.access_token) {
+    return false;
+  }
+
+  setToken(data.access_token);
+  return true;
+}
+
+async function apiFetch(path, options = {}, retryOnUnauthorized = true) {
   const token = getToken();
   const headers = {
     ...(options.headers || {}),
@@ -75,7 +123,10 @@ async function apiFetch(path, options = {}) {
   });
 
   if (res.status === 401) {
-    logout();
+    if (retryOnUnauthorized && await refreshAccessToken()) {
+      return apiFetch(path, options, false);
+    }
+    await logout();
     throw new Error("Sessão expirada. Faça login novamente.");
   }
 
@@ -187,11 +238,13 @@ async function signIn(email, password) {
   return data;
 }
 
-async function signUp(email, password) {
-  const data = await supabaseAuth("signup", { email, password });
+async function signUp(email, password, privacyNoticeAcknowledged) {
+  const data = await supabaseAuth("signup", {
+    email,
+    password,
+    privacy_notice_acknowledged: privacyNoticeAcknowledged,
+  });
 
-  // Em projetos Supabase sem confirmação obrigatória de e-mail,
-  // o signup pode devolver token imediatamente.
   const tokenFromResponse =
     data?.access_token ||
     data?.session?.access_token ||
@@ -211,7 +264,9 @@ function qs(name) {
 window.getToken = getToken;
 window.setToken = setToken;
 window.clearToken = clearToken;
+window.escapeHtml = escapeHtml;
 window.logout = logout;
+window.refreshAccessToken = refreshAccessToken;
 window.requireAuth = requireAuth;
 window.requireGuest = requireGuest;
 window.getAppConfig = getAppConfig;
@@ -224,3 +279,9 @@ window.formatProjectType = formatProjectType;
 window.signIn = signIn;
 window.signUp = signUp;
 window.qs = qs;
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bindGlobalActions);
+} else {
+  bindGlobalActions();
+}

@@ -409,6 +409,50 @@ class DashboardService:
                 item["activity_type"],
                 item["user_id"],
             )
+            )
+        return items
+
+    def list_new_process_time_by_month(self) -> list[dict]:
+        rows = self.dashboard_repo.list_new_process_time_by_month()
+
+        items: list[dict] = []
+        for row in rows:
+            responsible_label = str(row.get("responsible_label") or "").strip()
+            year = int(row.get("year") or 0)
+            month = int(row.get("month") or 0)
+            project_days = max(0.0, float(row.get("project_days") or 0.0))
+            routine_days = max(0.0, float(row.get("routine_days") or 0.0))
+            total_days = project_days + routine_days
+
+            if not responsible_label:
+                responsible_label = "Sem responsável"
+
+            if year <= 0 or month not in self._MONTH_LABELS:
+                continue
+
+            if total_days <= 0:
+                continue
+
+            month_label = self._MONTH_LABELS[month]
+            items.append(
+                {
+                    "responsible_label": responsible_label,
+                    "year": year,
+                    "month": month,
+                    "month_label": month_label,
+                    "period_label": f"{month_label} {year}",
+                    "project_days": project_days,
+                    "routine_days": routine_days,
+                    "total_days": total_days,
+                }
+            )
+
+        items.sort(
+            key=lambda item: (
+                item["year"],
+                item["month"],
+                item["responsible_label"],
+            )
         )
         return items
 
@@ -656,8 +700,20 @@ class DashboardService:
             planned_value = max(0.0, float(row.get("planned_value") or 0.0))
             earned_value = max(0.0, float(row.get("earned_value") or 0.0))
             total_task_cost = max(0.0, float(row.get("total_task_cost") or 0.0))
+            planned_effort_hours = max(0.0, float(row.get("planned_effort_hours") or 0.0))
+            actual_effort_hours = max(0.0, float(row.get("actual_effort_hours") or 0.0))
+            planned_labor_cost = max(0.0, float(row.get("planned_labor_cost") or 0.0))
+            actual_labor_cost = max(0.0, float(row.get("actual_labor_cost") or 0.0))
+            actual_cost = max(0.0, float(row.get("actual_cost") or 0.0))
 
-            if estimated_cost <= 0 and total_task_cost <= 0 and planned_value <= 0 and earned_value <= 0:
+            if (
+                estimated_cost <= 0
+                and total_task_cost <= 0
+                and planned_value <= 0
+                and earned_value <= 0
+                and planned_labor_cost <= 0
+                and actual_cost <= 0
+            ):
                 continue
 
             month_label = self._MONTH_LABELS[month]
@@ -679,6 +735,11 @@ class DashboardService:
                     "planned_value": planned_value,
                     "earned_value": earned_value,
                     "total_task_cost": total_task_cost,
+                    "planned_effort_hours": planned_effort_hours,
+                    "actual_effort_hours": actual_effort_hours,
+                    "planned_labor_cost": planned_labor_cost,
+                    "actual_labor_cost": actual_labor_cost,
+                    "actual_cost": actual_cost,
                     "task_count": max(0, int(row.get("task_count") or 0)),
                     "completed_task_count": max(0, int(row.get("completed_task_count") or 0)),
                 }
@@ -707,6 +768,8 @@ class DashboardService:
             task_count = max(0, int(row.get("task_count") or 0))
             planned_effort_hours = max(0.0, float(row.get("planned_effort_hours") or 0.0))
             actual_effort_hours = max(0.0, float(row.get("actual_effort_hours") or 0.0))
+            planned_labor_cost = max(0.0, float(row.get("planned_labor_cost") or 0.0))
+            actual_labor_cost = max(0.0, float(row.get("actual_labor_cost") or 0.0))
 
             if not project_type or not responsible_login:
                 continue
@@ -734,6 +797,9 @@ class DashboardService:
                     "planned_effort_hours": planned_effort_hours,
                     "actual_effort_hours": actual_effort_hours,
                     "effort_deviation_hours": actual_effort_hours - planned_effort_hours,
+                    "planned_labor_cost": planned_labor_cost,
+                    "actual_labor_cost": actual_labor_cost,
+                    "labor_cost_deviation": actual_labor_cost - planned_labor_cost,
                 }
             )
 

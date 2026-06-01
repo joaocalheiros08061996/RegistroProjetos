@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KPIs de Valor Agregado, Prazo, Custo e Esforço | Dashboard</title>
-  <link rel="stylesheet" href="styles.css?v=20260531">
+  <link rel="stylesheet" href="styles.css?v=20260525">
 </head>
 <body>
 <main class="page dashboard-page">
@@ -17,7 +17,7 @@
       <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
       <a class="button secondary" href="module-select.html">Trocar módulo</a>
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
-      <button class="danger" type="button" onclick="logout()">Sair</button>
+      <button class="danger" type="button" data-action="logout">Sair</button>
     </div>
   </header>
 
@@ -26,11 +26,10 @@
       <h2>Valor Agregado por Mês</h2>
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
-        o <strong>Valor Agregado (VA)</strong> é a soma dos custos estimados das
-        tarefas concluídas, representando o valor do escopo efetivamente
-        entregue. A linha de <strong>Valor Planejado (VP)</strong> aparece
-        apenas como referência do quanto deveria ter sido entregue pelo
-        cronograma até hoje, sem considerar custo real de execução.
+        o <strong>Valor Agregado (VA)</strong> soma os custos digitados das
+        tarefas concluídas com a mão de obra planejada concluída, calculada por
+        horas planejadas × R$ 195,61. O <strong>Valor Planejado (VP)</strong>
+        usa o orçamento de referência do projeto somado à mão de obra planejada.
       </div>
 
       <aside class="project-monthly-filters earned-value-filters" aria-label="Filtros do gráfico de valor agregado">
@@ -115,10 +114,9 @@
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
         o <strong>IDC</strong> mede o desempenho de custo a partir da razão
-        <strong>VA ÷ Custo Real</strong>. Valores abaixo de <strong>1</strong>
-        indicam consumo de recursos maior que o valor entregue, valores iguais a
-        <strong>1</strong> indicam aderência ao orçamento e valores acima de
-        <strong>1</strong> indicam consumo menor que o valor entregue.
+        <strong>VA ÷ Custo Real</strong>. O custo real soma os custos digitados
+        com a mão de obra real registrada em apontamentos fechados, calculada
+        por horas reais × R$ 195,61.
       </div>
 
       <aside class="project-monthly-filters cost-performance-filters" aria-label="Filtros do gráfico de IDC">
@@ -160,9 +158,9 @@
         <strong>Metodologia da KPI:</strong>
         o <strong>Desvio de Esforço</strong> compara o esforço real registrado
         em tarefas com o esforço planejado no cronograma. O cálculo usado é
-        <strong>horas reais - horas planejadas</strong>, considerando apenas
-        registros de tempo fechados. Valores positivos indicam consumo acima do
-        estimado; valores negativos indicam consumo abaixo do estimado.
+        <strong>tempo real - tempo planejado</strong>, considerando apenas
+        registros de tempo fechados. O hover também exibe o impacto financeiro
+        dessa variação usando R$ 195,61 por hora.
       </div>
 
       <aside class="project-monthly-filters effort-deviation-filters" aria-label="Filtros do gráfico de desvio de esforço">
@@ -185,6 +183,14 @@
           Usuário
           <select id="effort-deviation-user-filter"></select>
         </label>
+
+        <label for="dashboard-time-unit-filter">
+          Unidade de tempo
+          <select id="dashboard-time-unit-filter">
+            <option value="days">Dias</option>
+            <option value="hours">Horas</option>
+          </select>
+        </label>
       </aside>
 
       <p id="dashboard-feedback-13" class="status">Carregando gráfico...</p>
@@ -199,14 +205,14 @@
 </main>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="app.js?v=20260505"></script>
-<script src="dashboard/dom.js?v=20260531"></script>
-<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="app.js?v=20260602"></script>
+<script src="dashboard/dom.js?v=20260525"></script>
+<script src="dashboard/formatters.js?v=20260525"></script>
 <script src="dashboard/plotly-common.js?v=20260531"></script>
-<script src="dashboard/value-data.js?v=20260531"></script>
-<script src="dashboard/value-charts.js?v=20260531"></script>
-<script src="dashboard/effort-deviation-chart.js?v=20260531"></script>
+<script src="dashboard/value-data.js?v=20260602"></script>
+<script src="dashboard/value-charts.js?v=20260602"></script>
+<script src="dashboard/effort-deviation-chart.js?v=20260602"></script>
 <script src="dashboard/bootstrap-utils.js?v=20260531"></script>
-<script src="dashboard/bootstrap-value-kpis.js?v=20260531"></script>
+<script src="dashboard/bootstrap-value-kpis.js?v=20260525"></script>
 </body>
 </html>

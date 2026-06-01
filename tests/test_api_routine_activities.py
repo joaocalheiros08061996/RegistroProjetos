@@ -116,7 +116,9 @@ def test_start_routine_activity_accepts_all_allowed_types(client):
         "Atualização de Custos",
         "Finame",
         "Reuniões",
+        "Reuniões sobre Processos Novos",
         "Análise de Processos",
+        "Análise de Processos Novos",
     ]
 
     for activity_type in allowed_types:
@@ -142,6 +144,38 @@ def test_start_routine_activity_with_removed_type_returns_422(client):
     )
 
     assert response.status_code == 422
+
+
+def test_start_routine_activity_rejects_long_text_and_extra_fields(client):
+    long_responsible_response = client.post(
+        "/routine-activities/start",
+        headers=AUTH_HEADER,
+        json={
+            "tipo_atividade": "Cadastro",
+            "responsavel": "R" * 121,
+        },
+    )
+    assert long_responsible_response.status_code == 422
+
+    long_description_response = client.post(
+        "/routine-activities/start",
+        headers=AUTH_HEADER,
+        json={
+            "tipo_atividade": "Cadastro",
+            "descricao": "D" * 1001,
+        },
+    )
+    assert long_description_response.status_code == 422
+
+    extra_field_response = client.post(
+        "/routine-activities/start",
+        headers=AUTH_HEADER,
+        json={
+            "tipo_atividade": "Cadastro",
+            "campo_extra": "nao permitido",
+        },
+    )
+    assert extra_field_response.status_code == 422
 
 
 def test_routine_activity_requires_authentication(client):

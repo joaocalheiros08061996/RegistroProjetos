@@ -34,6 +34,122 @@ function getDaysPrecision(values) {
   return 1;
 }
 
+const DASHBOARD_TIME_UNIT_STORAGE_KEY = "registroProjetos.dashboardTimeUnit";
+
+function normalizeDashboardTimeUnit(value) {
+  return value === "hours" ? "hours" : "days";
+}
+
+function readDashboardTimeUnitPreference() {
+  try {
+    return window.localStorage.getItem(DASHBOARD_TIME_UNIT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveDashboardTimeUnitPreference(value) {
+  try {
+    window.localStorage.setItem(
+      DASHBOARD_TIME_UNIT_STORAGE_KEY,
+      normalizeDashboardTimeUnit(value)
+    );
+  } catch {
+    // A preferencia do usuario e opcional; o dashboard continua funcional sem localStorage.
+  }
+}
+
+function getDashboardTimeUnit() {
+  const selectEl = typeof dashboardTimeUnitFilterEl !== "undefined"
+    ? dashboardTimeUnitFilterEl
+    : null;
+
+  return normalizeDashboardTimeUnit(
+    selectEl?.value || readDashboardTimeUnitPreference()
+  );
+}
+
+function setupDashboardTimeUnitFilter(onChange) {
+  const selectEl = typeof dashboardTimeUnitFilterEl !== "undefined"
+    ? dashboardTimeUnitFilterEl
+    : null;
+
+  if (!selectEl) {
+    return;
+  }
+
+  selectEl.value = normalizeDashboardTimeUnit(
+    readDashboardTimeUnitPreference() || selectEl.value
+  );
+
+  selectEl.addEventListener("change", () => {
+    selectEl.value = normalizeDashboardTimeUnit(selectEl.value);
+    saveDashboardTimeUnitPreference(selectEl.value);
+    onChange?.();
+  });
+}
+
+function getDashboardTimeUnitLabel(unit = getDashboardTimeUnit()) {
+  return normalizeDashboardTimeUnit(unit) === "hours" ? "horas" : "dias";
+}
+
+function getDashboardTimeUnitTitle(unit = getDashboardTimeUnit()) {
+  return normalizeDashboardTimeUnit(unit) === "hours" ? "Horas" : "Dias";
+}
+
+function convertDaysToDashboardUnit(value, unit = getDashboardTimeUnit()) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue)) {
+    return 0;
+  }
+
+  return normalizeDashboardTimeUnit(unit) === "hours"
+    ? numericValue * 24
+    : numericValue;
+}
+
+function convertHoursToDashboardUnit(value, unit = getDashboardTimeUnit()) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue)) {
+    return 0;
+  }
+
+  return normalizeDashboardTimeUnit(unit) === "days"
+    ? numericValue / 24
+    : numericValue;
+}
+
+function formatDashboardDurationLabelFromDays(value, unit = getDashboardTimeUnit()) {
+  const convertedValue = convertDaysToDashboardUnit(value, unit);
+  return `${convertedValue.toFixed(1)} ${getDashboardTimeUnitLabel(unit)}`;
+}
+
+function formatDashboardDurationValue(value, unit = getDashboardTimeUnit()) {
+  const numericValue = Number(value || 0);
+  const normalizedUnit = normalizeDashboardTimeUnit(unit);
+  if (!Number.isFinite(numericValue)) {
+    return normalizedUnit === "hours" ? "0 h" : "0 dias";
+  }
+
+  const absValue = Math.abs(numericValue);
+  const suffix = normalizedUnit === "hours" ? "h" : "dias";
+  if (absValue >= 100) {
+    return `${numericValue.toFixed(0)} ${suffix}`;
+  }
+  if (absValue >= 10) {
+    return `${numericValue.toFixed(1)} ${suffix}`;
+  }
+  return `${numericValue.toFixed(2)} ${suffix}`;
+}
+
+function formatSignedDashboardDurationValue(value, unit = getDashboardTimeUnit()) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue) || numericValue === 0) {
+    return formatDashboardDurationValue(0, unit);
+  }
+  return `${numericValue > 0 ? "+" : ""}${formatDashboardDurationValue(numericValue, unit)}`;
+}
+
 function formatAdaptiveDays(value, values) {
   const numericValue = Number(value || 0);
   if (!Number.isFinite(numericValue)) {

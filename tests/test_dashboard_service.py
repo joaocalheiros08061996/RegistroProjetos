@@ -3,8 +3,9 @@ from datetime import timedelta
 from math import isclose
 
 from application.services import DashboardService
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
 from domain.entities import Project
-from domain.enums import MethodClarity, ObjectiveClarity, ProjectType
+from domain.enums import MethodClarity, ObjectiveClarity, ProcessClassification, ProjectType
 from domain.routine_activity import RoutineActivity
 from infra.in_memory_repos import (
     InMemoryDashboardRepository,
@@ -23,6 +24,7 @@ def _build_project(
     planned_end: datetime = datetime(2026, 1, 31),
     objective_clarity=ObjectiveClarity.FULLY_DEFINED,
     method_clarity=MethodClarity.FULLY_DEFINED,
+    process_classification: ProcessClassification | None = None,
     estimated_cost: float = 0.0,
 ) -> Project:
     return Project(
@@ -35,6 +37,7 @@ def _build_project(
         planned_end=planned_end,
         objective_clarity=objective_clarity,
         method_clarity=method_clarity,
+        process_classification=process_classification,
         estimated_cost=estimated_cost,
     )
 
@@ -481,28 +484,38 @@ def test_dashboard_service_returns_project_earned_value_by_period_and_responsibl
     items = service.list_project_earned_value()
 
     done_item = next(item for item in items if item["project_name"] == "Projeto Encerrado")
+    done_planned_labor = 72.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    done_completed_labor = 48.0 * ENGINEERING_PROCESS_HOURLY_RATE
     assert done_item["project_type"] == "LAYOUT"
     assert done_item["project_type_label"] == "LAYOUT"
     assert done_item["responsible_login"] == "ana"
     assert done_item["month_label"] in service._MONTH_LABELS.values()
     assert done_item["period_label"] == f'{done_item["month_label"]} {done_item["year"]}'
     assert done_item["estimated_cost"] == 1000.0
-    assert done_item["planned_value"] == 1000.0
-    assert done_item["earned_value"] == 600.0
+    assert isclose(done_item["planned_value"], 1000.0 + done_planned_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["earned_value"], 600.0 + done_completed_labor, rel_tol=0, abs_tol=1e-10)
     assert done_item["total_task_cost"] == 900.0
+    assert isclose(done_item["planned_effort_hours"], 72.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["actual_effort_hours"], 0.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["planned_labor_cost"], done_planned_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["actual_labor_cost"], 0.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["actual_cost"], 900.0, rel_tol=0, abs_tol=1e-10)
     assert done_item["task_count"] == 3
     assert done_item["completed_task_count"] == 2
     assert "schedule_performance_index" not in done_item
 
     future_item = next(item for item in items if item["project_name"] == "Projeto Futuro")
+    future_completed_labor = 48.0 * ENGINEERING_PROCESS_HOURLY_RATE
     assert future_item["planned_value"] == 0.0
-    assert future_item["earned_value"] == 300.0
+    assert isclose(future_item["earned_value"], 300.0 + future_completed_labor, rel_tol=0, abs_tol=1e-10)
     assert "schedule_performance_index" not in future_item
 
     fallback_item = next(item for item in items if item["project_name"] == "Projeto Sem Estimado")
+    fallback_labor = 24.0 * ENGINEERING_PROCESS_HOURLY_RATE
     assert fallback_item["estimated_cost"] == 0.0
-    assert fallback_item["planned_value"] == 250.0
-    assert fallback_item["earned_value"] == 250.0
+    assert isclose(fallback_item["planned_value"], 250.0 + fallback_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(fallback_item["earned_value"], 250.0 + fallback_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(fallback_item["actual_cost"], 250.0, rel_tol=0, abs_tol=1e-10)
     assert fallback_item["project_type_label"] == "NORMATIZAÇÃO"
     assert "schedule_performance_index" not in fallback_item
 
@@ -574,6 +587,24 @@ def test_dashboard_service_returns_project_effort_deviation_by_period_and_respon
     assert isclose(item["planned_effort_hours"], 12.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(item["actual_effort_hours"], 13.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(item["effort_deviation_hours"], 1.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(
+        item["planned_labor_cost"],
+        12.0 * ENGINEERING_PROCESS_HOURLY_RATE,
+        rel_tol=0,
+        abs_tol=1e-10,
+    )
+    assert isclose(
+        item["actual_labor_cost"],
+        13.0 * ENGINEERING_PROCESS_HOURLY_RATE,
+        rel_tol=0,
+        abs_tol=1e-10,
+    )
+    assert isclose(
+        item["labor_cost_deviation"],
+        ENGINEERING_PROCESS_HOURLY_RATE,
+        rel_tol=0,
+        abs_tol=1e-10,
+    )
 
 
 def test_dashboard_service_returns_routine_total_days_by_month():
@@ -650,3 +681,94 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     assert items[3]["activity_type"] == "Reuniões"
     assert items[3]["month_label"] == "FEV"
     assert isclose(items[3]["total_days"], 1.0, rel_tol=0, abs_tol=1e-10)
+
+
+def test_dashboard_service_returns_new_process_time_by_month():
+    project_repo = InMemoryProjectRepository()
+    routine_repo = InMemoryRoutineActivityRepository()
+    dashboard_repo = InMemoryDashboardRepository(project_repo, routine_repo)
+    service = DashboardService(dashboard_repo)
+
+    new_process_project = _build_project(
+        user_id="u1",
+        name="Projeto Processo Novo",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="Ana",
+        planned_start=datetime(2026, 4, 1),
+        planned_end=datetime(2026, 4, 30),
+        process_classification=ProcessClassification.NEW,
+    )
+    existing_process_project = _build_project(
+        user_id="u1",
+        name="Projeto Processo Existente",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="Ana",
+        planned_start=datetime(2026, 4, 1),
+        planned_end=datetime(2026, 4, 30),
+        process_classification=ProcessClassification.EXISTING,
+    )
+    project_repo.save(new_process_project)
+    project_repo.save(existing_process_project)
+
+    new_task = new_process_project.start_new_task(
+        "task-new",
+        datetime(2026, 4, 1),
+        datetime(2026, 4, 2),
+    )
+    new_task.add_manual_entry(
+        datetime(2026, 4, 5, 8, 0),
+        datetime(2026, 4, 7, 8, 0),
+    )
+
+    existing_task = existing_process_project.start_new_task(
+        "task-existing",
+        datetime(2026, 4, 1),
+        datetime(2026, 4, 2),
+    )
+    existing_task.add_manual_entry(
+        datetime(2026, 4, 8, 8, 0),
+        datetime(2026, 4, 9, 8, 0),
+    )
+
+    routine_repo.save(
+        RoutineActivity(
+            user_id="u1",
+            responsavel="Ana",
+            tipo_atividade="Reuniões sobre Processos Novos",
+            inicio=datetime(2026, 4, 10, 8, 0, tzinfo=timezone.utc),
+            fim=datetime(2026, 4, 10, 20, 0, tzinfo=timezone.utc),
+            horas_trabalhadas=12.0,
+        )
+    )
+    routine_repo.save(
+        RoutineActivity(
+            user_id="u1",
+            responsavel="Ana",
+            tipo_atividade="Análise de Processos Novos",
+            inicio=datetime(2026, 4, 11, 8, 0, tzinfo=timezone.utc),
+            fim=datetime(2026, 4, 11, 20, 0, tzinfo=timezone.utc),
+            horas_trabalhadas=12.0,
+        )
+    )
+    routine_repo.save(
+        RoutineActivity(
+            user_id="u1",
+            responsavel="Ana",
+            tipo_atividade="Reuniões",
+            inicio=datetime(2026, 4, 12, 8, 0, tzinfo=timezone.utc),
+            fim=datetime(2026, 4, 13, 8, 0, tzinfo=timezone.utc),
+            horas_trabalhadas=24.0,
+        )
+    )
+
+    items = service.list_new_process_time_by_month()
+
+    assert len(items) == 1
+    assert items[0]["responsible_label"] == "Ana"
+    assert items[0]["year"] == 2026
+    assert items[0]["month"] == 4
+    assert items[0]["month_label"] == "ABR"
+    assert items[0]["period_label"] == "ABR 2026"
+    assert isclose(items[0]["project_days"], 2.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["routine_days"], 1.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["total_days"], 3.0, rel_tol=0, abs_tol=1e-10)

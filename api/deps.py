@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from urllib.request import urlopen
 
@@ -22,16 +23,16 @@ from infra.database.repositories.routine_activity_repo import (
 from infra.database.repositories.task_repo import SupabaseTaskRepository
 
 # ---------------------------------------------------------------------
-# Auth / JWT (SEM MUDANÇA DE REGRA)
+# Auth / JWT / RBAC
 # ---------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class AuthenticatedUser:
     id: str
     email: str
+    roles: frozenset[str] = frozenset({"user"})
 
 
-ALGORITHM = "RS256"
 security = HTTPBearer(auto_error=True)
 
 SUPABASE_ISSUER = os.getenv(
@@ -48,6 +49,21 @@ JWKS_CACHE_SECONDS = int(os.getenv("SUPABASE_JWKS_CACHE_SECONDS", "3600"))
 _jwks_cache: dict[str, object] = {
     "expires_at": 0,
     "keys": [],
+}
+
+ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
+    "user": frozenset(
+        {
+            "projects:read_own",
+            "projects:write_own",
+            "tasks:read_own",
+            "tasks:write_own",
+            "routine:read_own",
+            "routine:write_own",
+            "dashboard:read_global",
+        }
+    ),
+    "admin": frozenset({"*"}),
 }
 
 # ---------------------------------------------------------------------
@@ -146,7 +162,7 @@ def _decode_supabase_rs256(token: str) -> dict:
     return jwt.decode(
         token,
         key=key,
-        algorithms=[ALGORITHM],
+        algorithms=["RS256"],
         audience=SUPABASE_AUDIENCE,
         issuer=SUPABASE_ISSUER,
     )
@@ -174,11 +190,7 @@ def _decode_supabase_token(token: str) -> dict:
     if alg == "RS256":
         return _decode_supabase_rs256(token)
 
-    # fallback defensivo
-    try:
-        return _decode_supabase_rs256(token)
-    except JWTError:
-        return _decode_supabase_hs256(token)
+    raise JWTError("Algoritmo de token nao permitido")
 
 
 # ---------------------------------------------------------------------
@@ -209,6 +221,60 @@ def _extract_email(payload: dict, fallback: str) -> str:
     return fallback
 
 
+def _roles_from_value(value: object) -> set[str]:
+    roles: set[str] = set()
+
+    if isinstance(value, str):
+        candidates = value.replace(",", " ").split()
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        candidates = value
+    else:
+        candidates = []
+
+    for candidate in candidates:
+        role = str(candidate or "").strip().lower()
+        if role:
+            roles.add(role)
+
+    return roles
+
+
+def _extract_roles(payload: dict) -> frozenset[str]:
+    roles: set[str] = set()
+
+    app_metadata = payload.get("app_metadata")
+    if isinstance(app_metadata, dict):
+        roles.update(_roles_from_value(app_metadata.get("roles")))
+        roles.update(_roles_from_value(app_metadata.get("role")))
+
+    roles.update(_roles_from_value(payload.get("roles")))
+    roles.update(_roles_from_value(payload.get("role")))
+
+    # Supabase costuma usar role=authenticated. Para a aplicacao, isso equivale
+    # ao papel base "user" quando nao ha papel de negocio mais especifico.
+    if not roles or roles == {"authenticated"}:
+        roles = {"user"}
+    else:
+        roles.discard("authenticated")
+        roles.discard("anon")
+
+    return frozenset(roles or {"user"})
+
+
+def _validate_required_claims(payload: dict) -> None:
+    for claim in ("iss", "aud", "exp"):
+        if payload.get(claim) in (None, ""):
+            raise JWTError(f"Token sem claim obrigatoria: {claim}")
+
+
+def _has_permission(user: AuthenticatedUser, permission: str) -> bool:
+    for role in user.roles:
+        permissions = ROLE_PERMISSIONS.get(role, frozenset())
+        if "*" in permissions or permission in permissions:
+            return True
+    return False
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> AuthenticatedUser:
@@ -216,10 +282,15 @@ def get_current_user(
 
     # Facilita testes locais
     if os.getenv("ENV", "").lower() == "test" and token.count(".") != 2:
-        return AuthenticatedUser(id=token, email=_test_email_from_token(token))
+        return AuthenticatedUser(
+            id=token,
+            email=_test_email_from_token(token),
+            roles=frozenset({"user"}),
+        )
 
     try:
         payload = _decode_supabase_token(token)
+        _validate_required_claims(payload)
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -239,9 +310,12 @@ def get_current_user(
         )
 
     user_id = str(user_id)
+    email = _extract_email(payload, fallback=user_id)
+
     return AuthenticatedUser(
         id=user_id,
-        email=_extract_email(payload, fallback=user_id),
+        email=email,
+        roles=_extract_roles(payload),
     )
 
 
@@ -249,3 +323,17 @@ def get_current_user_id(
     current_user: AuthenticatedUser = Depends(get_current_user),
 ) -> str:
     return current_user.id
+
+
+def require_permission(permission: str) -> Callable[[AuthenticatedUser], AuthenticatedUser]:
+    def _dependency(
+        current_user: AuthenticatedUser = Depends(get_current_user),
+    ) -> AuthenticatedUser:
+        if not _has_permission(current_user, permission):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permissao insuficiente",
+            )
+        return current_user
+
+    return _dependency

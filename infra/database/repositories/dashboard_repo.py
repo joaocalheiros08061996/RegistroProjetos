@@ -1,3 +1,4 @@
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
 from domain.repositories import IDashboardRepository
 from infra.database.connection import get_connection
 from psycopg2.extras import RealDictCursor
@@ -656,7 +657,21 @@ class SupabaseDashboardRepository(IDashboardRepository):
         with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
-                with task_values as (
+                with task_actual_effort as (
+                    select
+                        t.id as task_id,
+                        coalesce(sum(
+                            case
+                                when te.end_time is not null and te.end_time > te.start_time
+                                    then extract(epoch from (te.end_time - te.start_time)) / 3600.0
+                                else 0
+                            end
+                        ), 0) as actual_effort_hours
+                    from tasks t
+                    left join time_entries te on te.task_id = t.id
+                    group by t.id
+                ),
+                task_values as (
                     select
                         t.project_id,
                         count(*)::int as task_count,
@@ -673,8 +688,29 @@ class SupabaseDashboardRepository(IDashboardRepository):
                                     then greatest(coalesce(t.cost, 0), 0)
                                 else 0
                             end
-                        ), 0) as earned_value
+                        ), 0) as completed_task_cost,
+                        coalesce(sum(
+                            case
+                                when t.planned_start is not null
+                                  and t.planned_end is not null
+                                  and t.planned_end > t.planned_start
+                                    then extract(epoch from (t.planned_end - t.planned_start)) / 3600.0
+                                else 0
+                            end
+                        ), 0) as planned_effort_hours,
+                        coalesce(sum(
+                            case
+                                when upper(replace(trim(t.status::text), ' ', '_')) in ('COMPLETED', 'COMPLETE')
+                                  and t.planned_start is not null
+                                  and t.planned_end is not null
+                                  and t.planned_end > t.planned_start
+                                    then extract(epoch from (t.planned_end - t.planned_start)) / 3600.0
+                                else 0
+                            end
+                        ), 0) as completed_planned_effort_hours,
+                        coalesce(sum(ta.actual_effort_hours), 0) as actual_effort_hours
                     from tasks t
+                    left join task_actual_effort ta on ta.task_id = t.id
                     group by t.project_id
                 ),
                 project_values as (
@@ -687,14 +723,22 @@ class SupabaseDashboardRepository(IDashboardRepository):
                         extract(month from p.planned_start)::int as month,
                         greatest(coalesce(p.estimated_cost, 0), 0) as estimated_cost,
                         coalesce(tv.total_task_cost, 0) as total_task_cost,
-                        coalesce(tv.earned_value, 0) as earned_value,
+                        coalesce(tv.completed_task_cost, 0) as completed_task_cost,
+                        coalesce(tv.planned_effort_hours, 0) as planned_effort_hours,
+                        coalesce(tv.actual_effort_hours, 0) as actual_effort_hours,
+                        coalesce(tv.planned_effort_hours, 0) * %s::numeric as planned_labor_cost,
+                        coalesce(tv.actual_effort_hours, 0) * %s::numeric as actual_labor_cost,
+                        coalesce(tv.completed_planned_effort_hours, 0) * %s::numeric as completed_planned_labor_cost,
                         coalesce(tv.task_count, 0)::int as task_count,
                         coalesce(tv.completed_task_count, 0)::int as completed_task_count,
-                        case
-                            when greatest(coalesce(p.estimated_cost, 0), 0) > 0
-                                then greatest(coalesce(p.estimated_cost, 0), 0)
-                            else coalesce(tv.total_task_cost, 0)
-                        end as baseline_value,
+                        (
+                            case
+                                when greatest(coalesce(p.estimated_cost, 0), 0) > 0
+                                    then greatest(coalesce(p.estimated_cost, 0), 0)
+                                else coalesce(tv.total_task_cost, 0)
+                            end
+                            + coalesce(tv.planned_effort_hours, 0) * %s::numeric
+                        ) as baseline_value,
                         case
                             when p.planned_start is null
                               or p.planned_end is null
@@ -721,14 +765,27 @@ class SupabaseDashboardRepository(IDashboardRepository):
                     month,
                     estimated_cost,
                     total_task_cost,
-                    earned_value,
+                    completed_task_cost + completed_planned_labor_cost as earned_value,
+                    planned_effort_hours,
+                    actual_effort_hours,
+                    planned_labor_cost,
+                    actual_labor_cost,
+                    total_task_cost + actual_labor_cost as actual_cost,
                     task_count,
                     completed_task_count,
                     baseline_value * greatest(0, least(1, coalesce(planned_progress, 0))) as planned_value
                 from project_values
                 where baseline_value > 0
+                   or (completed_task_cost + completed_planned_labor_cost) > 0
+                   or (total_task_cost + actual_labor_cost) > 0
                 order by year asc, month asc, project_type asc, responsible_login asc, project_name asc
-                """
+                """,
+                (
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                ),
             )
             rows = cur.fetchall() or []
 
@@ -744,6 +801,11 @@ class SupabaseDashboardRepository(IDashboardRepository):
                 "planned_value": float(row["planned_value"] or 0.0),
                 "earned_value": float(row["earned_value"] or 0.0),
                 "total_task_cost": float(row["total_task_cost"] or 0.0),
+                "planned_effort_hours": float(row["planned_effort_hours"] or 0.0),
+                "actual_effort_hours": float(row["actual_effort_hours"] or 0.0),
+                "planned_labor_cost": float(row["planned_labor_cost"] or 0.0),
+                "actual_labor_cost": float(row["actual_labor_cost"] or 0.0),
+                "actual_cost": float(row["actual_cost"] or 0.0),
                 "task_count": int(row["task_count"] or 0),
                 "completed_task_count": int(row["completed_task_count"] or 0),
             }
@@ -791,12 +853,18 @@ class SupabaseDashboardRepository(IDashboardRepository):
                     month,
                     count(*)::int as task_count,
                     coalesce(sum(planned_effort_hours), 0) as planned_effort_hours,
-                    coalesce(sum(actual_effort_hours), 0) as actual_effort_hours
+                    coalesce(sum(actual_effort_hours), 0) as actual_effort_hours,
+                    coalesce(sum(planned_effort_hours), 0) * %s::numeric as planned_labor_cost,
+                    coalesce(sum(actual_effort_hours), 0) * %s::numeric as actual_labor_cost
                 from task_effort
                 where actual_effort_hours > 0
                 group by project_type, responsible_login, year, month
                 order by year asc, month asc, project_type asc, responsible_login asc
-                """
+                """,
+                (
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                    ENGINEERING_PROCESS_HOURLY_RATE,
+                ),
             )
             rows = cur.fetchall() or []
 
@@ -809,6 +877,210 @@ class SupabaseDashboardRepository(IDashboardRepository):
                 "task_count": int(row["task_count"] or 0),
                 "planned_effort_hours": float(row["planned_effort_hours"] or 0.0),
                 "actual_effort_hours": float(row["actual_effort_hours"] or 0.0),
+                "planned_labor_cost": float(row["planned_labor_cost"] or 0.0),
+                "actual_labor_cost": float(row["actual_labor_cost"] or 0.0),
+                "labor_cost_deviation": float(
+                    (row["actual_labor_cost"] or 0.0) - (row["planned_labor_cost"] or 0.0)
+                ),
             }
             for row in rows
         ]
+
+    def list_new_process_time_by_month(self) -> list[dict]:
+        grouped: dict[tuple[str, int, int], dict] = {}
+
+        def add_days(
+            responsible_label: str,
+            year: int,
+            month: int,
+            *,
+            project_days: float = 0.0,
+            routine_days: float = 0.0,
+        ) -> None:
+            key = (responsible_label, year, month)
+            current = grouped.setdefault(
+                key,
+                {
+                    "responsible_label": responsible_label,
+                    "year": year,
+                    "month": month,
+                    "project_days": 0.0,
+                    "routine_days": 0.0,
+                },
+            )
+            current["project_days"] += project_days
+            current["routine_days"] += routine_days
+
+        with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                select
+                    coalesce(nullif(trim(p.responsible_login::text), ''), 'Sem responsável') as responsible_label,
+                    extract(year from p.planned_start)::int as year,
+                    extract(month from p.planned_start)::int as month,
+                    sum(extract(epoch from (te.end_time - te.start_time))) / 86400.0 as project_days
+                from projects p
+                join tasks t on t.project_id = p.id
+                join time_entries te on te.task_id = t.id
+                where te.end_time is not null
+                  and te.end_time > te.start_time
+                  and p.planned_start is not null
+                  and upper(trim(coalesce(p.process_classification::text, ''))) in ('PROCESSOS NOVOS', 'NEW')
+                group by responsible_label, year, month
+                having sum(extract(epoch from (te.end_time - te.start_time))) > 0
+                """
+            )
+            for row in cur.fetchall() or []:
+                add_days(
+                    str(row["responsible_label"] or "Sem responsável"),
+                    int(row["year"] or 0),
+                    int(row["month"] or 0),
+                    project_days=float(row["project_days"] or 0.0),
+                )
+
+            cur.execute(
+                """
+                select column_name
+                from information_schema.columns
+                where table_schema = 'public'
+                  and table_name = 'atividades'
+                """
+            )
+            columns = {row["column_name"] for row in (cur.fetchall() or [])}
+
+            if "tipo_atividade" in columns:
+                user_expr = (
+                    "coalesce(nullif(trim(user_id::text), ''), 'Sem usuário')"
+                    if "user_id" in columns
+                    else "'Sem usuário'"
+                )
+                user_fallback_expr = f"""
+                    case
+                        when length({user_expr}) > 12
+                            then 'Usuário ' || left({user_expr}, 4) || '...' || right({user_expr}, 4)
+                        else {user_expr}
+                    end
+                """
+                user_label_expr = (
+                    f"coalesce(nullif(trim(responsavel::text), ''), {user_fallback_expr})"
+                    if "responsavel" in columns
+                    else user_fallback_expr
+                )
+
+                def year_value_expr(column_name: str) -> str:
+                    return f"""
+                        case
+                            when trim({column_name}::text) ~ '^[0-9]+(\\.[0-9]+)?$'
+                                then floor({column_name}::numeric)::int
+                        end
+                    """
+
+                def month_value_expr(column_name: str) -> str:
+                    return f"""
+                        case
+                            when trim({column_name}::text) ~ '^[0-9]+(\\.[0-9]+)?$'
+                                then floor({column_name}::numeric)::int
+                            when upper(left(trim({column_name}::text), 3)) = 'JAN' then 1
+                            when upper(left(trim({column_name}::text), 3)) = 'FEV' then 2
+                            when upper(left(trim({column_name}::text), 3)) = 'MAR' then 3
+                            when upper(left(trim({column_name}::text), 3)) = 'ABR' then 4
+                            when upper(left(trim({column_name}::text), 3)) = 'MAI' then 5
+                            when upper(left(trim({column_name}::text), 3)) = 'JUN' then 6
+                            when upper(left(trim({column_name}::text), 3)) = 'JUL' then 7
+                            when upper(left(trim({column_name}::text), 3)) = 'AGO' then 8
+                            when upper(left(trim({column_name}::text), 3)) = 'SET' then 9
+                            when upper(left(trim({column_name}::text), 3)) = 'OUT' then 10
+                            when upper(left(trim({column_name}::text), 3)) = 'NOV' then 11
+                            when upper(left(trim({column_name}::text), 3)) = 'DEZ' then 12
+                        end
+                    """
+
+                year_parts: list[str] = []
+                month_parts: list[str] = []
+                worked_hour_rules: list[str] = []
+
+                if "ano" in columns:
+                    year_parts.append(year_value_expr("ano"))
+                if "inicio" in columns:
+                    year_parts.append("extract(year from inicio)::int")
+
+                if "mes" in columns:
+                    month_parts.append(month_value_expr("mes"))
+                if "mes_nome" in columns:
+                    month_parts.append(month_value_expr("mes_nome"))
+                if "inicio" in columns:
+                    month_parts.append("extract(month from inicio)::int")
+
+                if "horas_trabalhadas" in columns:
+                    worked_hour_rules.append(
+                        """
+                        when horas_trabalhadas is not null
+                             and replace(trim(horas_trabalhadas::text), ',', '.') ~ '^[0-9]+(\\.[0-9]+)?$'
+                             and replace(trim(horas_trabalhadas::text), ',', '.')::numeric > 0
+                            then replace(trim(horas_trabalhadas::text), ',', '.')::numeric
+                        """
+                    )
+                if "inicio" in columns and "fim" in columns:
+                    worked_hour_rules.append(
+                        """
+                        when fim is not null and inicio is not null and fim > inicio
+                            then extract(epoch from (fim - inicio)) / 3600.0
+                        """
+                    )
+
+                if year_parts and month_parts and worked_hour_rules:
+                    year_expr = (
+                        year_parts[0]
+                        if len(year_parts) == 1
+                        else f"coalesce({', '.join(year_parts)})"
+                    )
+                    month_expr = (
+                        month_parts[0]
+                        if len(month_parts) == 1
+                        else f"coalesce({', '.join(month_parts)})"
+                    )
+                    worked_hours_expr = "case " + " ".join(worked_hour_rules) + " else 0 end"
+
+                    cur.execute(
+                        f"""
+                        with routine_hours as (
+                            select
+                                {user_label_expr} as responsible_label,
+                                {year_expr} as year,
+                                {month_expr} as month,
+                                {worked_hours_expr} as worked_hours
+                            from atividades
+                            where trim(tipo_atividade::text) in (
+                                'Reuniões sobre Processos Novos',
+                                'Análise de Processos Novos'
+                            )
+                        )
+                        select
+                            responsible_label,
+                            year,
+                            month,
+                            sum(worked_hours) / 24.0 as routine_days
+                        from routine_hours
+                        where year is not null
+                          and month between 1 and 12
+                        group by responsible_label, year, month
+                        having sum(worked_hours) > 0
+                        """
+                    )
+                    for row in cur.fetchall() or []:
+                        add_days(
+                            str(row["responsible_label"] or "Sem responsável"),
+                            int(row["year"] or 0),
+                            int(row["month"] or 0),
+                            routine_days=float(row["routine_days"] or 0.0),
+                        )
+
+        rows = list(grouped.values())
+        rows.sort(
+            key=lambda item: (
+                item["year"],
+                item["month"],
+                item["responsible_label"],
+            )
+        )
+        return rows

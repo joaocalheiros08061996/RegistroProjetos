@@ -1,6 +1,9 @@
 from datetime import datetime
+from math import isclose
 
 import application.services as services_module
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
+import domain.routine_activity as routine_activity_module
 
 
 def _create_project_and_task(
@@ -10,18 +13,26 @@ def _create_project_and_task(
     project_name: str,
     project_type: str,
     task_name: str,
+    responsible_login: str = "user",
+    process_classification: str | None = None,
+    planned_start: str = "2026-01-01T00:00:00",
+    planned_end: str = "2026-02-01T00:00:00",
 ) -> int:
+    project_payload = {
+        "name": project_name,
+        "project_type": project_type,
+        "responsible_login": responsible_login,
+        "fte": 1.0,
+        "planned_start": planned_start,
+        "planned_end": planned_end,
+    }
+    if process_classification is not None:
+        project_payload["process_classification"] = process_classification
+
     project_response = client.post(
         "/projects/",
         headers=auth_header,
-        json={
-            "name": project_name,
-            "project_type": project_type,
-            "responsible_login": "user",
-            "fte": 1.0,
-            "planned_start": "2026-01-01T00:00:00",
-            "planned_end": "2026-02-01T00:00:00",
-        },
+        json=project_payload,
     )
     assert project_response.status_code == 200
     project_id = project_response.json()["id"]
@@ -58,11 +69,95 @@ def _patch_utcnow(monkeypatch, values: list[datetime]) -> None:
             return current.replace(tzinfo=tz)
 
     monkeypatch.setattr(services_module, "datetime", _FakeDatetime)
+    monkeypatch.setattr(routine_activity_module, "datetime", _FakeDatetime)
 
 
 def test_dashboard_requires_authentication(client):
     response = client.get("/dashboard/avg-real-days-by-project-type")
     assert response.status_code == 401
+
+
+def test_new_process_time_dashboard_requires_authentication(client):
+    response = client.get("/dashboard/new-process-time-by-month")
+    assert response.status_code == 401
+
+
+def test_value_kpi_dashboards_include_labor_cost_from_effort(client, monkeypatch):
+    auth = {"Authorization": "Bearer user-1"}
+    project_response = client.post(
+        "/projects/",
+        headers=auth,
+        json={
+            "name": "Projeto Valor",
+            "project_type": "LAYOUT",
+            "responsible_login": "ana",
+            "fte": 1.0,
+            "planned_start": "2026-01-01T00:00:00",
+            "planned_end": "2026-01-31T00:00:00",
+            "estimated_cost": 100.0,
+        },
+    )
+    assert project_response.status_code == 200
+    project_id = project_response.json()["id"]
+
+    task_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=auth,
+        json={
+            "name": "Entrega Valor",
+            "planned_start": "2026-01-02T08:00:00",
+            "planned_end": "2026-01-02T16:00:00",
+            "cost": 50.0,
+        },
+    )
+    assert task_response.status_code == 200
+
+    _patch_utcnow(
+        monkeypatch,
+        [
+            datetime(2026, 1, 2, 8, 0, 0),
+            datetime(2026, 1, 2, 10, 0, 0),
+            datetime(2026, 1, 2, 10, 0, 0),
+        ],
+    )
+    assert client.post(
+        f"/projects/{project_id}/tasks/Entrega Valor/start",
+        headers=auth,
+    ).status_code == 200
+    assert client.post(
+        f"/projects/{project_id}/tasks/Entrega Valor/stop",
+        headers=auth,
+    ).status_code == 200
+    assert client.post(
+        f"/projects/{project_id}/tasks/Entrega Valor/complete",
+        headers=auth,
+    ).status_code == 200
+
+    earned_response = client.get("/dashboard/project-earned-value", headers=auth)
+    assert earned_response.status_code == 200
+    earned_payload = earned_response.json()
+    assert earned_payload["chart"] == "project_earned_value"
+    earned_item = next(
+        item for item in earned_payload["items"] if item["project_name"] == "Projeto Valor"
+    )
+    planned_labor = 8.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    actual_labor = 2.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    assert isclose(earned_item["planned_effort_hours"], 8.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["actual_effort_hours"], 2.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["planned_labor_cost"], planned_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["actual_labor_cost"], actual_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["actual_cost"], 50.0 + actual_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["planned_value"], 100.0 + planned_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(earned_item["earned_value"], 50.0 + planned_labor, rel_tol=0, abs_tol=1e-10)
+
+    effort_response = client.get("/dashboard/project-effort-deviation", headers=auth)
+    assert effort_response.status_code == 200
+    effort_payload = effort_response.json()
+    assert effort_payload["chart"] == "project_effort_deviation"
+    effort_item = effort_payload["items"][0]
+    assert isclose(effort_item["planned_labor_cost"], planned_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(effort_item["actual_labor_cost"], actual_labor, rel_tol=0, abs_tol=1e-10)
+    assert isclose(effort_item["labor_cost_deviation"], actual_labor - planned_labor, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_returns_global_average_across_users_and_ignores_open_entries(client, monkeypatch):
@@ -352,3 +447,107 @@ def test_dashboard_returns_planned_vs_real_days_by_type(client, monkeypatch):
     layout_item = next(item for item in payload["items"] if item["project_type"] == "LAYOUT")
     assert round(layout_item["real_average_days"], 4) == 3.0
     assert layout_item["planned_average_days"] > 0
+
+
+def test_dashboard_returns_new_process_time_by_month(client, monkeypatch):
+    auth = {"Authorization": "Bearer user-1"}
+
+    new_process_project = _create_project_and_task(
+        client,
+        auth,
+        project_name="Projeto Processo Novo",
+        project_type="LAYOUT",
+        task_name="task-new-process",
+        responsible_login="Ana",
+        process_classification="Processos novos",
+        planned_start="2026-04-01T00:00:00",
+        planned_end="2026-04-30T00:00:00",
+    )
+    existing_process_project = _create_project_and_task(
+        client,
+        auth,
+        project_name="Projeto Processo Existente",
+        project_type="LAYOUT",
+        task_name="task-existing-process",
+        responsible_login="Ana",
+        process_classification="Processos existentes",
+        planned_start="2026-04-01T00:00:00",
+        planned_end="2026-04-30T00:00:00",
+    )
+
+    _patch_utcnow(
+        monkeypatch,
+        [
+            datetime(2026, 4, 5, 8, 0, 0),
+            datetime(2026, 4, 7, 8, 0, 0),
+            datetime(2026, 4, 8, 8, 0, 0),
+            datetime(2026, 4, 9, 8, 0, 0),
+        ],
+    )
+    assert client.post(
+        f"/projects/{new_process_project}/tasks/task-new-process/start",
+        headers=auth,
+    ).status_code == 200
+    assert client.post(
+        f"/projects/{new_process_project}/tasks/task-new-process/stop",
+        headers=auth,
+    ).status_code == 200
+    assert client.post(
+        f"/projects/{existing_process_project}/tasks/task-existing-process/start",
+        headers=auth,
+    ).status_code == 200
+    assert client.post(
+        f"/projects/{existing_process_project}/tasks/task-existing-process/stop",
+        headers=auth,
+    ).status_code == 200
+
+    for activity_type, start, end in [
+        (
+            "Reuniões sobre Processos Novos",
+            datetime(2026, 4, 10, 8, 0, 0),
+            datetime(2026, 4, 10, 20, 0, 0),
+        ),
+        (
+            "Análise de Processos Novos",
+            datetime(2026, 4, 11, 8, 0, 0),
+            datetime(2026, 4, 11, 20, 0, 0),
+        ),
+        (
+            "Reuniões",
+            datetime(2026, 4, 12, 8, 0, 0),
+            datetime(2026, 4, 13, 8, 0, 0),
+        ),
+    ]:
+        _patch_utcnow(monkeypatch, [start, end])
+        start_response = client.post(
+            "/routine-activities/start",
+            headers=auth,
+            json={
+                "tipo_atividade": activity_type,
+                "responsavel": "Ana",
+                "descricao": "",
+            },
+        )
+        assert start_response.status_code == 200
+        finish_response = client.post(
+            "/routine-activities/finish-current",
+            headers=auth,
+        )
+        assert finish_response.status_code == 200
+
+    response = client.get("/dashboard/new-process-time-by-month", headers=auth)
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["chart"] == "new_process_time_by_month"
+    assert len(payload["items"]) == 1
+
+    item = payload["items"][0]
+    assert item["responsible_label"] == "Ana"
+    assert item["year"] == 2026
+    assert item["month"] == 4
+    assert item["month_label"] == "ABR"
+    assert item["period_label"] == "ABR 2026"
+    assert item["project_days"] == 2.0
+    assert item["routine_days"] == 1.0
+    assert item["total_days"] == 3.0

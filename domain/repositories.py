@@ -186,6 +186,11 @@ class IDashboardRepository(ABC):
         - planned_value (float)
         - earned_value (float)
         - total_task_cost (float)
+        - planned_effort_hours (float)
+        - actual_effort_hours (float)
+        - planned_labor_cost (float)
+        - actual_labor_cost (float)
+        - actual_cost (float)
         - task_count (int)
         - completed_task_count (int)
         """
@@ -202,4 +207,19 @@ class IDashboardRepository(ABC):
         - task_count (int)
         - planned_effort_hours (float)
         - actual_effort_hours (float)
+        - planned_labor_cost (float)
+        - actual_labor_cost (float)
+        - labor_cost_deviation (float)
+        """
+
+    @abstractmethod
+    def list_new_process_time_by_month(self) -> list[dict]:
+        """
+        Retorna tempo real mensal de projetos e rotinas de processos novos.
+        Cada item deve conter:
+        - responsible_label (str)
+        - year (int)
+        - month (int)
+        - project_days (float)
+        - routine_days (float)
         """

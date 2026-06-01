@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard | Registro</title>
-  <link rel="stylesheet" href="styles.css?v=20260531">
+  <link rel="stylesheet" href="styles.css?v=20260525">
 </head>
 <body>
 <main class="page dashboard-menu-page">
@@ -15,7 +15,7 @@
     </div>
     <div class="actions">
       <a class="button secondary" href="module-select.html">Trocar módulo</a>
-      <button class="danger" type="button" onclick="logout()">Sair</button>
+      <button class="danger" type="button" data-action="logout">Sair</button>
     </div>
   </header>
 
@@ -30,7 +30,7 @@
 
     <article class="item module-card">
       <h2 class="item-title">Séries Temporais de Atividades de Rotina</h2>
-      <p class="item-subtitle">Dias totais de atividades de rotina por período.</p>
+      <p class="item-subtitle">Tempo total de atividades de rotina por período.</p>
       <div class="actions">
         <a class="button" href="dashboard-routine-series.html">Abrir visão</a>
       </div>
@@ -59,12 +59,18 @@
         <a class="button" href="dashboard-projects-by-responsible.html">Abrir visão</a>
       </div>
     </article>
+
+    <article class="item module-card">
+      <h2 class="item-title">Tempo em Processos Novos</h2>
+      <p class="item-subtitle">Tempo total de projetos e rotinas ligados a processos novos.</p>
+      <div class="actions">
+        <a class="button" href="dashboard-new-process-time.html">Abrir visão</a>
+      </div>
+    </article>
   </section>
 </main>
 
-<script src="app.js?v=20260505"></script>
-<script>
-  requireAuth();
-</script>
+<script src="app.js?v=20260602"></script>
+<script src="pages/require-auth.js?v=20260602"></script>
 </body>
 </html>

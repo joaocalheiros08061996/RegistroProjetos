@@ -42,7 +42,94 @@ def test_create_project_invalid_fte_returns_422(client):
     )
 
     assert response.status_code == 422
-    assert "FTE deve ser maior que zero" in response.json()["detail"]
+    assert "fte" in str(response.json()["detail"]).lower()
+
+
+def test_create_project_fractional_fte_returns_422(client):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto FTE Fracionado",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.2,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+        },
+    )
+
+    assert response.status_code == 422
+    assert "FTE deve ser um numero inteiro" in str(response.json()["detail"])
+
+
+def test_create_project_rejects_extra_fields(client):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Campo Extra",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+            "campo_extra": "nao permitido",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_create_project_rejects_long_text_and_invalid_cost(client):
+    long_name = "P" * 161
+    long_responsible = "R" * 121
+
+    long_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": long_name,
+            "project_type": "LAYOUT",
+            "responsible_login": long_responsible,
+            "fte": 1.0,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+        },
+    )
+    assert long_response.status_code == 422
+
+    negative_cost_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Custo Negativo",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+            "estimated_cost": -1,
+        },
+    )
+    assert negative_cost_response.status_code == 422
+
+
+def test_create_project_rejects_fte_above_limit(client):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto FTE Alto",
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 101,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+        },
+    )
+
+    assert response.status_code == 422
 
 
 def test_create_project_without_auth_returns_401(client):
@@ -285,3 +372,31 @@ def test_create_project_api_rejects_invalid_process_classification(client):
     )
 
     assert response.status_code == 422
+
+
+def test_sql_like_project_name_is_treated_as_text(client):
+    project_name = "Projeto'; DROP TABLE projects; --"
+    create_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": project_name,
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-06-01T00:00:00",
+            "planned_end": "2026-06-30T00:00:00",
+        },
+    )
+    assert create_response.status_code == 200
+    project_id = create_response.json()["id"]
+
+    list_response = client.get("/projects/", headers=AUTH_HEADER)
+    assert list_response.status_code == 200
+    assert any(
+        project["id"] == project_id and project["name"] == project_name
+        for project in list_response.json()
+    )
+
+    delete_response = client.delete(f"/projects/{project_id}", headers=AUTH_HEADER)
+    assert delete_response.status_code == 200

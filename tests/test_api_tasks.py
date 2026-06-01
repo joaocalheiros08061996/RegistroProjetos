@@ -1,3 +1,6 @@
+from urllib.parse import quote
+
+
 AUTH_HEADER = {"Authorization": "Bearer test-user-123"}
 
 
@@ -166,3 +169,72 @@ def test_delete_task_api(client):
         headers=AUTH_HEADER,
     )
     assert detail_response.status_code == 422
+
+
+def test_create_task_rejects_long_name_and_negative_cost(client):
+    project_id = create_project(client)
+
+    long_name_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "T" * 161,
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+        },
+    )
+    assert long_name_response.status_code == 422
+
+    negative_cost_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "task-cost",
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+            "cost": -1,
+        },
+    )
+    assert negative_cost_response.status_code == 422
+
+
+def test_task_path_rejects_name_above_limit(client):
+    project_id = create_project(client)
+    long_name = quote("T" * 161)
+
+    response = client.get(
+        f"/projects/{project_id}/tasks/{long_name}",
+        headers=AUTH_HEADER,
+    )
+
+    assert response.status_code == 422
+
+
+def test_sql_like_task_name_is_treated_as_text(client):
+    project_id = create_project(client)
+    task_name = "task'; DROP TABLE tasks; --"
+    encoded_name = quote(task_name, safe="")
+
+    create_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": task_name,
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+        },
+    )
+    assert create_response.status_code == 200
+
+    detail_response = client.get(
+        f"/projects/{project_id}/tasks/{encoded_name}",
+        headers=AUTH_HEADER,
+    )
+    assert detail_response.status_code == 200
+    assert detail_response.json()["name"] == task_name
+
+    delete_response = client.delete(
+        f"/projects/{project_id}/tasks/{encoded_name}",
+        headers=AUTH_HEADER,
+    )
+    assert delete_response.status_code == 200

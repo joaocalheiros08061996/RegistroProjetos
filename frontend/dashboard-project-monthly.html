@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Análise Mensal dos Projetos | Dashboard</title>
-  <link rel="stylesheet" href="styles.css?v=20260531">
+  <link rel="stylesheet" href="styles.css?v=20260525">
 </head>
 <body>
 <main class="page dashboard-page">
@@ -17,7 +17,7 @@
       <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
       <a class="button secondary" href="module-select.html">Trocar módulo</a>
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
-      <button class="danger" type="button" onclick="logout()">Sair</button>
+      <button class="danger" type="button" data-action="logout">Sair</button>
     </div>
   </header>
 
@@ -49,15 +49,23 @@
         Usuário
         <select id="project-monthly-user-filter"></select>
       </label>
+
+      <label for="dashboard-time-unit-filter">
+        Unidade de tempo
+        <select id="dashboard-time-unit-filter">
+          <option value="days">Dias</option>
+          <option value="hours">Horas</option>
+        </select>
+      </label>
     </aside>
 
     <article class="dashboard-panel">
       <h2>Lead Time Mensal por Tipo de Projeto</h2>
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
-        para cada mês/ano, calcula-se a média de dias reais dos projetos com
+        para cada mês/ano, calcula-se a média de tempo real dos projetos com
         tempo real lançado. O tempo real vem das entradas de tempo fechadas das
-        tarefas (<strong>segundos / 86400</strong>). A linha de referência usa a
+        tarefas. A linha de referência usa a
         média de lead time real do gráfico “Lead Time Médio por Tipo de Projeto”.
       </div>
       <p id="dashboard-feedback-4" class="status"></p>
@@ -72,7 +80,7 @@
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
         o atraso médio mensal é calculado como
-        <strong>média de dias reais - média de dias planejados</strong> para os
+        <strong>média de tempo real - média de tempo planejado</strong> para os
         projetos do período. Valores positivos indicam estouro do planejado;
         valores negativos indicam execução abaixo do prazo planejado.
       </div>
@@ -88,7 +96,7 @@
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
         a eficiência mensal é calculada como
-        <strong>média de dias planejados / média de dias reais</strong>,
+        <strong>média de tempo planejado / média de tempo real</strong>,
         apresentada em percentual. Quanto maior o percentual, maior a relação
         entre prazo planejado disponível e tempo real consumido.
       </div>
@@ -103,8 +111,8 @@
       <h2>Taxa de Projetos que Estouram o Prazo</h2>
       <div class="dashboard-kpi-methodology">
         <strong>Metodologia da KPI:</strong>
-        considera-se que um projeto estourou o prazo quando seus dias reais são
-        maiores que seus dias planejados. A taxa mensal é
+        considera-se que um projeto estourou o prazo quando seu tempo real é
+        maior que seu tempo planejado. A taxa mensal é
         <strong>projetos estourados / projetos com tempo real válido</strong>,
         exibida em percentual.
       </div>
@@ -182,15 +190,15 @@
 </main>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="app.js?v=20260505"></script>
-<script src="dashboard/dom.js?v=20260531"></script>
-<script src="dashboard/formatters.js?v=20260531"></script>
+<script src="app.js?v=20260602"></script>
+<script src="dashboard/dom.js?v=20260525"></script>
+<script src="dashboard/formatters.js?v=20260525"></script>
 <script src="dashboard/plotly-common.js?v=20260531"></script>
 <script src="dashboard/project-monthly-data.js?v=20260531"></script>
-<script src="dashboard/project-monthly-charts.js?v=20260531"></script>
+<script src="dashboard/project-monthly-charts.js?v=20260525"></script>
 <script src="dashboard/complexity-data.js?v=20260531"></script>
 <script src="dashboard/complexity-charts.js?v=20260531"></script>
 <script src="dashboard/bootstrap-utils.js?v=20260531"></script>
-<script src="dashboard/bootstrap-project-monthly.js?v=20260531"></script>
+<script src="dashboard/bootstrap-project-monthly.js?v=20260525"></script>
 </body>
 </html>

@@ -25,6 +25,11 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+try:
+    from automacoes.file_validation import validate_input_file, validate_optional_input_file
+except ModuleNotFoundError:  # Execucao direta: python automacoes/importar_atividades_supabase.py
+    from file_validation import validate_input_file, validate_optional_input_file
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_CSV = ROOT_DIR / "atividades_rows (21).csv"
 DEFAULT_USER_MAP = Path(__file__).with_name("atividades_user_map.json")
@@ -158,8 +163,14 @@ def stable_natural_key(record: ActivityRecord) -> tuple[str, str, datetime, date
 
 
 def read_csv_rows(csv_path: Path) -> list[dict[str, str | None]]:
-    if not csv_path.exists():
-        raise ActivityImportError(f"CSV nao encontrado: {csv_path}")
+    try:
+        csv_path = validate_input_file(
+            csv_path,
+            allowed_suffixes={".csv"},
+            description="CSV",
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise ActivityImportError(str(exc)) from exc
     with csv_path.open(newline="", encoding="utf-8-sig") as handle:
         sample = handle.read(4096)
         handle.seek(0)
@@ -173,8 +184,14 @@ def read_csv_rows(csv_path: Path) -> list[dict[str, str | None]]:
 
 
 def load_user_map(path: Path) -> dict[str, UserMapping]:
-    if not path.exists():
-        raise ActivityImportError(f"Mapa de usuarios nao encontrado: {path}")
+    try:
+        path = validate_input_file(
+            path,
+            allowed_suffixes={".json"},
+            description="Mapa de usuarios",
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise ActivityImportError(str(exc)) from exc
     with path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     users = payload.get("users", payload)
@@ -298,6 +315,14 @@ def empty_manifest() -> dict[str, Any]:
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
+    try:
+        path = validate_optional_input_file(
+            path,
+            allowed_suffixes={".json"},
+            description="Manifesto",
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise ActivityImportError(str(exc)) from exc
     if not path.exists():
         return empty_manifest()
     with path.open("r", encoding="utf-8") as handle:

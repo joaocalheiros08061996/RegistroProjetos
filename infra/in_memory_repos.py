@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
 from domain.entities import Project, Task, TimeEntry
 from domain.exceptions import ValidationError
-from domain.enums import MethodClarity, ObjectiveClarity, TaskStatus
+from domain.enums import MethodClarity, ObjectiveClarity, ProcessClassification, TaskStatus
 from domain.repositories import (
     IDashboardRepository,
     IProjectRepository,
@@ -340,6 +341,93 @@ class InMemoryDashboardRepository(IDashboardRepository):
         )
         return rows
 
+    def list_new_process_time_by_month(self) -> list[dict]:
+        grouped: dict[tuple[str, int, int], dict] = {}
+
+        def add_days(
+            responsible_label: str,
+            year: int,
+            month: int,
+            *,
+            project_days: float = 0.0,
+            routine_days: float = 0.0,
+        ) -> None:
+            key = (responsible_label, year, month)
+            current = grouped.setdefault(
+                key,
+                {
+                    "responsible_label": responsible_label,
+                    "year": year,
+                    "month": month,
+                    "project_days": 0.0,
+                    "routine_days": 0.0,
+                },
+            )
+            current["project_days"] += project_days
+            current["routine_days"] += routine_days
+
+        for project in self.project_repo._storage.values():
+            process_classification = getattr(project, "process_classification", None)
+            if process_classification not in {ProcessClassification.NEW, ProcessClassification.NEW.value, "NEW"}:
+                continue
+
+            total_seconds = 0.0
+            for task in project.list_tasks():
+                for entry in task.time_entries:
+                    if entry.end is None:
+                        continue
+                    total_seconds += max(
+                        0.0,
+                        (entry.end - entry.start).total_seconds(),
+                    )
+
+            if total_seconds <= 0:
+                continue
+
+            add_days(
+                str(project.responsible_login or "").strip() or "Sem responsável",
+                project.planned_start.year,
+                project.planned_start.month,
+                project_days=total_seconds / 86400.0,
+            )
+
+        if self.routine_repo is not None:
+            allowed_routine_types = {
+                "Reuniões sobre Processos Novos",
+                "Análise de Processos Novos",
+            }
+
+            for activity in self.routine_repo._storage.values():
+                if activity.tipo_atividade not in allowed_routine_types:
+                    continue
+
+                hours = activity.horas_trabalhadas
+                if (hours is None or hours <= 0) and activity.fim is not None:
+                    hours = max(
+                        0.0,
+                        (activity.fim - activity.inicio).total_seconds() / 3600.0,
+                    )
+
+                if hours is None or hours <= 0:
+                    continue
+
+                add_days(
+                    self._routine_user_label(activity),
+                    activity.ano,
+                    activity.mes,
+                    routine_days=float(hours) / 24.0,
+                )
+
+        rows = list(grouped.values())
+        rows.sort(
+            key=lambda item: (
+                item["year"],
+                item["month"],
+                item["responsible_label"],
+            )
+        )
+        return rows
+
     @staticmethod
     def _routine_user_label(activity: RoutineActivity) -> str:
         responsavel = str(getattr(activity, "responsavel", "") or "").strip()
@@ -613,11 +701,35 @@ class InMemoryDashboardRepository(IDashboardRepository):
             tasks = project.list_tasks()
             total_task_cost = sum(max(0.0, float(task.cost or 0.0)) for task in tasks)
             completed_tasks = [task for task in tasks if task.is_completed]
-            earned_value = sum(max(0.0, float(task.cost or 0.0)) for task in completed_tasks)
+            completed_task_cost = sum(max(0.0, float(task.cost or 0.0)) for task in completed_tasks)
             estimated_cost = max(0.0, float(project.estimated_cost or 0.0))
-            baseline_value = estimated_cost if estimated_cost > 0 else total_task_cost
+            planned_effort_hours = 0.0
+            completed_planned_effort_hours = 0.0
+            actual_effort_hours = 0.0
 
-            if baseline_value <= 0:
+            for task in tasks:
+                planned_seconds = (task.planned_end - task.planned_start).total_seconds()
+                if planned_seconds > 0:
+                    task_planned_hours = planned_seconds / 3600.0
+                    planned_effort_hours += task_planned_hours
+                    if task.is_completed:
+                        completed_planned_effort_hours += task_planned_hours
+
+                for entry in task.time_entries:
+                    if entry.end is None or entry.end <= entry.start:
+                        continue
+                    actual_effort_hours += (entry.end - entry.start).total_seconds() / 3600.0
+
+            planned_labor_cost = planned_effort_hours * ENGINEERING_PROCESS_HOURLY_RATE
+            actual_labor_cost = actual_effort_hours * ENGINEERING_PROCESS_HOURLY_RATE
+            completed_planned_labor_cost = (
+                completed_planned_effort_hours * ENGINEERING_PROCESS_HOURLY_RATE
+            )
+            actual_cost = total_task_cost + actual_labor_cost
+            earned_value = completed_task_cost + completed_planned_labor_cost
+            baseline_value = (estimated_cost if estimated_cost > 0 else total_task_cost) + planned_labor_cost
+
+            if baseline_value <= 0 and earned_value <= 0 and actual_cost <= 0:
                 continue
 
             rows.append(
@@ -632,6 +744,11 @@ class InMemoryDashboardRepository(IDashboardRepository):
                     "planned_value": baseline_value * self._planned_progress(project),
                     "earned_value": earned_value,
                     "total_task_cost": total_task_cost,
+                    "planned_effort_hours": planned_effort_hours,
+                    "actual_effort_hours": actual_effort_hours,
+                    "planned_labor_cost": planned_labor_cost,
+                    "actual_labor_cost": actual_labor_cost,
+                    "actual_cost": actual_cost,
                     "task_count": len(tasks),
                     "completed_task_count": len(completed_tasks),
                 }
@@ -732,6 +849,17 @@ class InMemoryDashboardRepository(IDashboardRepository):
                 row["actual_effort_hours"] += actual_seconds / 3600.0
 
         rows = list(grouped.values())
+        for row in rows:
+            row["planned_labor_cost"] = (
+                row["planned_effort_hours"] * ENGINEERING_PROCESS_HOURLY_RATE
+            )
+            row["actual_labor_cost"] = (
+                row["actual_effort_hours"] * ENGINEERING_PROCESS_HOURLY_RATE
+            )
+            row["labor_cost_deviation"] = (
+                row["actual_labor_cost"] - row["planned_labor_cost"]
+            )
+
         rows.sort(
             key=lambda item: (
                 item["year"],

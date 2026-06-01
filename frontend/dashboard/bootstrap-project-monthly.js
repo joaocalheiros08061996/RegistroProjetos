@@ -53,6 +53,7 @@ const resizeProjectMonthlyCharts = registerDashboardResize([
   chart9El,
 ]);
 
+setupDashboardTimeUnitFilter(rerenderProjectMonthlyCharts);
 refreshBtn.addEventListener("click", loadProjectMonthlyDashboard);
 addChangeListeners(
   [

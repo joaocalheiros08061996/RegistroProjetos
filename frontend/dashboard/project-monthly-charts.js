@@ -1,11 +1,15 @@
 function toMonthlyLeadTimeChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
   const aggregatedItems = aggregateProjectMonthlyByPeriod(items)
     .filter((item) => Number.isFinite(item.realAverageDays));
-  const graphOneAverage = getGraphOneRealAverageForSelectedTypes();
+  const graphOneAverageDays = getGraphOneRealAverageForSelectedTypes();
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
-  const realValues = aggregatedItems.map((item) => item.realAverageDays);
-  const referenceValues = Number.isFinite(graphOneAverage)
-    ? periodLabels.map(() => graphOneAverage)
+  const realValues = aggregatedItems.map((item) =>
+    convertDaysToDashboardUnit(item.realAverageDays, timeUnit)
+  );
+  const referenceValues = Number.isFinite(graphOneAverageDays)
+    ? periodLabels.map(() => convertDaysToDashboardUnit(graphOneAverageDays, timeUnit))
     : [];
   const yValues = [...realValues, ...referenceValues];
   const precision = getDaysPrecision(yValues);
@@ -18,24 +22,24 @@ function toMonthlyLeadTimeChartPayload(items) {
       x: periodLabels,
       y: realValues,
       marker: projectMonthlyBarStyle("#2F80ED"),
-      text: realValues.map((value) => formatAdaptiveDays(value, yValues)),
+      text: realValues.map((value) => value.toFixed(precision)),
       textposition: "outside",
       textfont: projectMonthlyTextStyle(),
       cliponaxis: false,
-      hovertemplate: `%{x}<br>Lead time médio: %{y:.${precision}f} dias<extra></extra>`,
+      hovertemplate: `%{x}<br>Lead time médio: %{y:.${precision}f} ${unitLabel}<extra></extra>`,
     },
   ];
 
-  if (Number.isFinite(graphOneAverage)) {
+  if (Number.isFinite(graphOneAverageDays)) {
     data.push({
       type: "scatter",
       mode: "lines+markers",
       name: "Média Lead Time Real",
       x: periodLabels,
-      y: periodLabels.map(() => graphOneAverage),
+      y: referenceValues,
       line: projectMonthlyLineStyle("#F2994A"),
       marker: projectMonthlyMarkerStyle("#F2994A"),
-      hovertemplate: `%{x}<br>Média do Gráfico 1: %{y:.${precision}f} dias<extra></extra>`,
+      hovertemplate: `%{x}<br>Média do Gráfico 1: %{y:.${precision}f} ${unitLabel}<extra></extra>`,
     });
   }
 
@@ -44,12 +48,12 @@ function toMonthlyLeadTimeChartPayload(items) {
     layout: {
       ...projectMonthlyBaseLayout(
         "Lead Time Mensal por Tipo de Projeto",
-        "Média de dias reais"
+        `Média de ${unitLabel} reais`
       ),
       barmode: "group",
       bargap: 0.46,
       yaxis: {
-        ...projectMonthlyBaseLayout("", "Média de dias reais").yaxis,
+        ...projectMonthlyBaseLayout("", `Média de ${unitLabel} reais`).yaxis,
         range: [0, yAxisMax],
         rangemode: "tozero",
         tickformat: `.${precision}f`,
@@ -60,20 +64,28 @@ function toMonthlyLeadTimeChartPayload(items) {
 }
 
 function toMonthlyDelayChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
   const aggregatedItems = aggregateProjectMonthlyByPeriod(items)
     .filter((item) => Number.isFinite(item.delayAverageDays));
-  const overallDelayAverage = getOverallDelayAverage(items);
+  const overallDelayAverageDays = getOverallDelayAverage(items);
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
+  const delayValues = aggregatedItems.map((item) =>
+    convertDaysToDashboardUnit(item.delayAverageDays, timeUnit)
+  );
+  const overallDelayAverage = Number.isFinite(overallDelayAverageDays)
+    ? convertDaysToDashboardUnit(overallDelayAverageDays, timeUnit)
+    : null;
   const data = [
     {
       type: "scatter",
       mode: "lines+markers",
       name: "Média de Atraso por Mês",
       x: periodLabels,
-      y: aggregatedItems.map((item) => item.delayAverageDays),
+      y: delayValues,
       line: projectMonthlyLineStyle("#2F80ED"),
       marker: projectMonthlyMarkerStyle("#2F80ED"),
-      hovertemplate: "%{x}<br>Atraso médio: %{y:.2f} dias<extra></extra>",
+      hovertemplate: `%{x}<br>Atraso médio: %{y:.2f} ${unitLabel}<extra></extra>`,
     },
   ];
 
@@ -86,7 +98,7 @@ function toMonthlyDelayChartPayload(items) {
       y: periodLabels.map(() => overallDelayAverage),
       line: projectMonthlyLineStyle("#F2994A"),
       marker: projectMonthlyMarkerStyle("#F2994A"),
-      hovertemplate: "%{x}<br>Média geral de atraso: %{y:.2f} dias<extra></extra>",
+      hovertemplate: `%{x}<br>Média geral de atraso: %{y:.2f} ${unitLabel}<extra></extra>`,
     });
   }
 
@@ -97,10 +109,10 @@ function toMonthlyDelayChartPayload(items) {
     layout: {
       ...projectMonthlyBaseLayout(
         "Atraso Médio Mensal por Tipo de Projeto",
-        "Média de dias de atraso"
+        `Média de ${unitLabel} de atraso`
       ),
       yaxis: {
-        ...projectMonthlyBaseLayout("", "Média de dias de atraso").yaxis,
+        ...projectMonthlyBaseLayout("", `Média de ${unitLabel} de atraso`).yaxis,
         range: projectMonthlySignedRange(yValues),
         zeroline: true,
         zerolinecolor: "rgba(17, 35, 56, 0.28)",

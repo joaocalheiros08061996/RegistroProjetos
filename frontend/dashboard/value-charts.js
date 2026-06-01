@@ -20,10 +20,11 @@ function toEarnedValueChartPayload(items) {
         customdata: aggregatedItems.map((item) => [
           formatMoney(item.earnedValue),
           formatMoney(item.plannedValue),
+          formatMoney(item.plannedLaborCost),
           item.projectCount,
           item.completedTaskCount,
         ]),
-        hovertemplate: "%{x}<br>VA: %{customdata[0]}<br>VP referência: %{customdata[1]}<br>Projetos: %{customdata[2]}<br>Tarefas concluídas: %{customdata[3]}<extra></extra>",
+        hovertemplate: "%{x}<br>VA: %{customdata[0]}<br>VP referência: %{customdata[1]}<br>Mão de obra planejada: %{customdata[2]}<br>Projetos: %{customdata[3]}<br>Tarefas concluídas: %{customdata[4]}<extra></extra>",
       },
       {
         type: "scatter",
@@ -39,10 +40,11 @@ function toEarnedValueChartPayload(items) {
         customdata: aggregatedItems.map((item) => [
           formatMoney(item.earnedValue),
           formatMoney(item.plannedValue),
+          formatMoney(item.plannedLaborCost),
           item.projectCount,
           item.completedTaskCount,
         ]),
-        hovertemplate: "%{x}<br>VA: %{customdata[0]}<br>VP referência: %{customdata[1]}<br>Projetos: %{customdata[2]}<br>Tarefas concluídas: %{customdata[3]}<extra></extra>",
+        hovertemplate: "%{x}<br>VA: %{customdata[0]}<br>VP referência: %{customdata[1]}<br>Mão de obra planejada: %{customdata[2]}<br>Projetos: %{customdata[3]}<br>Tarefas concluídas: %{customdata[4]}<extra></extra>",
       },
     ],
     layout: {
@@ -200,7 +202,7 @@ function costPerformanceColor(value) {
 function getCostPerformancePoints(items) {
   return aggregateEarnedValueItems(items)
     .map((item) => {
-      const actualCost = Number(item.totalTaskCost || 0);
+      const actualCost = Number(item.actualCost || item.totalTaskCost || 0);
       const earnedValue = Number(item.earnedValue || 0);
       const idc = actualCost > 0 ? earnedValue / actualCost : null;
 
@@ -247,10 +249,11 @@ function toCostPerformanceChartPayload(items) {
           costPerformanceStatus(item.idc),
           formatMoney(item.earnedValue),
           formatMoney(item.actualCost),
+          formatMoney(item.actualLaborCost),
           item.projectCount,
           item.completedTaskCount,
         ]),
-        hovertemplate: "%{x}<br>IDC: %{customdata[0]} (%{customdata[1]})<br>VA: %{customdata[2]}<br>Custo real: %{customdata[3]}<br>Projetos: %{customdata[4]}<br>Tarefas concluídas: %{customdata[5]}<extra></extra>",
+        hovertemplate: "%{x}<br>IDC: %{customdata[0]} (%{customdata[1]})<br>VA: %{customdata[2]}<br>Custo real total: %{customdata[3]}<br>Mão de obra real: %{customdata[4]}<br>Projetos: %{customdata[5]}<br>Tarefas concluídas: %{customdata[6]}<extra></extra>",
       },
       {
         type: "scatter",

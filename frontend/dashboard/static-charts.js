@@ -1,6 +1,9 @@
 function toAvgRealChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
   const labels = items.map((item) => item.project_type_label);
-  const values = items.map((item) => Number(item.average_days || 0));
+  const dayValues = items.map((item) => Number(item.average_days || 0));
+  const values = dayValues.map((value) => convertDaysToDashboardUnit(value, timeUnit));
   const maxValue = Math.max(...values, 0);
   const xAxisMax = maxValue > 0 ? maxValue * 1.2 : 1;
   const barColors = [
@@ -22,7 +25,7 @@ function toAvgRealChartPayload(items) {
         orientation: "h",
         y: labels,
         x: values,
-        text: values.map((value) => formatDaysLabel(value)),
+        text: dayValues.map((value) => formatDashboardDurationLabelFromDays(value, timeUnit)),
         textposition: "outside",
         textfont: {
           color: "#2c3e50",
@@ -37,7 +40,7 @@ function toAvgRealChartPayload(items) {
             width: 2,
           },
         },
-        hovertemplate: "%{y}<br>%{x:.1f} dias<extra></extra>",
+        hovertemplate: `%{y}<br>%{x:.1f} ${unitLabel}<extra></extra>`,
         opacity: 0.95,
         showlegend: false,
       },
@@ -64,7 +67,7 @@ function toAvgRealChartPayload(items) {
         range: [0, xAxisMax],
         tickformat: ".1f",
         title: {
-          text: "<b>Lead Time Médio (dias)</b>",
+          text: `<b>Lead Time Médio (${unitLabel})</b>`,
           font: {
             size: 16,
           },
@@ -94,9 +97,13 @@ function toAvgRealChartPayload(items) {
 }
 
 function toPlannedVsRealChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
   const labels = items.map((item) => item.project_type_label);
-  const plannedValues = items.map((item) => Number(item.planned_average_days || 0));
-  const realValues = items.map((item) => Number(item.real_average_days || 0));
+  const plannedDayValues = items.map((item) => Number(item.planned_average_days || 0));
+  const realDayValues = items.map((item) => Number(item.real_average_days || 0));
+  const plannedValues = plannedDayValues.map((value) => convertDaysToDashboardUnit(value, timeUnit));
+  const realValues = realDayValues.map((value) => convertDaysToDashboardUnit(value, timeUnit));
   const maxValue = Math.max(...plannedValues, ...realValues, 0);
   const xAxisMax = maxValue > 0 ? maxValue * 1.2 : 1;
 
@@ -114,7 +121,7 @@ function toPlannedVsRealChartPayload(items) {
           width: 1.6,
         },
       },
-      text: plannedValues.map((value) => formatDaysLabel(value)),
+      text: plannedDayValues.map((value) => formatDashboardDurationLabelFromDays(value, timeUnit)),
       textposition: "outside",
       textfont: {
         color: "#2c3e50",
@@ -122,7 +129,7 @@ function toPlannedVsRealChartPayload(items) {
         family: "Manrope, Avenir Next, Segoe UI, sans-serif",
       },
       cliponaxis: false,
-      hovertemplate: "%{y}<br>Planejado: %{x:.1f} dias<extra></extra>",
+      hovertemplate: `%{y}<br>Planejado: %{x:.1f} ${unitLabel}<extra></extra>`,
       opacity: 0.94,
     },
     {
@@ -138,7 +145,7 @@ function toPlannedVsRealChartPayload(items) {
           width: 1.6,
         },
       },
-      text: realValues.map((value) => formatDaysLabel(value)),
+      text: realDayValues.map((value) => formatDashboardDurationLabelFromDays(value, timeUnit)),
       textposition: "outside",
       textfont: {
         color: "#2c3e50",
@@ -146,7 +153,7 @@ function toPlannedVsRealChartPayload(items) {
         family: "Manrope, Avenir Next, Segoe UI, sans-serif",
       },
       cliponaxis: false,
-      hovertemplate: "%{y}<br>Real: %{x:.1f} dias<extra></extra>",
+      hovertemplate: `%{y}<br>Real: %{x:.1f} ${unitLabel}<extra></extra>`,
       opacity: 0.94,
     },
   ];
@@ -181,7 +188,7 @@ function toPlannedVsRealChartPayload(items) {
         range: [0, xAxisMax],
         tickformat: ".1f",
         title: {
-          text: "<b>Lead Time Médio (dias)</b>",
+          text: `<b>Lead Time Médio (${unitLabel})</b>`,
           font: {
             size: 16,
           },

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cadastro | Registro de Projetos</title>
-  <link rel="stylesheet" href="styles.css?v=20260410">
+  <link rel="stylesheet" href="styles.css?v=20260603">
 </head>
 <body>
 <main class="page">
   <header class="page-header">
     <div>
       <h1 class="title">Criar conta</h1>
-      <p class="muted">Cadastro simples com e-mail e senha.</p>
+      <p class="muted">Cadastre-se com e-mail, senha e ciência do aviso de privacidade.</p>
     </div>
   </header>
 
@@ -26,6 +26,15 @@
       <input id="password" type="password" autocomplete="new-password" minlength="6" required>
     </label>
 
+    <label class="checkbox-row" for="privacy-notice-acknowledged">
+      <input id="privacy-notice-acknowledged" type="checkbox" required>
+      <span>
+        Li e estou ciente do
+        <a href="privacy.html" target="_blank" rel="noopener noreferrer">Aviso de Privacidade</a>
+        aplicável ao uso do Registro de Projetos.
+      </span>
+    </label>
+
     <div class="actions">
       <button type="submit">Cadastrar</button>
       <a class="button secondary" href="login.html">Voltar para login</a>
@@ -35,49 +44,7 @@
   </form>
 </main>
 
-<script src="app.js?v=20260505"></script>
-<script>
-  requireGuest();
-
-  const form = document.getElementById("register-form");
-  const feedback = document.getElementById("feedback");
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    feedback.textContent = "";
-    feedback.className = "status";
-
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-
-    if (!email || !password) {
-      feedback.textContent = "Informe e-mail e senha.";
-      feedback.className = "error";
-      return;
-    }
-
-    try {
-      await signUp(email, password);
-
-      if (getToken()) {
-        feedback.textContent = "Conta criada e autenticada. Redirecionando...";
-        feedback.className = "success";
-        setTimeout(() => {
-          location.href = "module-select.html";
-        }, 500);
-        return;
-      }
-
-      feedback.textContent = "Conta criada com sucesso. Agora faça login.";
-      feedback.className = "success";
-      setTimeout(() => {
-        location.href = "login.html";
-      }, 900);
-    } catch (err) {
-      feedback.textContent = err.message || "Falha no cadastro.";
-      feedback.className = "error";
-    }
-  });
-</script>
+<script src="app.js?v=20260603"></script>
+<script src="pages/register.js?v=20260603"></script>
 </body>
 </html>

@@ -175,6 +175,11 @@ function aggregateEarnedValueItems(items) {
       plannedValue: 0,
       earnedValue: 0,
       totalTaskCost: 0,
+      plannedEffortHours: 0,
+      actualEffortHours: 0,
+      plannedLaborCost: 0,
+      actualLaborCost: 0,
+      actualCost: 0,
     };
 
     current.projectCount += 1;
@@ -184,6 +189,11 @@ function aggregateEarnedValueItems(items) {
     current.plannedValue += Number(item.planned_value || 0);
     current.earnedValue += Number(item.earned_value || 0);
     current.totalTaskCost += Number(item.total_task_cost || 0);
+    current.plannedEffortHours += Number(item.planned_effort_hours || 0);
+    current.actualEffortHours += Number(item.actual_effort_hours || 0);
+    current.plannedLaborCost += Number(item.planned_labor_cost || 0);
+    current.actualLaborCost += Number(item.actual_labor_cost || 0);
+    current.actualCost += Number(item.actual_cost || item.total_task_cost || 0);
     grouped.set(key, current);
   }
 

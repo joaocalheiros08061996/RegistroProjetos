@@ -11,11 +11,15 @@ function aggregateEffortDeviationItems(items) {
       taskCount: 0,
       plannedEffortHours: 0,
       actualEffortHours: 0,
+      plannedLaborCost: 0,
+      actualLaborCost: 0,
     };
 
     current.taskCount += Number(item.task_count || 0);
     current.plannedEffortHours += Number(item.planned_effort_hours || 0);
     current.actualEffortHours += Number(item.actual_effort_hours || 0);
+    current.plannedLaborCost += Number(item.planned_labor_cost || 0);
+    current.actualLaborCost += Number(item.actual_labor_cost || 0);
     grouped.set(key, current);
   }
 
@@ -23,6 +27,7 @@ function aggregateEffortDeviationItems(items) {
     .map((item) => ({
       ...item,
       effortDeviationHours: item.actualEffortHours - item.plannedEffortHours,
+      laborCostDeviation: item.actualLaborCost - item.plannedLaborCost,
       effortDeviationPercent: item.plannedEffortHours > 0
         ? ((item.actualEffortHours - item.plannedEffortHours) / item.plannedEffortHours) * 100
         : null,
@@ -61,9 +66,13 @@ function effortDeviationRange(values) {
 }
 
 function toEffortDeviationChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
   const aggregatedItems = aggregateEffortDeviationItems(items);
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
-  const deviationValues = aggregatedItems.map((item) => item.effortDeviationHours);
+  const deviationValues = aggregatedItems.map((item) =>
+    convertHoursToDashboardUnit(item.effortDeviationHours, timeUnit)
+  );
 
   return {
     data: [
@@ -79,26 +88,40 @@ function toEffortDeviationChartPayload(items) {
             width: 2,
           },
         },
-        text: deviationValues.map(formatSignedHours),
+        text: deviationValues.map((value) =>
+          formatSignedDashboardDurationValue(value, timeUnit)
+        ),
         textposition: "outside",
         textfont: projectMonthlyTextStyle(),
         cliponaxis: false,
         customdata: aggregatedItems.map((item) => [
-          formatSignedHours(item.effortDeviationHours),
+          formatSignedDashboardDurationValue(
+            convertHoursToDashboardUnit(item.effortDeviationHours, timeUnit),
+            timeUnit
+          ),
           effortDeviationStatus(item.effortDeviationHours),
-          formatHours(item.plannedEffortHours),
-          formatHours(item.actualEffortHours),
+          formatDashboardDurationValue(
+            convertHoursToDashboardUnit(item.plannedEffortHours, timeUnit),
+            timeUnit
+          ),
+          formatDashboardDurationValue(
+            convertHoursToDashboardUnit(item.actualEffortHours, timeUnit),
+            timeUnit
+          ),
           Number.isFinite(item.effortDeviationPercent)
             ? `${item.effortDeviationPercent.toFixed(1)}%`
             : "-",
+          formatMoney(item.plannedLaborCost),
+          formatMoney(item.actualLaborCost),
+          formatMoney(item.laborCostDeviation),
           item.taskCount,
         ]),
-        hovertemplate: "%{x}<br>Desvio: %{customdata[0]} (%{customdata[1]})<br>Planejado: %{customdata[2]}<br>Real: %{customdata[3]}<br>Variação: %{customdata[4]}<br>Tarefas: %{customdata[5]}<extra></extra>",
+        hovertemplate: "%{x}<br>Desvio: %{customdata[0]} (%{customdata[1]})<br>Planejado: %{customdata[2]}<br>Real: %{customdata[3]}<br>Variação: %{customdata[4]}<br>Mão de obra planejada: %{customdata[5]}<br>Mão de obra real: %{customdata[6]}<br>Desvio em R$: %{customdata[7]}<br>Tarefas: %{customdata[8]}<extra></extra>",
       },
       {
         type: "scatter",
         mode: "lines",
-        name: "Referência 0 h",
+        name: `Referência 0 ${unitLabel}`,
         x: periodLabels,
         y: periodLabels.map(() => 0),
         line: {
@@ -106,24 +129,24 @@ function toEffortDeviationChartPayload(items) {
           width: 2,
           dash: "dash",
         },
-        hovertemplate: "%{x}<br>Referência sem desvio: 0 h<extra></extra>",
+        hovertemplate: `%{x}<br>Referência sem desvio: 0 ${unitLabel}<extra></extra>`,
       },
     ],
     layout: {
       ...projectMonthlyBaseLayout(
         "Desvio de Esforço por Mês",
-        "Desvio (horas)"
+        `Desvio (${unitLabel})`
       ),
       bargap: 0.45,
       yaxis: {
-        ...projectMonthlyBaseLayout("", "Desvio (horas)").yaxis,
+        ...projectMonthlyBaseLayout("", `Desvio (${unitLabel})`).yaxis,
         range: effortDeviationRange(deviationValues),
         zeroline: true,
         zerolinecolor: "#7F8C8D",
         zerolinewidth: 2,
       },
       legend: {
-        ...projectMonthlyBaseLayout("", "Desvio (horas)").legend,
+        ...projectMonthlyBaseLayout("", `Desvio (${unitLabel})`).legend,
         y: -0.28,
       },
     },

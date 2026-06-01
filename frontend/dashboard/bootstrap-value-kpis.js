@@ -42,6 +42,7 @@ const resizeValueKpiCharts = registerDashboardResize([
   chart13El,
 ]);
 
+setupDashboardTimeUnitFilter(rerenderEffortDeviationChart);
 refreshBtn.addEventListener("click", loadValueKpisDashboard);
 addChangeListeners(
   [

@@ -16,7 +16,7 @@
     <div class="actions">
       <a class="button secondary" href="module-select.html">Trocar módulo</a>
       <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
-      <button class="danger" type="button" onclick="logout()">Sair</button>
+      <button class="danger" type="button" data-action="logout">Sair</button>
     </div>
   </header>
 
@@ -31,12 +31,12 @@
     <form id="project-form" class="grid cols-2">
       <label for="name">
         Nome
-        <input id="name" required>
+        <input id="name" maxlength="160" required>
       </label>
 
       <label for="responsible_login">
         Responsável
-        <input id="responsible_login" required>
+        <input id="responsible_login" maxlength="120" required>
       </label>
 
       <label for="project_type">
@@ -63,7 +63,7 @@
 
       <label for="fte">
         FTE
-        <input id="fte" type="number" min="0.1" step="0.1" value="1" required>
+        <input id="fte" type="number" min="1" max="100" step="1" value="1" inputmode="numeric" required>
       </label>
 
       <label for="planned_start">
@@ -133,7 +133,7 @@
 
       <label for="estimated_cost">
         Custo estimado
-        <input id="estimated_cost" type="number" min="0" step="0.01" value="0">
+        <input id="estimated_cost" type="number" min="0" max="1000000000" step="0.01" value="0">
       </label>
 
       <div class="actions" style="align-self:end;">
@@ -144,197 +144,7 @@
   </section>
 </main>
 
-<script src="app.js?v=20260505"></script>
-<script>
-  requireAuth();
-
-  const projectList = document.getElementById("project-list");
-  const listFeedback = document.getElementById("list-feedback");
-  const formFeedback = document.getElementById("form-feedback");
-  const projectForm = document.getElementById("project-form");
-  const refreshBtn = document.getElementById("refresh-btn");
-
-  const plannedStartInput = document.getElementById("planned_start");
-  const plannedEndInput = document.getElementById("planned_end");
-
-  const now = new Date();
-  const plus7 = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  plannedStartInput.value = toLocalInputValue(now);
-  plannedEndInput.value = toLocalInputValue(plus7);
-
-  const PROJECT_TYPE_LABELS = {
-    LAYOUT: "LAYOUT",
-    EXPORTACAO: "EXPORTAÇÃO",
-    NORMATIZACAO: "NORMATIZAÇÃO",
-    PADRONIZACAO: "PADRONIZAÇÃO",
-    TRY_OUT: "TRY OUT",
-    MAPEAMENTO: "MAPEAMENTO",
-    MELHORIA: "MELHORIA DE PROC. EXISTENTES",
-    MELHORIA_PROC_NOVOS: "MELHORIA DE PROC. NOVOS",
-    PECAS: "PEÇAS",
-  };
-
-  function formatProjectTypeSafe(projectType) {
-    if (typeof formatProjectType === "function") {
-      return formatProjectType(projectType);
-    }
-    if (PROJECT_TYPE_LABELS[projectType]) {
-      return PROJECT_TYPE_LABELS[projectType];
-    }
-    return String(projectType || "").split("_").join(" ").toUpperCase();
-  }
-
-  function formatProcessClassification(value) {
-    return value || "Não informado";
-  }
-
-  function getProjectPriority(project) {
-    const level = Number(project.priority_level || 5);
-    const normalizedLevel = Number.isInteger(level) && level >= 1 && level <= 5
-      ? level
-      : 5;
-
-    return {
-      level: normalizedLevel,
-      label: project.priority_label || `Prioridade ${normalizedLevel}`,
-      gutScore: Number(project.gut_score || 0),
-    };
-  }
-
-  function renderProjectItem(project) {
-    const card = document.createElement("article");
-    card.className = "item";
-
-    const period = `${formatDateTime(project.planned_start)} - ${formatDateTime(project.planned_end)}`;
-    const progress = `${project.percent_completed ?? 0}%`;
-    const priority = getProjectPriority(project);
-
-    card.innerHTML = `
-      <div class="row project-heading">
-        <div class="project-title-stack">
-          <div class="project-title-with-priority">
-            <span class="priority-dot priority-${priority.level}" aria-label="${priority.label}"></span>
-            <h3 class="item-title">${project.name}</h3>
-          </div>
-          <p class="project-priority-label priority-text-${priority.level}">
-            ${priority.label}
-          </p>
-        </div>
-        <span class="item-subtitle">${formatProjectTypeSafe(project.project_type)}</span>
-      </div>
-      <p class="item-subtitle">Responsável: ${project.responsible_login}</p>
-      ${project.process_classification ? `<p class="item-subtitle">Processo: ${formatProcessClassification(project.process_classification)}</p>` : ""}
-      <p class="item-subtitle">Período: ${period}</p>
-      <div class="row">
-        <span class="item-subtitle">Tarefas: ${project.task_count}</span>
-        <span class="item-subtitle">Progresso: ${progress}</span>
-      </div>
-      <div class="actions" style="margin-top:10px;">
-        <a class="button secondary" href="project.html?id=${project.id}">Abrir projeto</a>
-        <button type="button" class="danger delete-project-btn">Excluir projeto</button>
-      </div>
-    `;
-
-    const deleteButton = card.querySelector(".delete-project-btn");
-    deleteButton.addEventListener("click", async () => {
-      const confirmed = confirm(`Deseja excluir o projeto "${project.name}"? Essa ação não pode ser desfeita.`);
-      if (!confirmed) {
-        return;
-      }
-
-      listFeedback.textContent = "Excluindo projeto...";
-      listFeedback.className = "status";
-
-      try {
-        await apiFetch(`/projects/${project.id}`, { method: "DELETE" });
-        await loadProjects();
-      } catch (err) {
-        listFeedback.textContent = err.message || "Erro ao excluir projeto.";
-        listFeedback.className = "error";
-      }
-    });
-
-    return card;
-  }
-
-  async function loadProjects() {
-    listFeedback.textContent = "Carregando projetos...";
-    listFeedback.className = "status";
-    projectList.innerHTML = "";
-
-    try {
-      const projects = await apiFetch("/projects/");
-
-      if (!projects.length) {
-        listFeedback.textContent = "Nenhum projeto cadastrado.";
-        return;
-      }
-
-      listFeedback.textContent = `${projects.length} projeto(s) encontrado(s).`;
-      projects.forEach((project) => {
-        projectList.appendChild(renderProjectItem(project));
-      });
-    } catch (err) {
-      listFeedback.textContent = err.message || "Erro ao carregar projetos.";
-      listFeedback.className = "error";
-    }
-  }
-
-  projectForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    formFeedback.textContent = "";
-    formFeedback.className = "status";
-
-    const payload = {
-      name: document.getElementById("name").value.trim(),
-      project_type: document.getElementById("project_type").value,
-      process_classification: document.getElementById("process_classification").value || null,
-      responsible_login: document.getElementById("responsible_login").value.trim(),
-      fte: Number(document.getElementById("fte").value),
-      planned_start: normalizeIsoFromInput(plannedStartInput.value),
-      planned_end: normalizeIsoFromInput(plannedEndInput.value),
-      severity: document.getElementById("severity").value,
-      urgency: document.getElementById("urgency").value,
-      trend: document.getElementById("trend").value,
-      objective_clarity: document.getElementById("objective_clarity").value,
-      method_clarity: document.getElementById("method_clarity").value,
-      estimated_cost: Number(document.getElementById("estimated_cost").value || 0),
-    };
-
-    if (!payload.name || !payload.responsible_login) {
-      formFeedback.textContent = "Preencha nome e responsável.";
-      formFeedback.className = "error";
-      return;
-    }
-
-    if (!payload.planned_start || !payload.planned_end) {
-      formFeedback.textContent = "Informe início e fim planejados.";
-      formFeedback.className = "error";
-      return;
-    }
-
-    try {
-      await apiFetch("/projects/", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      formFeedback.textContent = "Projeto criado com sucesso.";
-      formFeedback.className = "success";
-      projectForm.reset();
-      document.getElementById("fte").value = "1";
-      document.getElementById("estimated_cost").value = "0";
-      plannedStartInput.value = toLocalInputValue(new Date());
-      plannedEndInput.value = toLocalInputValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
-      await loadProjects();
-    } catch (err) {
-      formFeedback.textContent = err.message || "Erro ao criar projeto.";
-      formFeedback.className = "error";
-    }
-  });
-
-  refreshBtn.addEventListener("click", loadProjects);
-  loadProjects();
-</script>
+<script src="app.js?v=20260602"></script>
+<script src="pages/projects.js?v=20260602"></script>
 </body>
 </html>

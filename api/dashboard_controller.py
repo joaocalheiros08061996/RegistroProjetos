@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from api.deps import get_current_user_id, get_dashboard_service
+from api.deps import AuthenticatedUser, get_dashboard_service, require_permission
 from api.dtos import (
     DashboardAvgPlannedVsRealDaysByTypeResponseDTO,
     DashboardAvgRealDaysByTypeResponseDTO,
+    DashboardNewProcessTimeByMonthResponseDTO,
     DashboardProjectComplexityByMonthResponseDTO,
     DashboardProjectComplexityCountsResponseDTO,
     DashboardProjectEffortDeviationResponseDTO,
@@ -25,7 +26,7 @@ router = APIRouter(
     response_model=DashboardAvgRealDaysByTypeResponseDTO,
 )
 def get_avg_real_days_by_project_type(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -39,7 +40,7 @@ def get_avg_real_days_by_project_type(
     response_model=DashboardAvgPlannedVsRealDaysByTypeResponseDTO,
 )
 def get_avg_planned_vs_real_days_by_project_type(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -53,7 +54,7 @@ def get_avg_planned_vs_real_days_by_project_type(
     response_model=DashboardRoutineTotalDaysByMonthResponseDTO,
 )
 def get_routine_total_days_by_month(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -63,11 +64,25 @@ def get_routine_total_days_by_month(
 
 
 @router.get(
+    "/new-process-time-by-month",
+    response_model=DashboardNewProcessTimeByMonthResponseDTO,
+)
+def get_new_process_time_by_month(
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
+    service: DashboardService = Depends(get_dashboard_service),
+):
+    return {
+        "chart": "new_process_time_by_month",
+        "items": service.list_new_process_time_by_month(),
+    }
+
+
+@router.get(
     "/project-monthly-kpis",
     response_model=DashboardProjectMonthlyKpisResponseDTO,
 )
 def get_project_monthly_kpis(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -81,7 +96,7 @@ def get_project_monthly_kpis(
     response_model=DashboardProjectComplexityCountsResponseDTO,
 )
 def get_project_complexity_counts(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -95,7 +110,7 @@ def get_project_complexity_counts(
     response_model=DashboardProjectComplexityByMonthResponseDTO,
 )
 def get_project_complexity_counts_by_month(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -109,7 +124,7 @@ def get_project_complexity_counts_by_month(
     response_model=DashboardProjectsByResponsibleResponseDTO,
 )
 def get_projects_by_responsible(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -123,7 +138,7 @@ def get_projects_by_responsible(
     response_model=DashboardProjectEarnedValueResponseDTO,
 )
 def get_project_earned_value(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {
@@ -137,7 +152,7 @@ def get_project_earned_value(
     response_model=DashboardProjectEffortDeviationResponseDTO,
 )
 def get_project_effort_deviation(
-    _: str = Depends(get_current_user_id),
+    _: AuthenticatedUser = Depends(require_permission("dashboard:read_global")),
     service: DashboardService = Depends(get_dashboard_service),
 ):
     return {

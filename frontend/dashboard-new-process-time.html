@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tempo em Processos Novos | Dashboard</title>
+  <link rel="stylesheet" href="styles.css?v=20260525">
+</head>
+<body>
+<main class="page dashboard-page">
+  <header class="page-header">
+    <div>
+      <h1 class="title">Tempo em Processos Novos</h1>
+      <p class="muted">Tempo cronometrado em projetos e rotinas ligados a processos novos.</p>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="dashboard.html">Voltar ao Dashboard</a>
+      <a class="button secondary" href="module-select.html">Trocar módulo</a>
+      <button class="secondary" type="button" id="refresh-btn">Atualizar</button>
+      <button class="danger" type="button" data-action="logout">Sair</button>
+    </div>
+  </header>
+
+  <section class="section project-monthly-section new-process-time-section">
+    <article class="dashboard-panel">
+      <h2>Tempo Total em Processos Novos</h2>
+      <div class="dashboard-kpi-methodology">
+        <strong>Metodologia da KPI:</strong>
+        soma-se o tempo real cronometrado dos projetos classificados como
+        <strong>Processos novos</strong> com o tempo real das atividades
+        <strong>Reuniões sobre Processos Novos</strong> e
+        <strong>Análise de Processos Novos</strong>. O período dos projetos usa
+        a data inicial planejada; o período das rotinas usa o mês/ano registrado
+        na atividade.
+      </div>
+
+      <aside class="project-monthly-filters new-process-time-filters" aria-label="Filtros do gráfico de tempo em processos novos">
+        <label for="new-process-responsible-filter">
+          Responsável
+          <select id="new-process-responsible-filter"></select>
+        </label>
+
+        <label for="new-process-year-filter">
+          Ano
+          <select id="new-process-year-filter"></select>
+        </label>
+
+        <label for="new-process-month-filter">
+          Mês
+          <select id="new-process-month-filter"></select>
+        </label>
+
+        <label for="dashboard-time-unit-filter">
+          Unidade de tempo
+          <select id="dashboard-time-unit-filter">
+            <option value="days">Dias</option>
+            <option value="hours">Horas</option>
+          </select>
+        </label>
+      </aside>
+
+      <p id="dashboard-feedback-14" class="status">Carregando gráfico...</p>
+      <div id="dashboard-empty-14" class="item hidden">
+        <p class="item-subtitle">
+          Ainda não há tempo contabilizado para processos novos no filtro atual.
+        </p>
+      </div>
+      <div id="dashboard-chart-14" class="dashboard-chart new-process-time-dashboard-chart hidden" aria-label="Gráfico de tempo total em processos novos"></div>
+    </article>
+  </section>
+</main>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="app.js?v=20260602"></script>
+<script src="dashboard/dom.js?v=20260525"></script>
+<script src="dashboard/formatters.js?v=20260525"></script>
+<script src="dashboard/plotly-common.js?v=20260531"></script>
+<script src="dashboard/bootstrap-utils.js?v=20260531"></script>
+<script src="dashboard/new-process-time-chart.js?v=20260525"></script>
+</body>
+</html>

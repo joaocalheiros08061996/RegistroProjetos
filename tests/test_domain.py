@@ -56,6 +56,19 @@ def test_project_rejects_invalid_fte():
         )
 
 
+def test_project_rejects_fractional_fte():
+    with pytest.raises(ValidationError, match="FTE deve ser um numero inteiro"):
+        Project(
+            user_id=USER_ID,
+            name="Projeto FTE Fracionado",
+            project_type=ProjectType.LAYOUT,
+            responsible_login="user1",
+            fte=1.2,
+            planned_start=datetime(2026, 1, 1),
+            planned_end=datetime(2026, 1, 31),
+        )
+
+
 def test_project_rejects_end_before_start():
     with pytest.raises(ValidationError):
         Project(

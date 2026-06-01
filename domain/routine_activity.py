@@ -12,7 +12,9 @@ ROUTINE_ACTIVITY_TYPES: Sequence[str] = (
     "Atualização de Custos",
     "Finame",
     "Reuniões",
+    "Reuniões sobre Processos Novos",
     "Análise de Processos",
+    "Análise de Processos Novos",
 )
 
 

@@ -30,6 +30,7 @@ async function loadLeadTimeDashboard() {
 
 const resizeLeadTimeCharts = registerDashboardResize([chartEl, chart2El]);
 
+setupDashboardTimeUnitFilter(loadLeadTimeDashboard);
 refreshBtn.addEventListener("click", loadLeadTimeDashboard);
 
 loadLeadTimeDashboard().then(async () => {

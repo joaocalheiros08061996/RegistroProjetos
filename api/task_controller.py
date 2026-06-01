@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 
 from api.deps import get_current_user_id, get_task_service
 from api.dtos import CreateTaskDTO, TaskResponseDTO
 from application.services import TaskService
+from domain.validation import TASK_NAME_MAX_LENGTH
 
 router = APIRouter(
     prefix="/projects/{project_id}/tasks",
@@ -36,8 +37,8 @@ def to_task_response(task) -> TaskResponseDTO:
 
 @router.post("/", response_model=TaskResponseDTO)
 def add_task(
-    project_id: int,
     dto: CreateTaskDTO,
+    project_id: int = Path(..., gt=0),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -61,7 +62,7 @@ def add_task(
 
 @router.get("/", response_model=list[TaskResponseDTO])
 def list_tasks(
-    project_id: int,
+    project_id: int = Path(..., gt=0),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -78,8 +79,8 @@ def list_tasks(
 
 @router.get("/{task_name}", response_model=TaskResponseDTO)
 def get_task(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -96,8 +97,8 @@ def get_task(
 
 @router.post("/{task_name}/start")
 def start_task(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -110,8 +111,8 @@ def start_task(
 
 @router.post("/{task_name}/stop")
 def stop_task(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -131,8 +132,8 @@ def stop_task(
 
 @router.post("/{task_name}/complete")
 def complete_task(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -149,8 +150,8 @@ def complete_task(
 
 @router.delete("/{task_name}")
 def delete_task(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -167,8 +168,8 @@ def delete_task(
 
 @router.get("/{task_name}/time-entries")
 def list_time_entries(
-    project_id: int,
-    task_name: str,
+    project_id: int = Path(..., gt=0),
+    task_name: str = Path(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH),
     service: TaskService = Depends(get_task_service),
     user_id: str = Depends(get_current_user_id),
 ):

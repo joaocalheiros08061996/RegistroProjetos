@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 
 from application.services import ProjectService
 from api.dtos import (
@@ -98,7 +98,7 @@ def list_projects(
 
 @router.delete("/{project_id}")
 def delete_project(
-    project_id: int,
+    project_id: int = Path(..., gt=0),
     service: ProjectService = Depends(get_project_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -112,7 +112,7 @@ def delete_project(
 
 @router.get("/{project_id}", response_model=ProjectMetricsResponseDTO)
 def get_project_metrics(
-    project_id: int,
+    project_id: int = Path(..., gt=0),
     service: ProjectService = Depends(get_project_service),
     user_id: str = Depends(get_current_user_id),
 ):
@@ -132,7 +132,7 @@ def get_project_metrics(
 
 @router.get("/{project_id}/detail", response_model=ProjectDetailResponseDTO)
 def get_project_detail(
-    project_id: int,
+    project_id: int = Path(..., gt=0),
     service: ProjectService = Depends(get_project_service),
     user_id: str = Depends(get_current_user_id),
 ):

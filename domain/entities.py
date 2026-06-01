@@ -297,8 +297,16 @@ class Project:
         if planned_end < planned_start:
             raise ValidationError("Data final do projeto anterior a inicial.")
 
-        if fte <= 0:
+        try:
+            numeric_fte = float(fte)
+        except (TypeError, ValueError) as exc:
+            raise ValidationError("FTE deve ser um numero inteiro.") from exc
+
+        if numeric_fte <= 0:
             raise ValidationError("FTE deve ser maior que zero.")
+
+        if not numeric_fte.is_integer():
+            raise ValidationError("FTE deve ser um numero inteiro.")
 
         self._id: Optional[int] = None
 
@@ -307,7 +315,7 @@ class Project:
 
         self.project_type: ProjectType = project_type
         self.responsible_login: str = responsible_login
-        self.fte: float = float(fte)
+        self.fte: int = int(numeric_fte)
 
         self.planned_start: datetime = planned_start
         self.planned_end: datetime = planned_end

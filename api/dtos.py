@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from domain.enums import (
     ProjectType,
@@ -11,21 +11,37 @@ from domain.enums import (
     MethodClarity,
     ProcessClassification,
 )
+from domain.routine_activity import ROUTINE_ACTIVITY_TYPES
+from domain.validation import (
+    DESCRIPTION_MAX_LENGTH,
+    FTE_MAX,
+    FTE_MIN,
+    MONEY_MAX,
+    MONEY_MIN,
+    PROJECT_NAME_MAX_LENGTH,
+    RESPONSIBLE_MAX_LENGTH,
+    TASK_NAME_MAX_LENGTH,
+)
 
 
 # ============================================================
 # INPUT DTOS
 # ============================================================
 
-class CreateProjectDTO(BaseModel):
+
+class StrictInputDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+
+class CreateProjectDTO(StrictInputDTO):
     """
     DTO de entrada para criação de um projeto.
     """
 
-    name: str
+    name: str = Field(..., min_length=1, max_length=PROJECT_NAME_MAX_LENGTH)
     project_type: ProjectType
-    responsible_login: str
-    fte: float
+    responsible_login: str = Field(..., min_length=1, max_length=RESPONSIBLE_MAX_LENGTH)
+    fte: float = Field(..., ge=FTE_MIN, le=FTE_MAX)
 
     planned_start: datetime
     planned_end: datetime
@@ -40,18 +56,25 @@ class CreateProjectDTO(BaseModel):
     method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED
     process_classification: Optional[ProcessClassification] = None
 
-    estimated_cost: float = 0.0
+    estimated_cost: float = Field(default=0.0, ge=MONEY_MIN, le=MONEY_MAX)
+
+    @field_validator("fte")
+    @classmethod
+    def validate_integer_fte(cls, value: float) -> float:
+        if not float(value).is_integer():
+            raise ValueError("FTE deve ser um numero inteiro.")
+        return value
 
 
-class CreateTaskDTO(BaseModel):
+class CreateTaskDTO(StrictInputDTO):
     """
     DTO de entrada para criação de uma tarefa.
     """
 
-    name: str
+    name: str = Field(..., min_length=1, max_length=TASK_NAME_MAX_LENGTH)
     planned_start: datetime
     planned_end: datetime
-    cost: float = 0.0
+    cost: float = Field(default=0.0, ge=MONEY_MIN, le=MONEY_MAX)
 
 
 # ============================================================
@@ -197,10 +220,17 @@ class ProjectDetailResponseDTO(BaseModel):
 # ROUTINE ACTIVITIES
 # ============================================================
 
-class StartRoutineActivityDTO(BaseModel):
-    tipo_atividade: str
-    responsavel: str = ""
-    descricao: str = ""
+class StartRoutineActivityDTO(StrictInputDTO):
+    tipo_atividade: str = Field(..., min_length=1, max_length=80)
+    responsavel: str = Field(default="", max_length=RESPONSIBLE_MAX_LENGTH)
+    descricao: str = Field(default="", max_length=DESCRIPTION_MAX_LENGTH)
+
+    @field_validator("tipo_atividade")
+    @classmethod
+    def validate_tipo_atividade(cls, value: str) -> str:
+        if value not in ROUTINE_ACTIVITY_TYPES:
+            raise ValueError("Tipo de atividade invalido.")
+        return value
 
 
 class RoutineActivityResponseDTO(BaseModel):
@@ -257,6 +287,22 @@ class DashboardRoutineTotalDaysByMonthItemDTO(BaseModel):
 class DashboardRoutineTotalDaysByMonthResponseDTO(BaseModel):
     chart: str
     items: list[DashboardRoutineTotalDaysByMonthItemDTO]
+
+
+class DashboardNewProcessTimeByMonthItemDTO(BaseModel):
+    responsible_label: str
+    year: int
+    month: int
+    month_label: str
+    period_label: str
+    project_days: float
+    routine_days: float
+    total_days: float
+
+
+class DashboardNewProcessTimeByMonthResponseDTO(BaseModel):
+    chart: str
+    items: list[DashboardNewProcessTimeByMonthItemDTO]
 
 
 class DashboardProjectMonthlyKpiItemDTO(BaseModel):
@@ -352,6 +398,11 @@ class DashboardProjectEarnedValueItemDTO(BaseModel):
     planned_value: float
     earned_value: float
     total_task_cost: float
+    planned_effort_hours: float
+    actual_effort_hours: float
+    planned_labor_cost: float
+    actual_labor_cost: float
+    actual_cost: float
     task_count: int
     completed_task_count: int
 
@@ -373,6 +424,9 @@ class DashboardProjectEffortDeviationItemDTO(BaseModel):
     planned_effort_hours: float
     actual_effort_hours: float
     effort_deviation_hours: float
+    planned_labor_cost: float
+    actual_labor_cost: float
+    labor_cost_deviation: float
 
 
 class DashboardProjectEffortDeviationResponseDTO(BaseModel):

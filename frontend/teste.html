@@ -8,25 +8,12 @@
 
   <h1>TELA FUNCIONANDO</h1>
 
-  <button onclick="salvar()">Salvar token</button>
-  <button onclick="ler()">Ler token</button>
-  <button onclick="sair()">Logout</button>
+  <button id="save-token-btn">Salvar token</button>
+  <button id="read-token-btn">Ler token</button>
+  <button id="logout-btn">Logout</button>
 
-  <script src="app.js?v=20260505"></script>
-  <script>
-    function salvar() {
-      setToken("TOKEN_TESTE");
-      alert("Token salvo");
-    }
-
-    function ler() {
-      alert("Token atual: " + getToken());
-    }
-
-    function sair() {
-      logout();
-    }
-  </script>
+  <script src="app.js?v=20260602"></script>
+  <script src="pages/teste.js?v=20260602"></script>
 
 </body>
 </html>

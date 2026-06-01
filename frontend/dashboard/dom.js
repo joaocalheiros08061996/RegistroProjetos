@@ -11,6 +11,7 @@ const chart2El = document.getElementById("dashboard-chart-2");
 const feedback3El = document.getElementById("dashboard-feedback-3");
 const empty3El = document.getElementById("dashboard-empty-3");
 const chart3El = document.getElementById("dashboard-chart-3");
+const dashboardTimeUnitFilterEl = document.getElementById("dashboard-time-unit-filter");
 const routineTypeFilterEl = document.getElementById("routine-type-filter");
 const routineYearFilterEl = document.getElementById("routine-year-filter");
 const routineMonthFilterEl = document.getElementById("routine-month-filter");
@@ -82,6 +83,13 @@ const effortDeviationMonthFilterEl = document.getElementById("effort-deviation-m
 const effortDeviationTypeFilterEl = document.getElementById("effort-deviation-type-filter");
 const effortDeviationUserFilterEl = document.getElementById("effort-deviation-user-filter");
 
+const feedback14El = document.getElementById("dashboard-feedback-14");
+const empty14El = document.getElementById("dashboard-empty-14");
+const chart14El = document.getElementById("dashboard-chart-14");
+const newProcessResponsibleFilterEl = document.getElementById("new-process-responsible-filter");
+const newProcessYearFilterEl = document.getElementById("new-process-year-filter");
+const newProcessMonthFilterEl = document.getElementById("new-process-month-filter");
+
 const refreshBtn = document.getElementById("refresh-btn");
 
 let routineItems = [];
@@ -90,6 +98,7 @@ let avgRealItems = [];
 let complexityMonthlyItems = [];
 let earnedValueItems = [];
 let effortDeviationItems = [];
+let newProcessTimeItems = [];
 
 function setFeedback(target, message, type = "status") {
   target.textContent = message || "";

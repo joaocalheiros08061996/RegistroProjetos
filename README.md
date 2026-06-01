@@ -31,6 +31,20 @@ SUPABASE_ANON_KEY=<supabase-anon-key>
 SUPABASE_JWT_SECRET=<supabase-jwt-secret>
 SUPABASE_ISSUER=https://<project-ref>.supabase.co/auth/v1
 SUPABASE_AUDIENCE=authenticated
+
+# Recommended for signed app session cookies.
+AUTH_SESSION_SIGNING_SECRET=<random-secret>
+APP_ALLOWED_ORIGINS=https://<your-render-service>.onrender.com
+
+# Optional, only needed for app-stored secrets.
+DATA_ENCRYPTION_ACTIVE_KEY_ID=primary
+DATA_ENCRYPTION_KEYS=primary:<fernet-key>
+
+# Required for privacy notice acknowledgement audit.
+PRIVACY_CONTROLLER_NAME=<controller-name>
+PRIVACY_CONTACT_EMAIL=<privacy-contact-email>
+PRIVACY_POLICY_VERSION=2026-06-01
+PRIVACY_AUDIT_HASH_SECRET=<random-secret>
 ```
 
 Use the same Supabase project for all of these values. The `<project-ref>` in `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_ISSUER` must match.
@@ -60,6 +74,7 @@ Run the SQL schema files against your Supabase PostgreSQL database before using 
 ```text
 infra/database/schema.sql
 infra/database/schema_routine_activities.sql
+infra/database/migration_add_auth_privacy_acknowledgements.sql
 ```
 
 You can execute them in the Supabase SQL editor or through any PostgreSQL client connected with `DATABASE_URL`.
@@ -89,13 +104,13 @@ pip install -r requirements.txt
 Start the application:
 
 ```bash
-uvicorn api.main:app --reload
+uvicorn api.main:app --reload --no-server-header
 ```
 
 If you use `uv`, you can run:
 
 ```bash
-uv run uvicorn api.main:app --reload
+uv run uvicorn api.main:app --reload --no-server-header
 ```
 
 Open the app:
@@ -130,6 +145,8 @@ Authentication:
 ```text
 POST /auth/login
 POST /auth/signup
+POST /auth/refresh
+POST /auth/logout
 ```
 
 Projects:
@@ -267,6 +284,13 @@ http://127.0.0.1:8000/app
 
 The container listens on port `8000`.
 
+For a direct production-style Uvicorn start outside Docker, disable the default
+stack-identifying header:
+
+```bash
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --no-server-header
+```
+
 ## Deploying to Render
 
 This repository includes a Dockerfile, so the recommended Render setup is a Docker Web Service.
@@ -288,6 +312,42 @@ SUPABASE_ANON_KEY=<supabase-anon-key>
 SUPABASE_JWT_SECRET=<supabase-jwt-secret>
 SUPABASE_ISSUER=https://<project-ref>.supabase.co/auth/v1
 SUPABASE_AUDIENCE=authenticated
+AUTH_SESSION_SIGNING_SECRET=<random-secret>
+APP_ALLOWED_ORIGINS=https://<your-render-service>.onrender.com
+```
+
+Generate `AUTH_SESSION_SIGNING_SECRET` locally with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Optional encryption variables for future app-stored secrets:
+
+```env
+DATA_ENCRYPTION_ACTIVE_KEY_ID=primary
+DATA_ENCRYPTION_KEYS=primary:<fernet-key>
+```
+
+Generate a Fernet key locally with:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Required privacy notice variables:
+
+```env
+PRIVACY_CONTROLLER_NAME=<controller-name>
+PRIVACY_CONTACT_EMAIL=<privacy-contact-email>
+PRIVACY_POLICY_VERSION=2026-06-01
+PRIVACY_AUDIT_HASH_SECRET=<random-secret>
+```
+
+Generate `PRIVACY_AUDIT_HASH_SECRET` locally with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
 Optional import-only variable:
@@ -309,6 +369,9 @@ Before deploying or switching Supabase projects, verify:
 - `SUPABASE_JWT_SECRET` belongs to that same Supabase project.
 - `SUPABASE_ISSUER` is exactly `https://<project-ref>.supabase.co/auth/v1`.
 - `SUPABASE_AUDIENCE` is `authenticated`.
+- `AUTH_SESSION_SIGNING_SECRET` is configured and stored only in Render environment variables.
+- `APP_ALLOWED_ORIGINS` contains the public HTTPS URL of the Render service.
+- Privacy notice variables are configured, and `PRIVACY_AUDIT_HASH_SECRET` is stored only in Render environment variables.
 - Database schema files have been applied.
 - The Render service has been restarted after environment variable changes.
 
@@ -351,5 +414,78 @@ Set `SUPABASE_ISSUER` explicitly. Do not rely on a fallback issuer when changing
 
 - Do not commit `.env` files or real Supabase credentials.
 - Use Render environment variables for production secrets.
-- Keep `SUPABASE_JWT_SECRET` private.
+- Keep `DATABASE_URL`, `SUPABASE_JWT_SECRET`, `SUPABASE_ANON_KEY`, and `DATA_ENCRYPTION_KEYS` private.
+- Do not log `Authorization`, cookies, `DATABASE_URL`, tokens, passwords, API keys, or full authentication payloads.
 - Rotate Supabase keys if they were exposed.
+- Production requests received through Render with `X-Forwarded-Proto: http` are redirected to HTTPS by the app. Local development remains HTTP-friendly.
+- Security headers are added globally by the app, including HSTS in production, content-type protection, frame denial, referrer policy, permissions policy, and a CSP compatible with the current frontend.
+- The application removes `Server` and `X-Powered-By` when they are present in app responses. Docker also starts Uvicorn with `--no-server-header`.
+- Plotly remains loaded from `https://cdn.plot.ly`; the CSP permits that origin and keeps `'unsafe-eval'` only for Plotly compatibility. Application-owned JavaScript must stay in external files.
+
+### Staging Header Checklist
+
+After each security-header change, verify the deployed staging service before
+promoting it to production:
+
+```bash
+curl -sSI https://<staging-host>/app/login.html
+curl -sSI https://<staging-host>/missing-route
+curl -sSI -H "X-Forwarded-Proto: http" http://<staging-host>/app/login.html
+```
+
+Confirm that HTTPS responses include `Strict-Transport-Security`,
+`Content-Security-Policy`, `Permissions-Policy`, `X-Content-Type-Options`,
+`X-Frame-Options`, and `Referrer-Policy`. Confirm that HTTP redirects to HTTPS
+and that neither `Server` nor `X-Powered-By` is exposed. Headers added by the
+Render proxy must be checked at this deployed boundary because the app cannot
+remove headers appended after its response leaves the container.
+
+Finally, open login, projects, and each Plotly dashboard in staging and check the
+browser console for CSP violations.
+
+### Sessions, Cookies, and CSRF
+
+- Supabase remains responsible for issuing access and refresh tokens. Business API routes use `Authorization: Bearer <access-token>`, so browser cookies are not used to authorize project, task, routine, or dashboard changes.
+- Refresh tokens are stored only in an `HttpOnly`, `SameSite=Lax` cookie. In production the cookie is also `Secure`.
+- The app issues a second signed `HttpOnly` cookie with an opaque session id, initial issue time, last refresh time, and a hash of the refresh token. A new id is generated after login, signup, and each successful refresh.
+- `/auth/refresh` rejects missing, modified, inactive, or absolutely expired session cookies. Defaults are 8 hours of refresh inactivity and 30 days absolute lifetime. Override with `AUTH_SESSION_IDLE_TIMEOUT_SECONDS` and `AUTH_SESSION_ABSOLUTE_TIMEOUT_SECONDS`.
+- Authentication POST routes reject cross-site browser requests using `Origin`, `Referer`, and `Sec-Fetch-Site` when those headers are present. Configure production origins with `APP_ALLOWED_ORIGINS`.
+- `/auth/logout` clears both cookies and attempts Supabase revocation with the current access token. A stolen access token may remain valid until its short JWT expiration; use short access-token lifetime in Supabase and revoke affected sessions in Supabase after password changes or suspected compromise.
+
+### Input Validation and Output Encoding
+
+- JSON write endpoints use Pydantic DTOs with unknown fields rejected, trimmed text fields, bounded lengths, non-negative costs, and bounded integer FTE values.
+- Repository SQL remains parameterized. Names containing SQL-like text are stored and queried as data.
+- Dynamic frontend values rendered through HTML templates are escaped, and dynamic URL parameters are encoded before concatenation.
+- The web app has no file-upload endpoint. Local Excel, CSV, and JSON automation inputs are checked for allowed extension, existence, regular-file type, and size before opening. Override the default 50 MB limit with `AUTOMACAO_MAX_INPUT_FILE_BYTES`.
+- The API does not accept XML and does not fetch user-provided URLs. XXE and SSRF are therefore outside the current web surface. File paths exist only in local CLI automation arguments, where validation occurs before opening.
+
+### Data Encryption and Backups
+
+Supabase provides managed PostgreSQL storage; use Supabase controls for database-level encryption, access, and backup retention. The app also includes a Fernet-based helper for secrets that may be stored by future features. Its payload format is `v1:<key_id>:<ciphertext>`, and old keys can remain in `DATA_ENCRYPTION_KEYS` while `DATA_ENCRYPTION_ACTIVE_KEY_ID` points to the new key.
+
+Current project/task/routine operational fields are not encrypted at the application layer because dashboards filter and group by those values. If future features store tokens, API keys, integration secrets, or similar values in database tables, encrypt them with the helper before persistence.
+
+Test backups periodically in a separate environment. At minimum, record the backup date, restore target, verification steps, and result after each monthly or quarterly restore drill.
+
+### Privacy Notice and LGPD
+
+- New registrations require explicit acknowledgement that the user has read the Privacy Notice at `/app/privacy.html`.
+- The acknowledgement audit stores the policy version, timestamp, user id, and HMAC-SHA256 hashes of email and IP. It does not store raw email or IP in the audit table.
+- Apply `infra/database/migration_add_auth_privacy_acknowledgements.sql` before deploying this feature. If the audit insert fails after Supabase creates an account, the app returns `503` and does not issue authentication cookies.
+- The acknowledgement covers transparency for essential internal use. Optional future purposes must be presented separately and, when consent is the applicable legal basis, support facilitated revocation.
+- This implementation supports LGPD operations but does not replace legal review or the internal process for handling data-subject requests through `PRIVACY_CONTACT_EMAIL`.
+- Official references: [compiled LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm) and [ANPD data-subject rights](https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados-1/direito-dos-titulares).
+
+Existing accounts can be registered honestly as legacy pending records, without fabricating retroactive acknowledgement. Prepare a local CSV with `user_id,email`, run dry-run first, then commit:
+
+```bash
+uv run python automacoes/registrar_privacidade_legado_supabase.py \
+  --csv usuarios_legados.csv \
+  --reason "Usuarios existentes antes da publicacao do aviso"
+
+uv run python automacoes/registrar_privacidade_legado_supabase.py \
+  --csv usuarios_legados.csv \
+  --reason "Usuarios existentes antes da publicacao do aviso" \
+  --commit
+```

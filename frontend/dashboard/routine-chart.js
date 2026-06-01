@@ -138,11 +138,15 @@ function aggregateRoutineItemsByPeriod(items) {
 }
 
 function toRoutineTotalDaysChartPayload(items) {
+  const timeUnit = getDashboardTimeUnit();
+  const unitLabel = getDashboardTimeUnitLabel(timeUnit);
+  const unitTitle = getDashboardTimeUnitTitle(timeUnit);
   const aggregatedItems = aggregateRoutineItemsByPeriod(items);
   const monthLabels = aggregatedItems.map((item) => item.monthLabel);
   const yearLabels = aggregatedItems.map((item) => String(item.year));
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
-  const values = aggregatedItems.map((item) => Number(item.totalDays || 0));
+  const dayValues = aggregatedItems.map((item) => Number(item.totalDays || 0));
+  const values = dayValues.map((value) => convertDaysToDashboardUnit(value, timeUnit));
   const maxValue = Math.max(...values, 0);
   const yAxisMax = maxValue > 0 ? maxValue * 1.2 : 1;
 
@@ -160,7 +164,7 @@ function toRoutineTotalDaysChartPayload(items) {
             width: 1.8,
           },
         },
-        text: values.map((value) => formatDaysLabel(value)),
+        text: dayValues.map((value) => formatDashboardDurationLabelFromDays(value, timeUnit)),
         textposition: "outside",
         textfont: {
           color: "#2c3e50",
@@ -168,13 +172,13 @@ function toRoutineTotalDaysChartPayload(items) {
           family: "Manrope, Avenir Next, Segoe UI, sans-serif",
         },
         cliponaxis: false,
-        hovertemplate: "%{customdata}<br>Dias totais: %{y:.1f}<extra></extra>",
+        hovertemplate: `%{customdata}<br>${unitTitle} totais: %{y:.1f} ${unitLabel}<extra></extra>`,
         opacity: 0.95,
       },
     ],
     layout: {
       title: {
-        text: "Dias Totais para Atividades de Rotina",
+        text: `${unitTitle} Totais para Atividades de Rotina`,
         x: 0.5,
         xanchor: "center",
         font: {
@@ -210,7 +214,7 @@ function toRoutineTotalDaysChartPayload(items) {
         tickformat: ".1f",
         rangemode: "tozero",
         title: {
-          text: "<b>Dias totais</b>",
+          text: `<b>${unitTitle} totais</b>`,
           font: {
             size: 16,
           },

@@ -23,6 +23,11 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+try:
+    from automacoes.file_validation import validate_input_file, validate_optional_input_file
+except ModuleNotFoundError:  # Execucao direta: python automacoes/importar_a3_supabase.py
+    from file_validation import validate_input_file, validate_optional_input_file
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_WORKBOOK = ROOT_DIR / "A3 - Gerenciamento de Projetos.xlsx"
 DEFAULT_MANIFEST = Path(__file__).with_name("import_a3_manifest.json")
@@ -416,9 +421,14 @@ def read_excel_records(workbook_path: Path) -> WorkbookRecords:
             "Dependencia ausente: instale pandas e openpyxl com `pip install -r requirements.txt`."
         ) from exc
 
-    workbook_path = workbook_path.resolve()
-    if not workbook_path.exists():
-        raise MigrationError(f"Planilha nao encontrada: {workbook_path}")
+    try:
+        workbook_path = validate_input_file(
+            workbook_path,
+            allowed_suffixes={".xlsx"},
+            description="Planilha",
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise MigrationError(str(exc)) from exc
 
     def read_sheet(sheet_name: str, header_row: int) -> list[dict[str, Any]]:
         try:
@@ -598,6 +608,14 @@ def empty_manifest(user_id: str | None = None) -> dict[str, Any]:
 
 
 def load_manifest(path: Path, user_id: str) -> dict[str, Any]:
+    try:
+        path = validate_optional_input_file(
+            path,
+            allowed_suffixes={".json"},
+            description="Manifesto",
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        raise MigrationError(str(exc)) from exc
     if not path.exists():
         return empty_manifest(user_id)
     with path.open("r", encoding="utf-8") as handle:
