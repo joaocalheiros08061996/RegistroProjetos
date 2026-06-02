@@ -3,10 +3,11 @@ from datetime import timedelta
 from math import isclose
 
 from application.services import DashboardService
-from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE, WORKDAY_HOURS
 from domain.entities import Project
 from domain.enums import MethodClarity, ObjectiveClarity, ProcessClassification, ProjectType
 from domain.routine_activity import RoutineActivity
+from domain.work_schedule import planned_interval_to_hours
 from infra.in_memory_repos import (
     InMemoryDashboardRepository,
     InMemoryProjectRepository,
@@ -69,7 +70,7 @@ def test_dashboard_service_returns_global_average_and_ignores_open_entries():
     assert len(items) == 1
     assert items[0]["project_type"] == "LAYOUT"
     assert items[0]["project_type_label"] == "LAYOUT"
-    assert items[0]["average_days"] == 3.0
+    assert isclose(items[0]["average_days"], 72.0 / 24.0, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_service_sorts_descending_and_applies_labels():
@@ -134,7 +135,7 @@ def test_dashboard_service_keeps_small_non_zero_values():
     map_value = next(item["average_days"] for item in items if item["project_type"] == "MAPEAMENTO")
     norm_value = next(item["average_days"] for item in items if item["project_type"] == "NORMATIZACAO")
 
-    assert isclose(map_value, 307.0 / 24.0 + 27.0 / 1440.0 + 44.0 / 86400.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(map_value, (307.0 + 27.0 / 60.0 + 44.0 / 3600.0) / 24.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(norm_value, 127.0 / 86400.0, rel_tol=0, abs_tol=1e-10)
 
 
@@ -163,7 +164,7 @@ def test_dashboard_service_returns_planned_vs_real_averages():
     assert len(items) == 1
     assert items[0]["project_type"] == "LAYOUT"
     assert isclose(items[0]["planned_average_days"], 9.0, rel_tol=0, abs_tol=1e-10)
-    assert isclose(items[0]["real_average_days"], 3.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["real_average_days"], 72.0 / 24.0, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_service_returns_project_monthly_kpis_by_responsible():
@@ -225,7 +226,7 @@ def test_dashboard_service_returns_project_monthly_kpis_by_responsible():
         item
         for item in items
         if item["project_type"] == "LAYOUT"
-        and item["responsible_login"] == "ana"
+        and item["responsible_login"] == "Ana"
         and item["year"] == 2026
         and item["month"] == 1
     )
@@ -241,7 +242,7 @@ def test_dashboard_service_returns_project_monthly_kpis_by_responsible():
     assert layout_jan["sla_project_count"] == 2
 
     map_fev = next(item for item in items if item["project_type"] == "MAPEAMENTO")
-    assert map_fev["responsible_login"] == "bruno"
+    assert map_fev["responsible_login"] == "Bruno"
     assert map_fev["month_label"] == "FEV"
     assert map_fev["project_count"] == 1
     assert isclose(map_fev["planned_days_sum"], 5.0, rel_tol=0, abs_tol=1e-10)
@@ -250,7 +251,7 @@ def test_dashboard_service_returns_project_monthly_kpis_by_responsible():
 
     no_real = next(item for item in items if item["project_type"] == "MELHORIA")
     assert no_real["project_type_label"] == "MELHORIA DE PROC. EXISTENTES"
-    assert no_real["responsible_login"] == "ana"
+    assert no_real["responsible_login"] == "Ana"
     assert no_real["project_count"] == 1
     assert no_real["planned_days_sum"] == 0.0
     assert no_real["planned_days_count"] == 0
@@ -388,7 +389,7 @@ def test_dashboard_service_returns_project_complexity_counts_by_month_with_filte
         {
             "project_type": "LAYOUT",
             "project_type_label": "LAYOUT",
-            "responsible_login": "ana",
+            "responsible_login": "Ana",
             "year": 2026,
             "month": 1,
             "month_label": "JAN",
@@ -399,7 +400,7 @@ def test_dashboard_service_returns_project_complexity_counts_by_month_with_filte
         {
             "project_type": "LAYOUT",
             "project_type_label": "LAYOUT",
-            "responsible_login": "bruno",
+            "responsible_login": "Bruno",
             "year": 2026,
             "month": 1,
             "month_label": "JAN",
@@ -410,7 +411,7 @@ def test_dashboard_service_returns_project_complexity_counts_by_month_with_filte
         {
             "project_type": "NORMATIZACAO",
             "project_type_label": "NORMATIZAÇÃO",
-            "responsible_login": "ana",
+            "responsible_login": "Ana",
             "year": 2026,
             "month": 1,
             "month_label": "JAN",
@@ -421,7 +422,7 @@ def test_dashboard_service_returns_project_complexity_counts_by_month_with_filte
         {
             "project_type": "MAPEAMENTO",
             "project_type_label": "MAPEAMENTO",
-            "responsible_login": "bruno",
+            "responsible_login": "Bruno",
             "year": 2026,
             "month": 2,
             "month_label": "FEV",
@@ -484,18 +485,26 @@ def test_dashboard_service_returns_project_earned_value_by_period_and_responsibl
     items = service.list_project_earned_value()
 
     done_item = next(item for item in items if item["project_name"] == "Projeto Encerrado")
-    done_planned_labor = 72.0 * ENGINEERING_PROCESS_HOURLY_RATE
-    done_completed_labor = 48.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    done_planned_hours = sum(
+        planned_interval_to_hours(task.planned_start, task.planned_end)
+        for task in project_done.list_tasks()
+    )
+    done_completed_hours = sum(
+        planned_interval_to_hours(task.planned_start, task.planned_end)
+        for task in project_done.completed_tasks()
+    )
+    done_planned_labor = done_planned_hours * ENGINEERING_PROCESS_HOURLY_RATE
+    done_completed_labor = done_completed_hours * ENGINEERING_PROCESS_HOURLY_RATE
     assert done_item["project_type"] == "LAYOUT"
     assert done_item["project_type_label"] == "LAYOUT"
-    assert done_item["responsible_login"] == "ana"
+    assert done_item["responsible_login"] == "Ana"
     assert done_item["month_label"] in service._MONTH_LABELS.values()
     assert done_item["period_label"] == f'{done_item["month_label"]} {done_item["year"]}'
     assert done_item["estimated_cost"] == 1000.0
     assert isclose(done_item["planned_value"], 1000.0 + done_planned_labor, rel_tol=0, abs_tol=1e-10)
     assert isclose(done_item["earned_value"], 600.0 + done_completed_labor, rel_tol=0, abs_tol=1e-10)
     assert done_item["total_task_cost"] == 900.0
-    assert isclose(done_item["planned_effort_hours"], 72.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(done_item["planned_effort_hours"], done_planned_hours, rel_tol=0, abs_tol=1e-10)
     assert isclose(done_item["actual_effort_hours"], 0.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(done_item["planned_labor_cost"], done_planned_labor, rel_tol=0, abs_tol=1e-10)
     assert isclose(done_item["actual_labor_cost"], 0.0, rel_tol=0, abs_tol=1e-10)
@@ -505,13 +514,21 @@ def test_dashboard_service_returns_project_earned_value_by_period_and_responsibl
     assert "schedule_performance_index" not in done_item
 
     future_item = next(item for item in items if item["project_name"] == "Projeto Futuro")
-    future_completed_labor = 48.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    future_completed_hours = planned_interval_to_hours(
+        future_task.planned_start,
+        future_task.planned_end,
+    )
+    future_completed_labor = future_completed_hours * ENGINEERING_PROCESS_HOURLY_RATE
     assert future_item["planned_value"] == 0.0
     assert isclose(future_item["earned_value"], 300.0 + future_completed_labor, rel_tol=0, abs_tol=1e-10)
     assert "schedule_performance_index" not in future_item
 
     fallback_item = next(item for item in items if item["project_name"] == "Projeto Sem Estimado")
-    fallback_labor = 24.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    fallback_hours = planned_interval_to_hours(
+        fallback_task.planned_start,
+        fallback_task.planned_end,
+    )
+    fallback_labor = fallback_hours * ENGINEERING_PROCESS_HOURLY_RATE
     assert fallback_item["estimated_cost"] == 0.0
     assert isclose(fallback_item["planned_value"], 250.0 + fallback_labor, rel_tol=0, abs_tol=1e-10)
     assert isclose(fallback_item["earned_value"], 250.0 + fallback_labor, rel_tol=0, abs_tol=1e-10)
@@ -578,7 +595,7 @@ def test_dashboard_service_returns_project_effort_deviation_by_period_and_respon
     item = items[0]
     assert item["project_type"] == "LAYOUT"
     assert item["project_type_label"] == "LAYOUT"
-    assert item["responsible_login"] == "ana"
+    assert item["responsible_login"] == "Ana"
     assert item["year"] == 2026
     assert item["month"] == 5
     assert item["month_label"] == "MAI"
@@ -662,25 +679,25 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     assert items[0]["month"] == 1
     assert items[0]["month_label"] == "JAN"
     assert items[0]["period_label"] == "JAN 2026"
-    assert isclose(items[0]["total_days"], 0.5, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["total_days"], 12.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
     assert items[1]["user_id"] == "u2"
     assert items[1]["user_label"] == "Bruno"
     assert items[1]["activity_type"] == "Cadastro"
     assert items[1]["month_label"] == "JAN"
-    assert isclose(items[1]["total_days"], 0.5, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[1]["total_days"], 12.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
     assert items[2]["user_id"] == "36f1e40c-949e-4850-b86d-607dc6a468d3"
     assert items[2]["user_label"] == "Usuário 36f1...68d3"
     assert items[2]["activity_type"] == "Reuniões"
     assert items[2]["month_label"] == "FEV"
-    assert isclose(items[2]["total_days"], 1.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[2]["total_days"], 24.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
     assert items[3]["user_id"] == "u4"
     assert items[3]["user_label"] == "u4"
     assert items[3]["activity_type"] == "Reuniões"
     assert items[3]["month_label"] == "FEV"
-    assert isclose(items[3]["total_days"], 1.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[3]["total_days"], 24.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_service_returns_new_process_time_by_month():
@@ -769,6 +786,6 @@ def test_dashboard_service_returns_new_process_time_by_month():
     assert items[0]["month"] == 4
     assert items[0]["month_label"] == "ABR"
     assert items[0]["period_label"] == "ABR 2026"
-    assert isclose(items[0]["project_days"], 2.0, rel_tol=0, abs_tol=1e-10)
-    assert isclose(items[0]["routine_days"], 1.0, rel_tol=0, abs_tol=1e-10)
-    assert isclose(items[0]["total_days"], 3.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["project_days"], 48.0 / 24.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["routine_days"], 24.0 / 24.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["total_days"], 72.0 / 24.0, rel_tol=0, abs_tol=1e-10)

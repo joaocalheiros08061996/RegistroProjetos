@@ -146,7 +146,9 @@ function toRoutineTotalDaysChartPayload(items) {
   const yearLabels = aggregatedItems.map((item) => String(item.year));
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
   const dayValues = aggregatedItems.map((item) => Number(item.totalDays || 0));
-  const values = dayValues.map((value) => convertDaysToDashboardUnit(value, timeUnit));
+  const values = dayValues.map((value) =>
+    convertDaysToDashboardUnit(value, timeUnit, DASHBOARD_WORKDAY_HOURS)
+  );
   const maxValue = Math.max(...values, 0);
   const yAxisMax = maxValue > 0 ? maxValue * 1.2 : 1;
 
@@ -164,7 +166,9 @@ function toRoutineTotalDaysChartPayload(items) {
             width: 1.8,
           },
         },
-        text: dayValues.map((value) => formatDashboardDurationLabelFromDays(value, timeUnit)),
+        text: dayValues.map((value) =>
+          formatDashboardDurationLabelFromDays(value, timeUnit, DASHBOARD_WORKDAY_HOURS)
+        ),
         textposition: "outside",
         textfont: {
           color: "#2c3e50",

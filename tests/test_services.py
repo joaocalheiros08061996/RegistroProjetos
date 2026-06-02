@@ -37,7 +37,7 @@ def test_create_project_service(services):
         name="Projeto Service",
         project_type=ProjectType.LAYOUT,
         process_classification=ProcessClassification.NEW,
-        responsible_login="user1",
+        responsible_login=" JACKSON ",
         fte=1.0,
         planned_start=datetime(2026, 1, 1),
         planned_end=datetime(2026, 1, 31),
@@ -46,6 +46,7 @@ def test_create_project_service(services):
     assert project.id is not None
     assert project.name == "Projeto Service"
     assert project.user_id == USER_ID
+    assert project.responsible_login == "Jackson"
     assert project.process_classification == ProcessClassification.NEW
     assert project.task_count == 0
 

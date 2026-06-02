@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from domain.exceptions import ValidationError
+from domain.responsible import normalize_responsible_name
 
 
 ROUTINE_ACTIVITY_TYPES: Sequence[str] = (
@@ -54,7 +55,7 @@ class RoutineActivity:
 
         self._id: Optional[int] = None
         self.user_id = user_id.strip()
-        self.responsavel = (responsavel or "").strip()
+        self.responsavel = normalize_responsible_name(responsavel)
         self.tipo_atividade = tipo
         self.descricao = (descricao or "").strip()
         self.inicio = started_at

@@ -17,6 +17,7 @@ import json
 import math
 import os
 import re
+import sys
 import unicodedata
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -25,12 +26,17 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from domain.responsible import normalize_responsible_name
+
 try:
     from automacoes.file_validation import validate_input_file, validate_optional_input_file
 except ModuleNotFoundError:  # Execucao direta: python automacoes/importar_atividades_supabase.py
     from file_validation import validate_input_file, validate_optional_input_file
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_CSV = ROOT_DIR / "atividades_rows (21).csv"
 DEFAULT_USER_MAP = Path(__file__).with_name("atividades_user_map.json")
 DEFAULT_MANIFEST = Path(__file__).with_name("import_atividades_manifest.json")
@@ -203,7 +209,7 @@ def load_user_map(path: Path) -> dict[str, UserMapping]:
         if not isinstance(raw_entry, dict):
             continue
         user_id = normalize_spaces(raw_entry.get("user_id"))
-        responsavel = (
+        responsavel = normalize_responsible_name(
             normalize_spaces(raw_entry.get("responsavel"))
             or normalize_spaces(raw_entry.get("user_email"))
             or normalize_spaces(source_label)

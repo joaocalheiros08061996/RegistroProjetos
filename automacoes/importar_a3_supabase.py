@@ -16,6 +16,7 @@ import json
 import math
 import os
 import re
+import sys
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
@@ -23,12 +24,17 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from domain.responsible import normalize_responsible_name
+
 try:
     from automacoes.file_validation import validate_input_file, validate_optional_input_file
 except ModuleNotFoundError:  # Execucao direta: python automacoes/importar_a3_supabase.py
     from file_validation import validate_input_file, validate_optional_input_file
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_WORKBOOK = ROOT_DIR / "A3 - Gerenciamento de Projetos.xlsx"
 DEFAULT_MANIFEST = Path(__file__).with_name("import_a3_manifest.json")
 DEFAULT_REPORT = Path(__file__).with_name("import_a3_report.json")
@@ -512,9 +518,11 @@ def build_records(
             source_id=source_id,
             name=name,
             project_type=project_type,
-            responsible_login=to_text(row.get("Responsável"))
-            or to_text(classification.get("RESPONSÁVEL"))
-            or "nao_informado",
+            responsible_login=normalize_responsible_name(
+                to_text(row.get("Responsável"))
+                or to_text(classification.get("RESPONSÁVEL"))
+                or "nao_informado"
+            ),
             fte=to_positive_float(row.get("FTEs"), to_positive_float(classification.get("FTes"), 1.0)),
             planned_start=planned_start,
             planned_end=planned_end,

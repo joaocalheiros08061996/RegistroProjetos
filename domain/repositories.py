@@ -124,7 +124,7 @@ class IDashboardRepository(ABC):
     @abstractmethod
     def list_routine_total_days_by_month(self) -> list[dict]:
         """
-        Retorna dias totais globais de atividades de rotina por tipo, ano e mes.
+        Retorna dias uteis totais globais de atividades de rotina por tipo, ano e mes.
         Cada item deve conter:
         - user_id (str)
         - activity_type (str)

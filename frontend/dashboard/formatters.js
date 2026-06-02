@@ -35,6 +35,8 @@ function getDaysPrecision(values) {
 }
 
 const DASHBOARD_TIME_UNIT_STORAGE_KEY = "registroProjetos.dashboardTimeUnit";
+const DASHBOARD_DAY_HOURS = 24;
+const DASHBOARD_WORKDAY_HOURS = 8.8;
 
 function normalizeDashboardTimeUnit(value) {
   return value === "hours" ? "hours" : "days";
@@ -97,30 +99,42 @@ function getDashboardTimeUnitTitle(unit = getDashboardTimeUnit()) {
   return normalizeDashboardTimeUnit(unit) === "hours" ? "Horas" : "Dias";
 }
 
-function convertDaysToDashboardUnit(value, unit = getDashboardTimeUnit()) {
+function convertDaysToDashboardUnit(
+  value,
+  unit = getDashboardTimeUnit(),
+  hoursPerDay = DASHBOARD_DAY_HOURS
+) {
   const numericValue = Number(value || 0);
   if (!Number.isFinite(numericValue)) {
     return 0;
   }
 
   return normalizeDashboardTimeUnit(unit) === "hours"
-    ? numericValue * 24
+    ? numericValue * hoursPerDay
     : numericValue;
 }
 
-function convertHoursToDashboardUnit(value, unit = getDashboardTimeUnit()) {
+function convertHoursToDashboardUnit(
+  value,
+  unit = getDashboardTimeUnit(),
+  hoursPerDay = DASHBOARD_DAY_HOURS
+) {
   const numericValue = Number(value || 0);
   if (!Number.isFinite(numericValue)) {
     return 0;
   }
 
   return normalizeDashboardTimeUnit(unit) === "days"
-    ? numericValue / 24
+    ? numericValue / hoursPerDay
     : numericValue;
 }
 
-function formatDashboardDurationLabelFromDays(value, unit = getDashboardTimeUnit()) {
-  const convertedValue = convertDaysToDashboardUnit(value, unit);
+function formatDashboardDurationLabelFromDays(
+  value,
+  unit = getDashboardTimeUnit(),
+  hoursPerDay = DASHBOARD_DAY_HOURS
+) {
+  const convertedValue = convertDaysToDashboardUnit(value, unit, hoursPerDay);
   return `${convertedValue.toFixed(1)} ${getDashboardTimeUnitLabel(unit)}`;
 }
 

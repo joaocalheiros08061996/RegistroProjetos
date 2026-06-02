@@ -19,6 +19,7 @@ from .exceptions import (
     TaskNotStartedError,
     ValidationError,
 )
+from .responsible import normalize_responsible_name
 
 
 # ============================================================
@@ -314,7 +315,7 @@ class Project:
         self._name: str = name.strip()
 
         self.project_type: ProjectType = project_type
-        self.responsible_login: str = responsible_login
+        self.responsible_login: str = normalize_responsible_name(responsible_login)
         self.fte: int = int(numeric_fte)
 
         self.planned_start: datetime = planned_start

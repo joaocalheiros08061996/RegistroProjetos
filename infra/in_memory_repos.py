@@ -12,6 +12,11 @@ from domain.repositories import (
     ITaskRepository,
 )
 from domain.routine_activity import RoutineActivity
+from domain.work_schedule import (
+    planned_interval_to_hours,
+    planned_progress,
+    worked_hours_to_workdays,
+)
 
 
 class InMemoryProjectRepository(IProjectRepository):
@@ -263,7 +268,9 @@ class InMemoryDashboardRepository(IDashboardRepository):
                     )
 
             if total_seconds > 0:
-                grouped_real_by_type.setdefault(project_type, []).append(total_seconds / 86400.0)
+                grouped_real_by_type.setdefault(project_type, []).append(
+                    total_seconds / 86400.0
+                )
 
         all_types = set(grouped_planned_by_type.keys()) | set(grouped_real_by_type.keys())
         rows: list[dict] = []
@@ -317,7 +324,7 @@ class InMemoryDashboardRepository(IDashboardRepository):
                 activity.ano,
                 activity.mes,
             )
-            grouped[key] = grouped.get(key, 0.0) + (float(hours) / 24.0)
+            grouped[key] = grouped.get(key, 0.0) + worked_hours_to_workdays(hours)
 
         rows = [
             {
@@ -688,11 +695,7 @@ class InMemoryDashboardRepository(IDashboardRepository):
         if now >= project.planned_end:
             return 1.0
 
-        total_seconds = (project.planned_end - project.planned_start).total_seconds()
-        if total_seconds <= 0:
-            return 0.0
-
-        return max(0.0, min(1.0, (now - project.planned_start).total_seconds() / total_seconds))
+        return planned_progress(project.planned_start, project.planned_end, now)
 
     def list_project_earned_value(self) -> list[dict]:
         rows: list[dict] = []
@@ -708,9 +711,11 @@ class InMemoryDashboardRepository(IDashboardRepository):
             actual_effort_hours = 0.0
 
             for task in tasks:
-                planned_seconds = (task.planned_end - task.planned_start).total_seconds()
-                if planned_seconds > 0:
-                    task_planned_hours = planned_seconds / 3600.0
+                task_planned_hours = planned_interval_to_hours(
+                    task.planned_start,
+                    task.planned_end,
+                )
+                if task_planned_hours > 0:
                     planned_effort_hours += task_planned_hours
                     if task.is_completed:
                         completed_planned_effort_hours += task_planned_hours
@@ -813,8 +818,11 @@ class InMemoryDashboardRepository(IDashboardRepository):
             responsible_login = (project.responsible_login or "").strip() or "Sem responsável"
 
             for task in project.list_tasks():
-                planned_seconds = (task.planned_end - task.planned_start).total_seconds()
-                if planned_seconds <= 0:
+                planned_hours = planned_interval_to_hours(
+                    task.planned_start,
+                    task.planned_end,
+                )
+                if planned_hours <= 0:
                     continue
 
                 actual_seconds = 0.0
@@ -845,7 +853,7 @@ class InMemoryDashboardRepository(IDashboardRepository):
                     },
                 )
                 row["task_count"] += 1
-                row["planned_effort_hours"] += planned_seconds / 3600.0
+                row["planned_effort_hours"] += planned_hours
                 row["actual_effort_hours"] += actual_seconds / 3600.0
 
         rows = list(grouped.values())

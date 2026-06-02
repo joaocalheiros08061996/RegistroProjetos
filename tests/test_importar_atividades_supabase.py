@@ -105,7 +105,7 @@ def test_user_map_ignores_entries_without_uuid(tmp_path):
             {
                 "users": {
                     "A": {"user_id": "", "responsavel": "A"},
-                    "B": {"user_id": "uuid-b", "responsavel": "B"},
+                    "B": {"user_id": "uuid-b", "responsavel": "JACKSON"},
                 }
             }
         ),
@@ -116,6 +116,7 @@ def test_user_map_ignores_entries_without_uuid(tmp_path):
 
     assert set(loaded) == {"b"}
     assert loaded["b"].user_id == "uuid-b"
+    assert loaded["b"].responsavel == "Jackson"
 
 
 def test_manifest_defaults_and_natural_key_are_stable(tmp_path):

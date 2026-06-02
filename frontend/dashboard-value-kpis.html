@@ -28,8 +28,10 @@
         <strong>Metodologia da KPI:</strong>
         o <strong>Valor Agregado (VA)</strong> soma os custos digitados das
         tarefas concluídas com a mão de obra planejada concluída, calculada por
-        horas planejadas × R$ 195,61. O <strong>Valor Planejado (VP)</strong>
+        horas planejadas × R$ 32,60. O <strong>Valor Planejado (VP)</strong>
         usa o orçamento de referência do projeto somado à mão de obra planejada.
+        Intervalos planejados com vários dias contam apenas segunda a sexta,
+        usando <strong>8h48 por dia útil</strong>; o VP não avança no fim de semana.
       </div>
 
       <aside class="project-monthly-filters earned-value-filters" aria-label="Filtros do gráfico de valor agregado">
@@ -116,7 +118,7 @@
         o <strong>IDC</strong> mede o desempenho de custo a partir da razão
         <strong>VA ÷ Custo Real</strong>. O custo real soma os custos digitados
         com a mão de obra real registrada em apontamentos fechados, calculada
-        por horas reais × R$ 195,61.
+        por horas reais × R$ 32,60.
       </div>
 
       <aside class="project-monthly-filters cost-performance-filters" aria-label="Filtros do gráfico de IDC">
@@ -159,8 +161,9 @@
         o <strong>Desvio de Esforço</strong> compara o esforço real registrado
         em tarefas com o esforço planejado no cronograma. O cálculo usado é
         <strong>tempo real - tempo planejado</strong>, considerando apenas
-        registros de tempo fechados. O hover também exibe o impacto financeiro
-        dessa variação usando R$ 195,61 por hora.
+        registros de tempo fechados. O balão de detalhes também exibe o impacto financeiro
+        dessa variação usando R$ 32,60 por hora. Quando exibido em dias,
+        <strong>1 dia útil equivale a 8h48</strong>.
       </div>
 
       <aside class="project-monthly-filters effort-deviation-filters" aria-label="Filtros do gráfico de desvio de esforço">
@@ -207,7 +210,7 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="app.js?v=20260602"></script>
 <script src="dashboard/dom.js?v=20260525"></script>
-<script src="dashboard/formatters.js?v=20260525"></script>
+<script src="dashboard/formatters.js?v=20260602"></script>
 <script src="dashboard/plotly-common.js?v=20260531"></script>
 <script src="dashboard/value-data.js?v=20260602"></script>
 <script src="dashboard/value-charts.js?v=20260602"></script>

@@ -224,4 +224,4 @@ def test_project_actual_days_uses_task_entries(project):
         end=datetime(2026, 1, 1, 20, 0, 0),
     )
 
-    assert project.actual_days() == 0.5
+    assert project.actual_days() == 12.0 / 24.0

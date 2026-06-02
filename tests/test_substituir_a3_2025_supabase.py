@@ -65,7 +65,7 @@ def test_legacy_project_type_is_imported_as_existing_improvement():
 def test_build_records_2025_skips_ref_rows_and_uses_compound_task_names():
     records = build_records_2025(
         project_rows=[
-            _project_row(_row_number=2),
+            _project_row(_row_number=2, **{"RESPONSÁVEL": "fagner"}),
             _project_row(
                 _row_number=3,
                 PROJETOS="Projeto quebrado",
@@ -90,6 +90,7 @@ def test_build_records_2025_skips_ref_rows_and_uses_compound_task_names():
     project = records.projects[0]
     assert project.project_type == "MELHORIA"
     assert project.process_classification == PROCESS_CLASSIFICATION_EXISTING
+    assert project.responsible_login == "Fagner"
     assert project.fte == 1.0
     assert project.planned_start == datetime(2025, 1, 10)
     assert project.planned_end == datetime(2025, 1, 10)

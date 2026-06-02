@@ -140,7 +140,7 @@ def test_project_type_2026_maps_known_2026_labels():
 def test_build_records_2026_keeps_soldagem_tasks_as_external_project():
     records = build_records_2026(
         project_rows=[
-            _project_row(_row_number=2),
+            _project_row(_row_number=2, **{"RESPONSÁVEL": "JOÃO PAULO"}),
             _project_row(
                 _row_number=3,
                 PROJETOS="Treinamento",
@@ -174,10 +174,12 @@ def test_build_records_2026_keeps_soldagem_tasks_as_external_project():
         "MAPEAMENTO",
         "PADRONIZACAO",
     ]
+    assert records.projects[0].responsible_login == "João Paulo"
     assert [task.name for task in records.tasks] == [
         "Desenvolvimento - Aplicação Web",
         "Avaliação Diagnóstica dos Soldadores: Programa de Soldagem - ROGERIO DE ASSIS KUBIAK",
     ]
+    assert [task.actual_seconds for task in records.tasks] == [345600, 345600]
     assert normalize_key(SOLDAGEM_PROJECT_NAME) in external_project_keys(records)
     assert time_entries_ready(records) == 2
     assert [item["reason"] for item in records.skipped_tasks] == [

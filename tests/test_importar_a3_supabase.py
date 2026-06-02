@@ -65,7 +65,7 @@ def test_build_records_skips_unclassified_projects_and_their_tasks():
             {
                 "ID": 1,
                 "Projeto": "Projeto Classificado",
-                "Responsável": "Evandro",
+                "Responsável": "fagner",
                 "FTEs": 1,
                 "Valor previsto": 1000,
                 "Data Início Planej.": 45355,
@@ -122,6 +122,7 @@ def test_build_records_skips_unclassified_projects_and_their_tasks():
     )
 
     assert [project.source_id for project in records.projects] == ["1"]
+    assert records.projects[0].responsible_login == "Fagner"
     assert records.skipped_projects == [
         {
             "source_id": "2",

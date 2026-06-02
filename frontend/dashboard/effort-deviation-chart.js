@@ -71,7 +71,7 @@ function toEffortDeviationChartPayload(items) {
   const aggregatedItems = aggregateEffortDeviationItems(items);
   const periodLabels = aggregatedItems.map((item) => item.periodLabel);
   const deviationValues = aggregatedItems.map((item) =>
-    convertHoursToDashboardUnit(item.effortDeviationHours, timeUnit)
+    convertHoursToDashboardUnit(item.effortDeviationHours, timeUnit, DASHBOARD_WORKDAY_HOURS)
   );
 
   return {
@@ -96,16 +96,28 @@ function toEffortDeviationChartPayload(items) {
         cliponaxis: false,
         customdata: aggregatedItems.map((item) => [
           formatSignedDashboardDurationValue(
-            convertHoursToDashboardUnit(item.effortDeviationHours, timeUnit),
+            convertHoursToDashboardUnit(
+              item.effortDeviationHours,
+              timeUnit,
+              DASHBOARD_WORKDAY_HOURS
+            ),
             timeUnit
           ),
           effortDeviationStatus(item.effortDeviationHours),
           formatDashboardDurationValue(
-            convertHoursToDashboardUnit(item.plannedEffortHours, timeUnit),
+            convertHoursToDashboardUnit(
+              item.plannedEffortHours,
+              timeUnit,
+              DASHBOARD_WORKDAY_HOURS
+            ),
             timeUnit
           ),
           formatDashboardDurationValue(
-            convertHoursToDashboardUnit(item.actualEffortHours, timeUnit),
+            convertHoursToDashboardUnit(
+              item.actualEffortHours,
+              timeUnit,
+              DASHBOARD_WORKDAY_HOURS
+            ),
             timeUnit
           ),
           Number.isFinite(item.effortDeviationPercent)

@@ -45,6 +45,7 @@ from automacoes.importar_a3_supabase import (
     write_json,
 )
 from automacoes.file_validation import validate_input_file
+from domain.responsible import normalize_responsible_name
 
 DEFAULT_WORKBOOK = ROOT_DIR / "A3 - Gerenciamento de Projetos (2026).xlsx"
 DEFAULT_REPORT = Path(__file__).with_name("import_a3_2026_report.json")
@@ -231,7 +232,9 @@ def build_records_2026(
             name=name,
             project_type=project_type,
             process_classification=process_classification,
-            responsible_login=to_text(row.get("RESPONSÁVEL")) or "nao_informado",
+            responsible_login=normalize_responsible_name(
+                to_text(row.get("RESPONSÁVEL")) or "nao_informado"
+            ),
             fte=to_positive_float(row.get("FTes"), 1.0),
             planned_start=planned_start,
             planned_end=planned_end,

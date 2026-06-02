@@ -2,7 +2,6 @@ from datetime import datetime
 from math import isclose
 
 import application.services as services_module
-from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
 import domain.routine_activity as routine_activity_module
 
 
@@ -140,8 +139,8 @@ def test_value_kpi_dashboards_include_labor_cost_from_effort(client, monkeypatch
     earned_item = next(
         item for item in earned_payload["items"] if item["project_name"] == "Projeto Valor"
     )
-    planned_labor = 8.0 * ENGINEERING_PROCESS_HOURLY_RATE
-    actual_labor = 2.0 * ENGINEERING_PROCESS_HOURLY_RATE
+    planned_labor = 8.0 * 32.60
+    actual_labor = 2.0 * 32.60
     assert isclose(earned_item["planned_effort_hours"], 8.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(earned_item["actual_effort_hours"], 2.0, rel_tol=0, abs_tol=1e-10)
     assert isclose(earned_item["planned_labor_cost"], planned_labor, rel_tol=0, abs_tol=1e-10)
@@ -230,7 +229,7 @@ def test_dashboard_returns_global_average_across_users_and_ignores_open_entries(
     layout_item = payload["items"][0]
     assert layout_item["project_type"] == "LAYOUT"
     assert layout_item["project_type_label"] == "LAYOUT"
-    assert layout_item["average_days"] == 3.0
+    assert isclose(layout_item["average_days"], 72.0 / 24.0, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_projects_by_responsible_returns_global_projects(client):
@@ -311,7 +310,7 @@ def test_dashboard_projects_by_responsible_returns_global_projects(client):
     assert alice_item["project_name"] == "Projeto Global Alice"
     assert alice_item["project_type"] == "LAYOUT"
     assert alice_item["project_type_label"] == "LAYOUT"
-    assert alice_item["responsible_login"] == "alice"
+    assert alice_item["responsible_login"] == "Alice"
     assert alice_item["estimated_cost"] == 1500.0
     assert alice_item["task_count"] == 2
     assert alice_item["completed_task_count"] == 1
@@ -328,7 +327,7 @@ def test_dashboard_projects_by_responsible_returns_global_projects(client):
     bob_item = items_by_id[project_2_id]
     assert bob_item["project_name"] == "Projeto Global Bob"
     assert bob_item["project_type"] == "PECAS"
-    assert bob_item["responsible_login"] == "bob"
+    assert bob_item["responsible_login"] == "Bob"
     assert bob_item["task_count"] == 0
     assert bob_item["completed_task_count"] == 0
     assert bob_item["percent_completed"] == 0.0
@@ -548,6 +547,6 @@ def test_dashboard_returns_new_process_time_by_month(client, monkeypatch):
     assert item["month"] == 4
     assert item["month_label"] == "ABR"
     assert item["period_label"] == "ABR 2026"
-    assert item["project_days"] == 2.0
-    assert item["routine_days"] == 1.0
-    assert item["total_days"] == 3.0
+    assert isclose(item["project_days"], 48.0 / 24.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(item["routine_days"], 24.0 / 24.0, rel_tol=0, abs_tol=1e-10)
+    assert isclose(item["total_days"], 72.0 / 24.0, rel_tol=0, abs_tol=1e-10)

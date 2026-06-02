@@ -1,7 +1,81 @@
-from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
+from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE, WORKDAY_HOURS, WORKDAY_SECONDS
 from domain.repositories import IDashboardRepository
 from infra.database.connection import get_connection
 from psycopg2.extras import RealDictCursor
+
+
+def _weekday_calendar_days_sql(start_expr: str, end_expr: str) -> str:
+    return f"""
+        (
+            select coalesce(sum(
+                greatest(
+                    0,
+                    extract(epoch from (
+                        least({end_expr}, workday + interval '1 day')
+                        - greatest({start_expr}, workday)
+                    ))
+                ) / 86400.0
+            ), 0)
+            from generate_series(
+                date_trunc('day', {start_expr}),
+                date_trunc('day', {end_expr}),
+                interval '1 day'
+            ) as workdays(workday)
+            where workday < {end_expr}
+              and extract(isodow from workday) between 1 and 5
+        )
+    """
+
+
+def _planned_workdays_sql(start_expr: str, end_expr: str) -> str:
+    weekday_days = _weekday_calendar_days_sql(start_expr, end_expr)
+    return f"""
+        case
+            when {start_expr} is null
+              or {end_expr} is null
+              or {end_expr} <= {start_expr}
+                then 0
+            when {start_expr}::date = {end_expr}::date
+                then extract(epoch from ({end_expr} - {start_expr})) / {WORKDAY_SECONDS}.0
+            else {weekday_days}
+        end
+    """
+
+
+def _planned_hours_sql(start_expr: str, end_expr: str) -> str:
+    weekday_days = _weekday_calendar_days_sql(start_expr, end_expr)
+    return f"""
+        case
+            when {start_expr} is null
+              or {end_expr} is null
+              or {end_expr} <= {start_expr}
+                then 0
+            when {start_expr}::date = {end_expr}::date
+                then extract(epoch from ({end_expr} - {start_expr})) / 3600.0
+            else ({weekday_days}) * {WORKDAY_HOURS}
+        end
+    """
+
+
+def _planned_progress_sql(start_expr: str, end_expr: str) -> str:
+    elapsed_days = _weekday_calendar_days_sql(start_expr, "now()")
+    planned_days = _weekday_calendar_days_sql(start_expr, end_expr)
+    return f"""
+        case
+            when {start_expr} is null
+              or {end_expr} is null
+              or {end_expr} <= {start_expr}
+                then null
+            when now() <= {start_expr}
+                then 0
+            when now() >= {end_expr}
+                then 1
+            when {start_expr}::date = {end_expr}::date
+                then extract(epoch from (now() - {start_expr}))
+                     / nullif(extract(epoch from ({end_expr} - {start_expr})), 0)
+            else ({elapsed_days}) / nullif(({planned_days}), 0)
+        end
+    """
 
 
 class SupabaseDashboardRepository(IDashboardRepository):
@@ -223,7 +297,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                     activity_type,
                     year,
                     month,
-                    sum(worked_hours) / 24.0 as total_days
+                    sum(worked_hours) / {WORKDAY_HOURS} as total_days
                 from routine_hours
                 where year is not null
                   and month between 1 and 12
@@ -654,9 +728,11 @@ class SupabaseDashboardRepository(IDashboardRepository):
         ]
 
     def list_project_earned_value(self) -> list[dict]:
+        planned_hours_sql = _planned_hours_sql("t.planned_start", "t.planned_end")
+        planned_progress_sql = _planned_progress_sql("p.planned_start", "p.planned_end")
         with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                """
+                f"""
                 with task_actual_effort as (
                     select
                         t.id as task_id,
@@ -694,7 +770,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                                 when t.planned_start is not null
                                   and t.planned_end is not null
                                   and t.planned_end > t.planned_start
-                                    then extract(epoch from (t.planned_end - t.planned_start)) / 3600.0
+                                    then {planned_hours_sql}
                                 else 0
                             end
                         ), 0) as planned_effort_hours,
@@ -704,7 +780,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                                   and t.planned_start is not null
                                   and t.planned_end is not null
                                   and t.planned_end > t.planned_start
-                                    then extract(epoch from (t.planned_end - t.planned_start)) / 3600.0
+                                    then {planned_hours_sql}
                                 else 0
                             end
                         ), 0) as completed_planned_effort_hours,
@@ -739,18 +815,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                             end
                             + coalesce(tv.planned_effort_hours, 0) * %s::numeric
                         ) as baseline_value,
-                        case
-                            when p.planned_start is null
-                              or p.planned_end is null
-                              or p.planned_end <= p.planned_start
-                                then null
-                            when now() <= p.planned_start
-                                then 0
-                            when now() >= p.planned_end
-                                then 1
-                            else extract(epoch from (now() - p.planned_start))
-                                 / nullif(extract(epoch from (p.planned_end - p.planned_start)), 0)
-                        end as planned_progress
+                        {planned_progress_sql} as planned_progress
                     from projects p
                     left join task_values tv on tv.project_id = p.id
                     where p.planned_start is not null
@@ -813,9 +878,10 @@ class SupabaseDashboardRepository(IDashboardRepository):
         ]
 
     def list_project_effort_deviation(self) -> list[dict]:
+        planned_hours_sql = _planned_hours_sql("t.planned_start", "t.planned_end")
         with get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
-                """
+                f"""
                 with task_actual_effort as (
                     select
                         t.id as task_id,
@@ -836,7 +902,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                         coalesce(nullif(trim(p.responsible_login::text), ''), 'Sem responsável') as responsible_login,
                         extract(year from t.planned_start)::int as year,
                         extract(month from t.planned_start)::int as month,
-                        extract(epoch from (t.planned_end - t.planned_start)) / 3600.0 as planned_effort_hours,
+                        {planned_hours_sql} as planned_effort_hours,
                         coalesce(ta.actual_effort_hours, 0) as actual_effort_hours
                     from projects p
                     join tasks t on t.project_id = p.id
