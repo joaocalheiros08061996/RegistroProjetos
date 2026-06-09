@@ -25,6 +25,7 @@ def to_task_response(task) -> TaskResponseDTO:
         planned_start=task.planned_start,
         planned_end=task.planned_end,
         cost=task.cost,
+        description=task.description,
         actual_seconds=round(task.actual_time.total_seconds(), 2),
         time_entries_count=len(task.time_entries),
         percent_completed=task.percent_completed,
@@ -52,6 +53,7 @@ def add_task(
         planned_start=dto.planned_start,
         planned_end=dto.planned_end,
         cost=dto.cost,
+        description=dto.description,
     )
     return to_task_response(task)
 

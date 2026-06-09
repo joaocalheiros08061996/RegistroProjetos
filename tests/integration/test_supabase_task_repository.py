@@ -42,6 +42,7 @@ def test_supabase_task_repository_save_and_load():
 
     task = Task(
         name="Task Integracao",
+        description="Descrição persistida no Supabase",
         planned_start=datetime(2026, 1, 2),
         planned_end=datetime(2026, 1, 5),
         cost=100.0,
@@ -56,6 +57,7 @@ def test_supabase_task_repository_save_and_load():
 
     assert loaded is not None
     assert loaded.name == "Task Integracao"
+    assert loaded.description == "Descrição persistida no Supabase"
     assert loaded.cost == 100.0
     assert loaded.percent_completed == 0.0
 

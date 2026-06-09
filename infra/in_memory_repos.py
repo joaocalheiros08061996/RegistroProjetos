@@ -305,7 +305,7 @@ class InMemoryDashboardRepository(IDashboardRepository):
         if self.routine_repo is None:
             return []
 
-        grouped: dict[tuple[str, str, str, int, int], float] = {}
+        grouped: dict[tuple[str, str, int, int], float] = {}
         for activity in self.routine_repo._storage.values():
             hours = activity.horas_trabalhadas
             if (hours is None or hours <= 0) and activity.fim is not None:
@@ -317,9 +317,9 @@ class InMemoryDashboardRepository(IDashboardRepository):
             if hours is None or hours <= 0:
                 continue
 
+            responsavel = self._routine_responsavel(activity)
             key = (
-                activity.user_id,
-                self._routine_user_label(activity),
+                responsavel,
                 activity.tipo_atividade,
                 activity.ano,
                 activity.mes,
@@ -328,22 +328,22 @@ class InMemoryDashboardRepository(IDashboardRepository):
 
         rows = [
             {
-                "user_id": user_id,
-                "user_label": user_label,
+                "user_id": responsavel,
+                "user_label": responsavel,
+                "responsavel": responsavel,
                 "activity_type": activity_type,
                 "year": year,
                 "month": month,
                 "total_days": total_days,
             }
-            for (user_id, user_label, activity_type, year, month), total_days in grouped.items()
+            for (responsavel, activity_type, year, month), total_days in grouped.items()
         ]
         rows.sort(
             key=lambda item: (
                 item["year"],
                 item["month"],
                 item["activity_type"],
-                item["user_label"],
-                item["user_id"],
+                item["responsavel"],
             )
         )
         return rows
@@ -434,6 +434,14 @@ class InMemoryDashboardRepository(IDashboardRepository):
             )
         )
         return rows
+
+    @staticmethod
+    def _routine_responsavel(activity: RoutineActivity) -> str:
+        responsavel = str(getattr(activity, "responsavel", "") or "").strip()
+        if responsavel:
+            return responsavel
+
+        return "Sem responsável"
 
     @staticmethod
     def _routine_user_label(activity: RoutineActivity) -> str:

@@ -41,9 +41,9 @@ class SupabaseTaskRepository(ITaskRepository):
                     """
                     insert into tasks (
                         project_id, user_id, name,
-                        planned_start, planned_end, cost, status
+                        planned_start, planned_end, cost, status, description
                     )
-                    values (%s,%s,%s,%s,%s,%s,%s)
+                    values (%s,%s,%s,%s,%s,%s,%s,%s)
                     returning id
                     """,
                     (
@@ -54,6 +54,7 @@ class SupabaseTaskRepository(ITaskRepository):
                         task.planned_end,
                         task.cost,
                         task.status.value,
+                        task.description,
                     ),
                 )
                 task._set_id(cur.fetchone()[0])
@@ -85,6 +86,7 @@ class SupabaseTaskRepository(ITaskRepository):
                 planned_start=row["planned_start"],
                 planned_end=row["planned_end"],
                 cost=row["cost"],
+                description=row.get("description") or "",
             )
             task._set_id(row["id"])
             task._set_status(self._coerce_task_status(row["status"]))

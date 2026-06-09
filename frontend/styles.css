@@ -80,6 +80,10 @@ main.page {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.full-span {
+  grid-column: 1 / -1;
+}
+
 label {
   display: block;
   font-weight: 600;
@@ -210,6 +214,15 @@ button.danger:hover {
   border-radius: 12px;
   padding: 14px;
   background: #fff;
+}
+
+.wide-item {
+  grid-column: 1 / -1;
+}
+
+.task-description {
+  white-space: pre-line;
+  line-height: 1.5;
 }
 
 .module-grid {
@@ -420,7 +433,8 @@ button.danger:hover {
   margin: 0 auto;
 }
 
-.routine-dashboard-filters label {
+.routine-dashboard-filters label,
+.routine-filter-field {
   display: grid;
   gap: 4px;
   border: 1px solid var(--line);
@@ -430,6 +444,10 @@ button.danger:hover {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text);
+}
+
+.routine-filter-field > span {
+  line-height: 1.2;
 }
 
 .routine-dashboard-filters select {
@@ -446,6 +464,92 @@ button.danger:hover {
 
 .routine-dashboard-filters option {
   padding: 4px;
+}
+
+.multi-select {
+  position: relative;
+  min-width: 0;
+}
+
+.multi-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 36px;
+  height: 36px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: none;
+  transform: none;
+}
+
+.multi-select-trigger:hover {
+  background: #ffffff;
+  transform: none;
+}
+
+.multi-select-trigger:focus {
+  outline: 2px solid rgba(20, 105, 214, 0.2);
+  border-color: var(--primary);
+}
+
+#routine-type-filter-summary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multi-select-caret {
+  flex: 0 0 auto;
+  margin-left: 8px;
+  color: var(--muted);
+}
+
+.multi-select-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+  padding: 4px;
+}
+
+.routine-dashboard-filters .multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  padding: 7px 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.routine-dashboard-filters .multi-select-option:hover {
+  background: #eef4fb;
+}
+
+.routine-dashboard-filters .multi-select-option input {
+  width: auto;
+  margin: 0;
 }
 
 #dashboard-chart-3 {

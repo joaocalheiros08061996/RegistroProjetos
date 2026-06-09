@@ -17,6 +17,7 @@ const taskFormFeedback = document.getElementById("task-form-feedback");
 const refreshBtn = document.getElementById("refresh-btn");
 const deleteProjectBtn = document.getElementById("delete-project-btn");
 const TASK_NAME_MAX_LENGTH = 160;
+const TASK_DESCRIPTION_MAX_LENGTH = 150;
 const MAX_MONEY_VALUE = 1000000000;
 
 const taskStartInput = document.getElementById("task_planned_start");
@@ -65,11 +66,15 @@ function renderTaskItem(task) {
   const card = document.createElement("article");
   card.className = "item";
   const encodedTask = encodeURIComponent(task.name);
+  const descriptionHtml = task.description
+    ? `<p class="item-subtitle task-description">${escapeHtml(task.description)}</p>`
+    : "";
   card.innerHTML = `
     <div class="row">
       <h3 class="item-title">${escapeHtml(task.name)}</h3>
       <span class="item-subtitle">${escapeHtml(task.status)}</span>
     </div>
+    ${descriptionHtml}
     <p class="item-subtitle">Período: ${escapeHtml(formatDateTime(task.planned_start))} - ${escapeHtml(formatDateTime(task.planned_end))}</p>
     <p class="item-subtitle">Custo: ${escapeHtml(Number(task.cost || 0).toFixed(2))}</p>
     <div class="row">
@@ -119,6 +124,7 @@ async function loadProjectDetail() {
     projectSubtitle.textContent = `Responsável: ${detail.responsible_login} | Tipo: ${formatProjectTypeSafe(detail.project_type)} | Processo: ${formatProcessClassification(detail.process_classification)}`;
 
     projectMetrics.innerHTML =
+      metricItem("Descrição", detail.description || "Sem descrição") +
       metricItem("Progresso", `${detail.percent_completed}%`) +
       metricItem("Tarefas", String(detail.task_count)) +
       metricItem("Processo", formatProcessClassification(detail.process_classification)) +
@@ -149,6 +155,7 @@ taskForm.addEventListener("submit", async (event) => {
 
   const payload = {
     name: document.getElementById("task_name").value.trim(),
+    description: document.getElementById("task_description").value.trim(),
     planned_start: normalizeIsoFromInput(taskStartInput.value),
     planned_end: normalizeIsoFromInput(taskEndInput.value),
     cost: Number(document.getElementById("task_cost").value || 0),
@@ -162,6 +169,12 @@ taskForm.addEventListener("submit", async (event) => {
 
   if (payload.name.length > TASK_NAME_MAX_LENGTH) {
     taskFormFeedback.textContent = "O nome da tarefa excede o tamanho permitido.";
+    taskFormFeedback.className = "error";
+    return;
+  }
+
+  if (payload.description.length > TASK_DESCRIPTION_MAX_LENGTH) {
+    taskFormFeedback.textContent = "A descrição da tarefa excede o tamanho permitido.";
     taskFormFeedback.className = "error";
     return;
   }

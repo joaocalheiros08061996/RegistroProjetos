@@ -29,6 +29,7 @@ def create_project(
     project = service.create_project(
         user_id=user_id,
         name=dto.name,
+        description=dto.description,
         project_type=dto.project_type,
         responsible_login=dto.responsible_login,
         fte=dto.fte,
@@ -51,6 +52,7 @@ def create_project(
     return ProjectSummaryResponseDTO(
         id=project.id,
         name=project.name,
+        description=project.description,
         task_count=project.task_count,
     )
 
@@ -70,6 +72,7 @@ def list_projects(
         ProjectListItemResponseDTO(
             id=project.id,
             name=project.name,
+            description=project.description,
             project_type=project.project_type.value,
             process_classification=(
                 project.process_classification.value
@@ -142,6 +145,7 @@ def get_project_detail(
     return ProjectDetailResponseDTO(
         id=project.id,
         name=project.name,
+        description=project.description,
         project_type=project.project_type.value,
         process_classification=(
             project.process_classification.value
@@ -178,6 +182,7 @@ def get_project_detail(
                 planned_start=task.planned_start,
                 planned_end=task.planned_end,
                 cost=task.cost,
+                description=task.description,
                 actual_seconds=round(task.actual_time.total_seconds(), 2),
                 time_entries_count=len(task.time_entries),
                 percent_completed=task.percent_completed,

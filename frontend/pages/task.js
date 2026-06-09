@@ -30,6 +30,15 @@ function detailItem(label, value) {
   `;
 }
 
+function detailLongItem(label, value) {
+  return `
+    <article class="item wide-item">
+      <p class="item-subtitle">${escapeHtml(label)}</p>
+      <p class="task-description">${escapeHtml(value)}</p>
+    </article>
+  `;
+}
+
 function renderTimeEntry(entry) {
   const item = document.createElement("article");
   item.className = "item";
@@ -60,6 +69,7 @@ async function loadTask() {
     taskTitle.textContent = task.name;
     taskSubtitle.textContent = `Projeto #${projectId}`;
     taskDetails.innerHTML =
+      detailLongItem("Descrição", task.description || "Sem descrição") +
       detailItem("Status", task.status) +
       detailItem("Progresso", `${task.percent_completed}%`) +
       detailItem("Início planejado", formatDateTime(task.planned_start)) +

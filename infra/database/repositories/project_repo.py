@@ -99,6 +99,7 @@ class SupabaseProjectRepository(IProjectRepository):
                     insert into projects (
                         user_id,
                         name,
+                        description,
                         project_type,
                         process_classification,
                         responsible_login,
@@ -112,12 +113,13 @@ class SupabaseProjectRepository(IProjectRepository):
                         method,
                         estimated_cost
                     )
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     returning id
                     """,
                     (
                         project.user_id,
                         project.name,
+                        project.description,
                         project.project_type.value,
                         (
                             project.process_classification.value
@@ -230,6 +232,7 @@ class SupabaseProjectRepository(IProjectRepository):
         project = Project(
             user_id=row["user_id"],
             name=row["name"],
+            description=row.get("description") or "",
             project_type=self._coerce_enum(ProjectType, row["project_type"]),
             process_classification=process_classification,
             responsible_login=row["responsible_login"],
@@ -276,6 +279,7 @@ class SupabaseProjectRepository(IProjectRepository):
                 planned_start=row["planned_start"],
                 planned_end=row["planned_end"],
                 cost=row["cost"],
+                description=row.get("description") or "",
             )
 
             task._set_id(row["id"])

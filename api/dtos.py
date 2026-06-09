@@ -18,8 +18,10 @@ from domain.validation import (
     FTE_MIN,
     MONEY_MAX,
     MONEY_MIN,
+    PROJECT_DESCRIPTION_MAX_LENGTH,
     PROJECT_NAME_MAX_LENGTH,
     RESPONSIBLE_MAX_LENGTH,
+    TASK_DESCRIPTION_MAX_LENGTH,
     TASK_NAME_MAX_LENGTH,
 )
 
@@ -39,6 +41,7 @@ class CreateProjectDTO(StrictInputDTO):
     """
 
     name: str = Field(..., min_length=1, max_length=PROJECT_NAME_MAX_LENGTH)
+    description: str = Field(default="", max_length=PROJECT_DESCRIPTION_MAX_LENGTH)
     project_type: ProjectType
     responsible_login: str = Field(..., min_length=1, max_length=RESPONSIBLE_MAX_LENGTH)
     fte: float = Field(..., ge=FTE_MIN, le=FTE_MAX)
@@ -75,6 +78,7 @@ class CreateTaskDTO(StrictInputDTO):
     planned_start: datetime
     planned_end: datetime
     cost: float = Field(default=0.0, ge=MONEY_MIN, le=MONEY_MAX)
+    description: str = Field(default="", max_length=TASK_DESCRIPTION_MAX_LENGTH)
 
 
 # ============================================================
@@ -99,6 +103,7 @@ class TaskResponseDTO(BaseModel):
     planned_start: datetime
     planned_end: datetime
     cost: float
+    description: str
 
     # esforço
     actual_seconds: float
@@ -119,6 +124,7 @@ class ProjectSummaryResponseDTO(BaseModel):
 
     id: int
     name: str
+    description: str
     task_count: int
 
 
@@ -129,6 +135,7 @@ class ProjectListItemResponseDTO(BaseModel):
 
     id: int
     name: str
+    description: str
     project_type: str
     process_classification: Optional[str] = None
 
@@ -183,6 +190,7 @@ class ProjectDetailResponseDTO(BaseModel):
 
     id: int
     name: str
+    description: str
     project_type: str
     process_classification: Optional[str] = None
 
@@ -276,6 +284,7 @@ class DashboardAvgPlannedVsRealDaysByTypeResponseDTO(BaseModel):
 class DashboardRoutineTotalDaysByMonthItemDTO(BaseModel):
     user_id: str
     user_label: str
+    responsavel: str
     activity_type: str
     year: int
     month: int

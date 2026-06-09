@@ -31,6 +31,7 @@ def test_create_project():
     created = Project(
         user_id=USER_ID,
         name="Projeto Teste",
+        description="  Descrição do projeto  ",
         project_type=ProjectType.LAYOUT,
         responsible_login="user1",
         fte=1.0,
@@ -39,8 +40,35 @@ def test_create_project():
     )
 
     assert created.name == "Projeto Teste"
+    assert created.description == "Descrição do projeto"
     assert created.task_count == 0
     assert created.user_id == USER_ID
+
+
+def test_project_description_is_optional_and_bounded():
+    created = Project(
+        user_id=USER_ID,
+        name="Projeto sem descrição",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 10),
+    )
+
+    assert created.description == ""
+
+    with pytest.raises(ValidationError):
+        Project(
+            user_id=USER_ID,
+            name="Projeto descrição longa",
+            description="D" * 151,
+            project_type=ProjectType.LAYOUT,
+            responsible_login="user1",
+            fte=1.0,
+            planned_start=datetime(2026, 1, 1),
+            planned_end=datetime(2026, 1, 10),
+        )
 
 
 def test_project_rejects_invalid_fte():
@@ -124,6 +152,33 @@ def test_task_start_and_stop_updates_status_and_duration():
     assert task.status == TaskStatus.PAUSED
     assert duration.total_seconds() == 5400
     assert task.actual_time.total_seconds() == 5400
+
+
+def test_task_description_is_optional_trimmed_and_bounded():
+    task = Task(
+        name="Tarefa com descrição",
+        description="  Texto de apoio  ",
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 2),
+    )
+
+    assert task.description == "Texto de apoio"
+
+    empty_task = Task(
+        name="Tarefa sem descrição",
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 2),
+    )
+
+    assert empty_task.description == ""
+
+    with pytest.raises(ValidationError):
+        Task(
+            name="Tarefa descrição longa",
+            description="D" * 151,
+            planned_start=datetime(2026, 1, 1),
+            planned_end=datetime(2026, 1, 2),
+        )
 
 
 def test_task_cannot_start_twice():

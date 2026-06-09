@@ -114,6 +114,7 @@ def test_save_task_assigns_id_and_project():
 
     task = Task(
         name="Task Teste",
+        description="Descrição salva em memória",
         planned_start=datetime(2026, 1, 2),
         planned_end=datetime(2026, 1, 5),
     )
@@ -122,6 +123,9 @@ def test_save_task_assigns_id_and_project():
 
     assert task_id == 1
     assert task.id == 1
+    assert repo.find_by_id(task_id, project_id=1, user_id=USER_1).description == (
+        "Descrição salva em memória"
+    )
 
 
 def test_append_time_entry_to_task():

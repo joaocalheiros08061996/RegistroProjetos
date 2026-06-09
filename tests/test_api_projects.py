@@ -10,6 +10,7 @@ def test_create_project_api(client):
         headers=AUTH_HEADER,
         json={
             "name": "Projeto API",
+            "description": "Descrição curta",
             "project_type": "LAYOUT",
             "process_classification": "Processos novos",
             "responsible_login": "user1",
@@ -24,6 +25,7 @@ def test_create_project_api(client):
     body = response.json()
     assert "id" in body
     assert body["name"] == "Projeto API"
+    assert body["description"] == "Descrição curta"
     assert body["task_count"] == 0
 
 
@@ -99,6 +101,21 @@ def test_create_project_rejects_long_text_and_invalid_cost(client):
     )
     assert long_response.status_code == 422
 
+    long_description_response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "Projeto Descrição Longa",
+            "description": "D" * 151,
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-02-01T00:00:00",
+            "planned_end": "2026-02-10T00:00:00",
+        },
+    )
+    assert long_description_response.status_code == 422
+
     negative_cost_response = client.post(
         "/projects/",
         headers=AUTH_HEADER,
@@ -171,6 +188,7 @@ def test_list_projects_api_returns_user_projects(client):
         headers=AUTH_HEADER,
         json={
             "name": "Projeto Listagem API",
+            "description": "Descrição de listagem",
             "project_type": "LAYOUT",
             "process_classification": "Processos existentes",
             "responsible_login": "user1",
@@ -186,6 +204,7 @@ def test_list_projects_api_returns_user_projects(client):
     assert list_response.status_code == 200
     projects = list_response.json()
     listed_project = next(project for project in projects if project["id"] == created["id"])
+    assert listed_project["description"] == "Descrição de listagem"
     assert listed_project["process_classification"] == "Processos existentes"
     assert listed_project["gut_score"] == 1
     assert listed_project["priority_level"] == 5
@@ -227,6 +246,7 @@ def test_project_detail_api_returns_full_payload(client):
         headers=AUTH_HEADER,
         json={
             "name": "Projeto Detalhe API",
+            "description": "Descrição para detalhe",
             "project_type": "LAYOUT",
             "process_classification": "Processos novos",
             "responsible_login": "user1",
@@ -255,6 +275,7 @@ def test_project_detail_api_returns_full_payload(client):
     detail = detail_response.json()
     assert detail["id"] == project_id
     assert detail["name"] == "Projeto Detalhe API"
+    assert detail["description"] == "Descrição para detalhe"
     assert detail["process_classification"] == "Processos novos"
     assert detail["task_count"] == 1
     assert detail["tasks"][0]["name"] == "task-detalhe"

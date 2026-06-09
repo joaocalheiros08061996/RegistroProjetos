@@ -29,6 +29,7 @@ def test_create_task_api(client):
         headers=AUTH_HEADER,
         json={
             "name": "task-a",
+            "description": "Descrição operacional da tarefa.",
             "planned_start": "2026-01-02T00:00:00",
             "planned_end": "2026-01-05T00:00:00",
             "cost": 100.0,
@@ -38,6 +39,7 @@ def test_create_task_api(client):
     assert response.status_code == 200
     body = response.json()
     assert body["name"] == "task-a"
+    assert body["description"] == "Descrição operacional da tarefa."
     assert body["percent_completed"] == 0.0
 
 
@@ -63,6 +65,7 @@ def test_list_tasks_api(client):
     body = response.json()
     assert len(body) == 1
     assert body[0]["name"] == "task-list"
+    assert body[0]["description"] == ""
 
 
 def test_get_task_api(client):
@@ -73,6 +76,7 @@ def test_get_task_api(client):
         headers=AUTH_HEADER,
         json={
             "name": "task-detail",
+            "description": "Detalhe da tarefa.",
             "planned_start": "2026-01-02T00:00:00",
             "planned_end": "2026-01-05T00:00:00",
         },
@@ -85,6 +89,7 @@ def test_get_task_api(client):
 
     assert response.status_code == 200
     assert response.json()["name"] == "task-detail"
+    assert response.json()["description"] == "Detalhe da tarefa."
 
 
 def test_start_and_stop_task_api(client):
@@ -196,6 +201,18 @@ def test_create_task_rejects_long_name_and_negative_cost(client):
         },
     )
     assert negative_cost_response.status_code == 422
+
+    long_description_response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": "task-description",
+            "description": "D" * 151,
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+        },
+    )
+    assert long_description_response.status_code == 422
 
 
 def test_task_path_rejects_name_above_limit(client):

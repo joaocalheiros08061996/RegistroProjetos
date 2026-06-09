@@ -2,6 +2,7 @@ create table if not exists projects (
     id bigserial primary key,
     user_id text not null,
     name text not null,
+    description text not null default '' check (char_length(description) <= 150),
     project_type text not null,
     process_classification text null,
     responsible_login text not null,
@@ -27,6 +28,7 @@ create table if not exists tasks (
     project_id bigint not null references projects(id) on delete cascade,
     user_id text not null,
     name text not null,
+    description text not null default '',
 
     planned_start timestamptz not null,
     planned_end timestamptz not null,

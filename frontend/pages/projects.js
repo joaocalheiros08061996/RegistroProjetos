@@ -10,6 +10,7 @@ const plannedStartInput = document.getElementById("planned_start");
 const plannedEndInput = document.getElementById("planned_end");
 const fteInput = document.getElementById("fte");
 const PROJECT_NAME_MAX_LENGTH = 160;
+const PROJECT_DESCRIPTION_MAX_LENGTH = 150;
 const RESPONSIBLE_MAX_LENGTH = 120;
 const MAX_FTE = 100;
 const MAX_MONEY_VALUE = 1000000000;
@@ -73,6 +74,9 @@ function renderProjectItem(project) {
   const priority = getProjectPriority(project);
   const processClassification = formatProcessClassification(project.process_classification);
   const projectIdParam = encodeURIComponent(project.id);
+  const descriptionHtml = project.description
+    ? `<p class="item-subtitle task-description">${escapeHtml(project.description)}</p>`
+    : "";
 
   card.innerHTML = `
     <div class="row project-heading">
@@ -87,6 +91,7 @@ function renderProjectItem(project) {
       </div>
       <span class="item-subtitle">${escapeHtml(formatProjectTypeSafe(project.project_type))}</span>
     </div>
+    ${descriptionHtml}
     <p class="item-subtitle">Responsável: ${escapeHtml(project.responsible_login)}</p>
     ${project.process_classification ? `<p class="item-subtitle">Processo: ${escapeHtml(processClassification)}</p>` : ""}
     <p class="item-subtitle">Período: ${escapeHtml(period)}</p>
@@ -152,6 +157,7 @@ projectForm.addEventListener("submit", async (event) => {
 
   const payload = {
     name: document.getElementById("name").value.trim(),
+    description: document.getElementById("description").value.trim(),
     project_type: document.getElementById("project_type").value,
     process_classification: document.getElementById("process_classification").value || null,
     responsible_login: document.getElementById("responsible_login").value.trim(),
@@ -174,6 +180,12 @@ projectForm.addEventListener("submit", async (event) => {
 
   if (payload.name.length > PROJECT_NAME_MAX_LENGTH || payload.responsible_login.length > RESPONSIBLE_MAX_LENGTH) {
     formFeedback.textContent = "Nome ou responsável excedem o tamanho permitido.";
+    formFeedback.className = "error";
+    return;
+  }
+
+  if (payload.description.length > PROJECT_DESCRIPTION_MAX_LENGTH) {
+    formFeedback.textContent = "A descrição do projeto excede o tamanho permitido.";
     formFeedback.className = "error";
     return;
   }

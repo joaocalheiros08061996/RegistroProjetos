@@ -642,6 +642,16 @@ def test_dashboard_service_returns_routine_total_days_by_month():
     )
     routine_repo.save(
         RoutineActivity(
+            user_id="outro-login",
+            responsavel="Ana",
+            tipo_atividade="Cadastro",
+            inicio=datetime(2026, 1, 12, 8, 0, tzinfo=timezone.utc),
+            fim=datetime(2026, 1, 12, 20, 0, tzinfo=timezone.utc),
+            horas_trabalhadas=12.0,
+        )
+    )
+    routine_repo.save(
+        RoutineActivity(
             user_id="u2",
             responsavel="Bruno",
             tipo_atividade="Cadastro",
@@ -671,33 +681,30 @@ def test_dashboard_service_returns_routine_total_days_by_month():
 
     items = service.list_routine_total_days_by_month()
 
-    assert len(items) == 4
-    assert items[0]["user_id"] == "u1"
+    assert len(items) == 3
+    assert items[0]["user_id"] == "Ana"
     assert items[0]["user_label"] == "Ana"
+    assert items[0]["responsavel"] == "Ana"
     assert items[0]["activity_type"] == "Cadastro"
     assert items[0]["year"] == 2026
     assert items[0]["month"] == 1
     assert items[0]["month_label"] == "JAN"
     assert items[0]["period_label"] == "JAN 2026"
-    assert isclose(items[0]["total_days"], 12.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[0]["total_days"], 24.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
-    assert items[1]["user_id"] == "u2"
+    assert items[1]["user_id"] == "Bruno"
     assert items[1]["user_label"] == "Bruno"
+    assert items[1]["responsavel"] == "Bruno"
     assert items[1]["activity_type"] == "Cadastro"
     assert items[1]["month_label"] == "JAN"
     assert isclose(items[1]["total_days"], 12.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
-    assert items[2]["user_id"] == "36f1e40c-949e-4850-b86d-607dc6a468d3"
-    assert items[2]["user_label"] == "Usuário 36f1...68d3"
+    assert items[2]["user_id"] == "Sem responsável"
+    assert items[2]["user_label"] == "Sem responsável"
+    assert items[2]["responsavel"] == "Sem responsável"
     assert items[2]["activity_type"] == "Reuniões"
     assert items[2]["month_label"] == "FEV"
-    assert isclose(items[2]["total_days"], 24.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
-
-    assert items[3]["user_id"] == "u4"
-    assert items[3]["user_label"] == "u4"
-    assert items[3]["activity_type"] == "Reuniões"
-    assert items[3]["month_label"] == "FEV"
-    assert isclose(items[3]["total_days"], 24.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
+    assert isclose(items[2]["total_days"], 48.0 / WORKDAY_HOURS, rel_tol=0, abs_tol=1e-10)
 
 
 def test_dashboard_service_returns_new_process_time_by_month():

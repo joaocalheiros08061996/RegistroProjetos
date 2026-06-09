@@ -126,7 +126,7 @@ class IDashboardRepository(ABC):
         """
         Retorna dias uteis totais globais de atividades de rotina por tipo, ano e mes.
         Cada item deve conter:
-        - user_id (str)
+        - responsavel (str)
         - activity_type (str)
         - year (int)
         - month (int)

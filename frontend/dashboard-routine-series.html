@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Séries Temporais de Atividades de Rotina | Dashboard</title>
-  <link rel="stylesheet" href="styles.css?v=20260525">
+  <link rel="stylesheet" href="styles.css?v=20260609">
 </head>
 <body>
 <main class="page dashboard-page">
@@ -50,10 +50,28 @@
             <select id="routine-month-filter"></select>
           </label>
 
-          <label for="routine-type-filter">
-            Tipo de atividade
-            <select id="routine-type-filter"></select>
-          </label>
+          <div class="routine-filter-field">
+            <span id="routine-type-filter-label">Tipo de atividade</span>
+            <div class="multi-select" id="routine-type-filter">
+              <button
+                type="button"
+                class="multi-select-trigger"
+                id="routine-type-filter-trigger"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="routine-type-filter-menu"
+              >
+                <span id="routine-type-filter-summary">Todos</span>
+                <span aria-hidden="true" class="multi-select-caret">&#9662;</span>
+              </button>
+              <div
+                class="multi-select-menu hidden"
+                id="routine-type-filter-menu"
+                role="group"
+                aria-labelledby="routine-type-filter-label"
+              ></div>
+            </div>
+          </div>
 
           <label for="routine-user-filter">
             Responsável
@@ -84,11 +102,11 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="app.js?v=20260602"></script>
-<script src="dashboard/dom.js?v=20260525"></script>
+<script src="dashboard/dom.js?v=20260609"></script>
 <script src="dashboard/formatters.js?v=20260602"></script>
 <script src="dashboard/plotly-common.js?v=20260531"></script>
-<script src="dashboard/routine-chart.js?v=20260525"></script>
+<script src="dashboard/routine-chart.js?v=20260609"></script>
 <script src="dashboard/bootstrap-utils.js?v=20260531"></script>
-<script src="dashboard/bootstrap-routine-series.js?v=20260525"></script>
+<script src="dashboard/bootstrap-routine-series.js?v=20260609"></script>
 </body>
 </html>

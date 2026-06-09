@@ -20,6 +20,7 @@ from .exceptions import (
     ValidationError,
 )
 from .responsible import normalize_responsible_name
+from .validation import PROJECT_DESCRIPTION_MAX_LENGTH, TASK_DESCRIPTION_MAX_LENGTH
 
 
 # ============================================================
@@ -77,14 +78,19 @@ class Task:
         planned_start: datetime,
         planned_end: datetime,
         cost: float = 0.0,
+        description: str = "",
     ):
         if not name or not name.strip():
             raise ValidationError("Nome da tarefa obrigatorio.")
         if planned_end < planned_start:
             raise ValidationError("Data final planejada anterior a inicial.")
+        normalized_description = str(description or "").strip()
+        if len(normalized_description) > TASK_DESCRIPTION_MAX_LENGTH:
+            raise ValidationError("Descricao da tarefa excede o tamanho permitido.")
 
         self._id: Optional[int] = None
         self._name: str = name.strip()
+        self._description: str = normalized_description
         self._planned_start: datetime = planned_start
         self._planned_end: datetime = planned_end
         self.cost: float = float(cost)
@@ -122,6 +128,10 @@ class Task:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     @property
     def planned_start(self) -> datetime:
@@ -288,12 +298,16 @@ class Project:
         method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED,
         process_classification: ProcessClassification | None = None,
         estimated_cost: float = 0.0,
+        description: str = "",
     ):
         if not user_id or not user_id.strip():
             raise ValidationError("User ID do projeto e obrigatorio.")
 
         if not name or not name.strip():
             raise ValidationError("Nome do projeto obrigatorio.")
+        normalized_description = str(description or "").strip()
+        if len(normalized_description) > PROJECT_DESCRIPTION_MAX_LENGTH:
+            raise ValidationError("Descricao do projeto excede o tamanho permitido.")
 
         if planned_end < planned_start:
             raise ValidationError("Data final do projeto anterior a inicial.")
@@ -313,6 +327,7 @@ class Project:
 
         self.user_id: str = user_id.strip()
         self._name: str = name.strip()
+        self._description: str = normalized_description
 
         self.project_type: ProjectType = project_type
         self.responsible_login: str = normalize_responsible_name(responsible_login)
@@ -353,6 +368,10 @@ class Project:
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     @property
     def task_count(self) -> int:
@@ -473,6 +492,7 @@ class Project:
         planned_start: datetime,
         planned_end: datetime,
         cost: float = 0.0,
+        description: str = "",
     ) -> Task:
 
         task = Task(
@@ -480,6 +500,7 @@ class Project:
             planned_start=planned_start,
             planned_end=planned_end,
             cost=cost,
+            description=description,
         )
 
         self.add_task(task)

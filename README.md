@@ -68,6 +68,9 @@ Run the SQL schema files against your Supabase PostgreSQL database before using 
 ```text
 infra/database/schema.sql
 infra/database/schema_routine_activities.sql
+infra/database/migration_add_task_description.sql
+infra/database/migration_limit_task_description_length.sql
+infra/database/migration_add_project_description.sql
 ```
 
 You can execute them in the Supabase SQL editor or through any PostgreSQL client connected with `DATABASE_URL`.

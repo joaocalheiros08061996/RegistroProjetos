@@ -5,10 +5,10 @@ async function loadRoutineSeriesDashboard() {
 const resizeRoutineSeriesCharts = registerDashboardResize([chart3El]);
 
 setupDashboardTimeUnitFilter(rerenderRoutineTotalDaysChart);
+setupRoutineTypeFilterDropdown(rerenderRoutineTotalDaysChart);
 refreshBtn.addEventListener("click", loadRoutineSeriesDashboard);
 addChangeListeners(
   [
-    routineTypeFilterEl,
     routineYearFilterEl,
     routineMonthFilterEl,
     routineUserFilterEl,

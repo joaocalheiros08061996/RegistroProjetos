@@ -1,3 +1,9 @@
+const ROUTINE_TYPE_ALL_VALUE = "ALL";
+
+let selectedRoutineActivityTypes = new Set();
+let availableRoutineActivityTypes = [];
+let routineTypeFilterChangeHandler = null;
+
 function buildRoutineFilterOptions(items) {
   const activityTypes = [...new Set(items.map((item) => item.activity_type))]
     .filter(Boolean)
@@ -5,7 +11,7 @@ function buildRoutineFilterOptions(items) {
 
   const responsaveisByLabel = new Map();
   for (const item of items) {
-    const responsavelLabel = getRoutineUserLabel(item);
+    const responsavelLabel = getRoutineResponsibleLabel(item);
     if (!responsavelLabel || responsaveisByLabel.has(responsavelLabel)) {
       continue;
     }
@@ -41,16 +47,7 @@ function buildRoutineFilterOptions(items) {
     ],
   );
 
-  setSelectOptions(
-    routineTypeFilterEl,
-    [
-      { value: "ALL", label: "Todos" },
-      ...activityTypes.map((activityType) => ({
-        value: activityType,
-        label: activityType,
-      })),
-    ],
-  );
+  setRoutineTypeFilterOptions(activityTypes);
 
   setSelectOptions(
     routineYearFilterEl,
@@ -72,34 +69,174 @@ function buildRoutineFilterOptions(items) {
   );
 }
 
-function getRoutineUserLabel(item) {
+function setupRoutineTypeFilterDropdown(onChange) {
+  routineTypeFilterChangeHandler = onChange;
+
+  if (!routineTypeFilterEl || !routineTypeFilterTriggerEl || !routineTypeFilterMenuEl) {
+    return;
+  }
+
+  routineTypeFilterTriggerEl.addEventListener("click", () => {
+    setRoutineTypeFilterOpen(!isRoutineTypeFilterOpen());
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!routineTypeFilterEl.contains(event.target)) {
+      setRoutineTypeFilterOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setRoutineTypeFilterOpen(false);
+      routineTypeFilterTriggerEl.focus();
+    }
+  });
+}
+
+function isRoutineTypeFilterOpen() {
+  return routineTypeFilterTriggerEl?.getAttribute("aria-expanded") === "true";
+}
+
+function setRoutineTypeFilterOpen(isOpen) {
+  if (!routineTypeFilterTriggerEl || !routineTypeFilterMenuEl) {
+    return;
+  }
+
+  routineTypeFilterTriggerEl.setAttribute("aria-expanded", String(isOpen));
+  routineTypeFilterMenuEl.classList.toggle("hidden", !isOpen);
+}
+
+function setRoutineTypeFilterOptions(activityTypes) {
+  availableRoutineActivityTypes = activityTypes;
+  selectedRoutineActivityTypes = new Set(
+    [...selectedRoutineActivityTypes].filter((activityType) => (
+      availableRoutineActivityTypes.includes(activityType)
+    )),
+  );
+
+  if (!routineTypeFilterMenuEl) {
+    return;
+  }
+
+  routineTypeFilterMenuEl.innerHTML = "";
+  routineTypeFilterMenuEl.appendChild(
+    createRoutineTypeCheckbox({
+      value: ROUTINE_TYPE_ALL_VALUE,
+      label: "Todos",
+      checked: selectedRoutineActivityTypes.size === 0,
+      onChange: () => {
+        selectedRoutineActivityTypes.clear();
+        syncRoutineTypeFilterState();
+        routineTypeFilterChangeHandler?.();
+      },
+    }),
+  );
+
+  for (const activityType of availableRoutineActivityTypes) {
+    routineTypeFilterMenuEl.appendChild(
+      createRoutineTypeCheckbox({
+        value: activityType,
+        label: activityType,
+        checked: selectedRoutineActivityTypes.has(activityType),
+        onChange: (checked) => {
+          if (checked) {
+            selectedRoutineActivityTypes.add(activityType);
+          } else {
+            selectedRoutineActivityTypes.delete(activityType);
+          }
+          syncRoutineTypeFilterState();
+          routineTypeFilterChangeHandler?.();
+        },
+      }),
+    );
+  }
+
+  syncRoutineTypeFilterState();
+}
+
+function createRoutineTypeCheckbox({ value, label, checked, onChange }) {
+  const field = document.createElement("label");
+  field.className = "multi-select-option";
+
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.value = value;
+  input.checked = checked;
+  input.addEventListener("change", () => {
+    onChange(input.checked);
+  });
+
+  const text = document.createElement("span");
+  text.textContent = label;
+
+  field.append(input, text);
+  return field;
+}
+
+function syncRoutineTypeFilterState() {
+  if (!routineTypeFilterMenuEl || !routineTypeFilterSummaryEl) {
+    return;
+  }
+
+  const selectedTypes = selectedRoutineActivityTypes;
+  const allInput = routineTypeFilterMenuEl.querySelector(
+    `input[value="${ROUTINE_TYPE_ALL_VALUE}"]`,
+  );
+  if (allInput) {
+    allInput.checked = selectedTypes.size === 0;
+  }
+
+  for (const input of routineTypeFilterMenuEl.querySelectorAll("input[type='checkbox']")) {
+    if (input.value === ROUTINE_TYPE_ALL_VALUE) {
+      continue;
+    }
+    input.checked = selectedTypes.has(input.value);
+  }
+
+  if (selectedTypes.size === 0) {
+    routineTypeFilterSummaryEl.textContent = "Todos";
+    return;
+  }
+
+  if (selectedTypes.size === 1) {
+    routineTypeFilterSummaryEl.textContent = [...selectedTypes][0];
+    return;
+  }
+
+  routineTypeFilterSummaryEl.textContent = `${selectedTypes.size} selecionados`;
+}
+
+function routineItemMatchesSelectedTypes(item) {
+  if (selectedRoutineActivityTypes.size === 0) {
+    return true;
+  }
+  return selectedRoutineActivityTypes.has(item.activity_type);
+}
+
+function getRoutineResponsibleLabel(item) {
+  const responsavel = String(item.responsavel || "").trim();
+  if (responsavel) {
+    return responsavel;
+  }
+
   const label = String(item.user_label || "").trim();
-  if (label) {
-    return label;
-  }
-
-  const userId = String(item.user_id || "").trim();
-  if (userId.length > 12) {
-    return `Usuário ${userId.slice(0, 4)}...${userId.slice(-4)}`;
-  }
-
-  return userId || "Sem usuário";
+  return label || "Sem responsável";
 }
 
 function getFilteredRoutineItems() {
   const selectedResponsavel = routineUserFilterEl.value;
-  const selectedType = routineTypeFilterEl.value;
   const selectedYear = routineYearFilterEl.value;
   const selectedMonth = routineMonthFilterEl.value;
 
   return routineItems.filter((item) => {
     if (
       selectedResponsavel !== "ALL"
-      && getRoutineUserLabel(item) !== selectedResponsavel
+      && getRoutineResponsibleLabel(item) !== selectedResponsavel
     ) {
       return false;
     }
-    if (selectedType !== "ALL" && item.activity_type !== selectedType) {
+    if (!routineItemMatchesSelectedTypes(item)) {
       return false;
     }
     if (selectedYear !== "ALL" && Number(item.year) !== Number(selectedYear)) {

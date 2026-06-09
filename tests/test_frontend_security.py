@@ -40,6 +40,22 @@ def test_register_requires_privacy_notice_acknowledgement():
     assert 'href="privacy.html"' in html
 
 
+def test_project_task_form_has_description_field():
+    html = (FRONTEND_DIR / "project.html").read_text(encoding="utf-8")
+
+    assert 'id="task_description"' in html
+    assert 'maxlength="150"' in html
+    assert 'src="pages/project.js?v=20260609"' in html
+
+
+def test_projects_form_has_project_description_field():
+    html = (FRONTEND_DIR / "projects.html").read_text(encoding="utf-8")
+
+    assert 'id="description"' in html
+    assert 'maxlength="150"' in html
+    assert 'src="pages/projects.js?v=20260609"' in html
+
+
 def test_privacy_notice_uses_external_script():
     html = (FRONTEND_DIR / "privacy.html").read_text(encoding="utf-8")
 

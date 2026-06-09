@@ -184,22 +184,10 @@ class SupabaseDashboardRepository(IDashboardRepository):
             if "tipo_atividade" not in columns:
                 return []
 
-            user_expr = (
-                "coalesce(nullif(trim(user_id::text), ''), 'Sem usuário')"
-                if "user_id" in columns
-                else "'Sem usuário'"
-            )
-            user_fallback_expr = f"""
-                case
-                    when length({user_expr}) > 12
-                        then 'Usuário ' || left({user_expr}, 4) || '...' || right({user_expr}, 4)
-                    else {user_expr}
-                end
-            """
-            user_label_expr = (
-                f"coalesce(nullif(trim(responsavel::text), ''), {user_fallback_expr})"
+            responsible_expr = (
+                "coalesce(nullif(trim(responsavel::text), ''), 'Sem responsável')"
                 if "responsavel" in columns
-                else user_fallback_expr
+                else "'Sem responsável'"
             )
 
             def year_value_expr(column_name: str) -> str:
@@ -282,8 +270,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                 f"""
                 with routine_hours as (
                     select
-                        {user_expr} as user_id,
-                        {user_label_expr} as user_label,
+                        {responsible_expr} as responsavel,
                         tipo_atividade as activity_type,
                         {year_expr} as year,
                         {month_expr} as month,
@@ -292,8 +279,7 @@ class SupabaseDashboardRepository(IDashboardRepository):
                     where tipo_atividade is not null
                 )
                 select
-                    user_id,
-                    user_label,
+                    responsavel,
                     activity_type,
                     year,
                     month,
@@ -301,17 +287,18 @@ class SupabaseDashboardRepository(IDashboardRepository):
                 from routine_hours
                 where year is not null
                   and month between 1 and 12
-                group by user_id, user_label, activity_type, year, month
+                group by responsavel, activity_type, year, month
                 having sum(worked_hours) > 0
-                order by year asc, month asc, activity_type asc, user_label asc, user_id asc
+                order by year asc, month asc, activity_type asc, responsavel asc
                 """
             )
             rows = cur.fetchall() or []
 
         return [
             {
-                "user_id": row["user_id"],
-                "user_label": row["user_label"],
+                "user_id": row["responsavel"],
+                "user_label": row["responsavel"],
+                "responsavel": row["responsavel"],
                 "activity_type": row["activity_type"],
                 "year": int(row["year"]),
                 "month": int(row["month"]),

@@ -55,6 +55,7 @@ class ProjectService:
         method_clarity: MethodClarity = MethodClarity.FULLY_DEFINED,
         process_classification: ProcessClassification | None = None,
         estimated_cost: float = 0.0,
+        description: str = "",
     ) -> Project:
         if project_type in self.LEGACY_PROJECT_TYPES:
             raise ValidationError(
@@ -76,6 +77,7 @@ class ProjectService:
             method_clarity=method_clarity,
             process_classification=process_classification,
             estimated_cost=estimated_cost,
+            description=description,
         )
 
         self.project_repo.save(project)
@@ -146,6 +148,7 @@ class TaskService:
         planned_start: datetime,
         planned_end: datetime,
         cost: float = 0.0,
+        description: str = "",
     ) -> Task:
         project = self.project_repo.find_by_id(project_id, user_id)
         if not project:
@@ -156,6 +159,7 @@ class TaskService:
             planned_start=planned_start,
             planned_end=planned_end,
             cost=cost,
+            description=description,
         )
 
         self.task_repo.save(task, project_id, user_id)
@@ -375,14 +379,18 @@ class DashboardService:
 
         items: list[dict] = []
         for row in rows:
-            user_id = str(row.get("user_id") or "").strip()
-            user_label = str(row.get("user_label") or "").strip()
+            responsavel = str(
+                row.get("responsavel") or row.get("user_label") or ""
+            ).strip()
             activity_type = str(row.get("activity_type") or "").strip()
             year = int(row.get("year") or 0)
             month = int(row.get("month") or 0)
             total_days = float(row.get("total_days") or 0.0)
 
-            if not user_id or not activity_type or year <= 0 or month not in self._MONTH_LABELS:
+            if not responsavel:
+                responsavel = "Sem responsável"
+
+            if not activity_type or year <= 0 or month not in self._MONTH_LABELS:
                 continue
 
             if total_days <= 0:
@@ -391,8 +399,9 @@ class DashboardService:
             month_label = self._MONTH_LABELS[month]
             items.append(
                 {
-                    "user_id": user_id,
-                    "user_label": user_label or self._format_user_label(user_id),
+                    "user_id": responsavel,
+                    "user_label": responsavel,
+                    "responsavel": responsavel,
                     "activity_type": activity_type,
                     "year": year,
                     "month": month,
@@ -407,7 +416,7 @@ class DashboardService:
                 item["year"],
                 item["month"],
                 item["activity_type"],
-                item["user_id"],
+                item["responsavel"],
             )
             )
         return items
