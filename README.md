@@ -39,12 +39,6 @@ APP_ALLOWED_ORIGINS=https://<your-render-service>.onrender.com
 # Optional, only needed for app-stored secrets.
 DATA_ENCRYPTION_ACTIVE_KEY_ID=primary
 DATA_ENCRYPTION_KEYS=primary:<fernet-key>
-
-# Required for privacy notice acknowledgement audit.
-PRIVACY_CONTROLLER_NAME=<controller-name>
-PRIVACY_CONTACT_EMAIL=<privacy-contact-email>
-PRIVACY_POLICY_VERSION=2026-06-01
-PRIVACY_AUDIT_HASH_SECRET=<random-secret>
 ```
 
 Use the same Supabase project for all of these values. The `<project-ref>` in `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_ISSUER` must match.
@@ -74,7 +68,6 @@ Run the SQL schema files against your Supabase PostgreSQL database before using 
 ```text
 infra/database/schema.sql
 infra/database/schema_routine_activities.sql
-infra/database/migration_add_auth_privacy_acknowledgements.sql
 ```
 
 You can execute them in the Supabase SQL editor or through any PostgreSQL client connected with `DATABASE_URL`.
@@ -335,21 +328,6 @@ Generate a Fernet key locally with:
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-Required privacy notice variables:
-
-```env
-PRIVACY_CONTROLLER_NAME=<controller-name>
-PRIVACY_CONTACT_EMAIL=<privacy-contact-email>
-PRIVACY_POLICY_VERSION=2026-06-01
-PRIVACY_AUDIT_HASH_SECRET=<random-secret>
-```
-
-Generate `PRIVACY_AUDIT_HASH_SECRET` locally with:
-
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-```
-
 Optional import-only variable:
 
 ```env
@@ -371,7 +349,6 @@ Before deploying or switching Supabase projects, verify:
 - `SUPABASE_AUDIENCE` is `authenticated`.
 - `AUTH_SESSION_SIGNING_SECRET` is configured and stored only in Render environment variables.
 - `APP_ALLOWED_ORIGINS` contains the public HTTPS URL of the Render service.
-- Privacy notice variables are configured, and `PRIVACY_AUDIT_HASH_SECRET` is stored only in Render environment variables.
 - Database schema files have been applied.
 - The Render service has been restarted after environment variable changes.
 
@@ -471,21 +448,7 @@ Test backups periodically in a separate environment. At minimum, record the back
 ### Privacy Notice and LGPD
 
 - New registrations require explicit acknowledgement that the user has read the Privacy Notice at `/app/privacy.html`.
-- The acknowledgement audit stores the policy version, timestamp, user id, and HMAC-SHA256 hashes of email and IP. It does not store raw email or IP in the audit table.
-- Apply `infra/database/migration_add_auth_privacy_acknowledgements.sql` before deploying this feature. If the audit insert fails after Supabase creates an account, the app returns `503` and does not issue authentication cookies.
+- The acknowledgement checkbox is required in the signup request, but the application does not require separate audit keys, policy-version configuration, or a privacy acknowledgement table for account creation.
 - The acknowledgement covers transparency for essential internal use. Optional future purposes must be presented separately and, when consent is the applicable legal basis, support facilitated revocation.
-- This implementation supports LGPD operations but does not replace legal review or the internal process for handling data-subject requests through `PRIVACY_CONTACT_EMAIL`.
+- This implementation supports LGPD operations but does not replace legal review or the internal process for handling data-subject requests.
 - Official references: [compiled LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm) and [ANPD data-subject rights](https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados-1/direito-dos-titulares).
-
-Existing accounts can be registered honestly as legacy pending records, without fabricating retroactive acknowledgement. Prepare a local CSV with `user_id,email`, run dry-run first, then commit:
-
-```bash
-uv run python automacoes/registrar_privacidade_legado_supabase.py \
-  --csv usuarios_legados.csv \
-  --reason "Usuarios existentes antes da publicacao do aviso"
-
-uv run python automacoes/registrar_privacidade_legado_supabase.py \
-  --csv usuarios_legados.csv \
-  --reason "Usuarios existentes antes da publicacao do aviso" \
-  --commit
-```

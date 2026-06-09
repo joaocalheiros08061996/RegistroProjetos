@@ -64,14 +64,13 @@ def test_security_headers_are_added_to_json_and_not_found_responses(client):
         assert response.headers["content-security-policy"]
 
 
-def test_frontend_config_exposes_public_privacy_metadata_without_audit_secret(
+def test_frontend_config_exposes_public_privacy_metadata(
     client,
     monkeypatch,
 ):
     monkeypatch.setenv("PRIVACY_CONTROLLER_NAME", "Controlador de Teste")
     monkeypatch.setenv("PRIVACY_CONTACT_EMAIL", "privacidade@example.com")
     monkeypatch.setenv("PRIVACY_POLICY_VERSION", "2026-06-01")
-    monkeypatch.setenv("PRIVACY_AUDIT_HASH_SECRET", "nao-expor")
 
     response = client.get("/app/config")
 
@@ -79,8 +78,6 @@ def test_frontend_config_exposes_public_privacy_metadata_without_audit_secret(
     assert response.json()["privacy_controller_name"] == "Controlador de Teste"
     assert response.json()["privacy_contact_email"] == "privacidade@example.com"
     assert response.json()["privacy_policy_version"] == "2026-06-01"
-    assert "privacy_audit_hash_secret" not in response.json()
-    assert "nao-expor" not in response.text
 
 
 def test_security_headers_strip_stack_identification():

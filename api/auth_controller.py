@@ -25,16 +25,6 @@ from fastapi import (
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from infra.database.repositories.privacy_acknowledgement_repo import (
-    SupabasePrivacyAcknowledgementRepository,
-)
-from infra.security.privacy_audit import (
-    PrivacyAuditConfigError,
-    configured_audit_hash_secret,
-    configured_policy_version,
-    privacy_audit_hash,
-)
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_COOKIE_NAME = "refresh_token"
@@ -537,66 +527,6 @@ def _fingerprint(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
 
 
-def _privacy_policy_version() -> str:
-    try:
-        return configured_policy_version()
-    except PrivacyAuditConfigError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Versao do aviso de privacidade nao configurada.",
-        ) from exc
-
-
-def _privacy_audit_hash(value: str) -> str:
-    try:
-        return privacy_audit_hash(value)
-    except PrivacyAuditConfigError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Chave de auditoria de privacidade nao configurada.",
-        ) from exc
-
-
-def _signup_user_id(data: dict) -> str:
-    user = data.get("user")
-    if isinstance(user, dict) and user.get("id"):
-        return str(user["id"])
-
-    session = data.get("session")
-    if isinstance(session, dict):
-        user = session.get("user")
-        if isinstance(user, dict) and user.get("id"):
-            return str(user["id"])
-
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail="Cadastro criado sem identificador de usuario para auditoria.",
-    )
-
-
-def _record_signup_privacy_acknowledgement(
-    *,
-    user_id: str,
-    email: str,
-    client_ip: str,
-    policy_version: str,
-) -> None:
-    try:
-        SupabasePrivacyAcknowledgementRepository().record_signup_acknowledgement(
-            user_id=user_id,
-            policy_version=policy_version,
-            email_hash=_privacy_audit_hash(email),
-            ip_hash=_privacy_audit_hash(client_ip),
-        )
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Nao foi possivel registrar a ciencia do aviso de privacidade.",
-        ) from exc
-
-
 def _rate_limit_key(request: FastAPIRequest, action: str, identifier: str) -> str:
     normalized_identifier = str(identifier or "").strip().lower() or "unknown"
     return f"{action}:{_client_ip(request)}:{normalized_identifier}"
@@ -647,14 +577,6 @@ def login(payload: AuthPayload, request: FastAPIRequest, response: Response):
 def signup(payload: SignupPayload, request: FastAPIRequest, response: Response):
     _validate_auth_origin(request)
     _session_signing_secret()
-    policy_version = _privacy_policy_version()
-    try:
-        configured_audit_hash_secret()
-    except PrivacyAuditConfigError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Chave de auditoria de privacidade nao configurada.",
-        ) from exc
     key = _rate_limit_key(request, "signup", payload.email)
     _auth_rate_limiter.check(key)
 
@@ -664,12 +586,6 @@ def signup(payload: SignupPayload, request: FastAPIRequest, response: Response):
         _register_auth_failure(exc, key)
         raise
 
-    _record_signup_privacy_acknowledgement(
-        user_id=_signup_user_id(data),
-        email=payload.email,
-        client_ip=_client_ip(request),
-        policy_version=policy_version,
-    )
     _auth_rate_limiter.register_success(key)
     _set_auth_cookies(response, data)
     return _public_auth_response(data)

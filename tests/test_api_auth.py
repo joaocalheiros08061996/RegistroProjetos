@@ -68,11 +68,6 @@ def test_signup_endpoint_maps_path_sets_cookie_and_hides_refresh_token(client, m
         }
 
     monkeypatch.setattr(auth_controller, "_call_supabase_auth", fake_call)
-    monkeypatch.setattr(
-        auth_controller,
-        "_record_signup_privacy_acknowledgement",
-        lambda **kwargs: captured.update({"privacy": kwargs}),
-    )
 
     response = client.post(
         "/auth/signup",
@@ -90,12 +85,6 @@ def test_signup_endpoint_maps_path_sets_cookie_and_hides_refresh_token(client, m
     }
     assert captured["path"] == "signup"
     assert captured["email"] == "joao@example.com"
-    assert captured["privacy"] == {
-        "user_id": "user-1",
-        "email": "joao@example.com",
-        "client_ip": "testclient",
-        "policy_version": "2026-06-01",
-    }
     set_cookie = response.headers["set-cookie"]
     assert "refresh_token=signup-refresh" in set_cookie
     assert "auth_session=" in set_cookie
@@ -113,7 +102,7 @@ def test_signup_requires_privacy_notice_acknowledgement(client, value):
     assert response.status_code == 422
 
 
-def test_signup_forwards_only_credentials_and_records_minimized_audit_data(
+def test_signup_forwards_only_credentials_to_supabase(
     client,
     monkeypatch,
 ):
@@ -123,16 +112,7 @@ def test_signup_forwards_only_credentials_and_records_minimized_audit_data(
         captured["supabase_payload"] = payload
         return {"user": {"id": "user-1", "email": payload["email"]}}
 
-    class FakePrivacyRepository:
-        def record_signup_acknowledgement(self, **kwargs):
-            captured["privacy"] = kwargs
-
     monkeypatch.setattr(auth_controller, "_post_supabase_auth", fake_post)
-    monkeypatch.setattr(
-        auth_controller,
-        "SupabasePrivacyAcknowledgementRepository",
-        FakePrivacyRepository,
-    )
 
     response = client.post(
         "/auth/signup",
@@ -149,49 +129,6 @@ def test_signup_forwards_only_credentials_and_records_minimized_audit_data(
         "email": "joao@example.com",
         "password": "123456",
     }
-    assert captured["privacy"]["user_id"] == "user-1"
-    assert captured["privacy"]["policy_version"] == "2026-06-01"
-    assert captured["privacy"]["email_hash"] == auth_controller._privacy_audit_hash(
-        "joao@example.com"
-    )
-    assert captured["privacy"]["ip_hash"] == auth_controller._privacy_audit_hash(
-        "192.0.2.10"
-    )
-    assert "joao@example.com" not in captured["privacy"].values()
-    assert "192.0.2.10" not in captured["privacy"].values()
-
-
-def test_signup_audit_failure_returns_503_without_auth_cookies(client, monkeypatch):
-    def fake_call(path, payload):
-        return {
-            "access_token": "signup-access",
-            "refresh_token": "signup-refresh",
-            "user": {"id": "user-1", "email": payload.email},
-        }
-
-    def fail_audit(**kwargs):
-        raise HTTPException(status_code=503, detail="Falha de auditoria")
-
-    monkeypatch.setattr(auth_controller, "_call_supabase_auth", fake_call)
-    monkeypatch.setattr(
-        auth_controller,
-        "_record_signup_privacy_acknowledgement",
-        fail_audit,
-    )
-
-    response = client.post(
-        "/auth/signup",
-        json={
-            "email": "joao@example.com",
-            "password": "123456",
-            "privacy_notice_acknowledged": True,
-        },
-    )
-
-    assert response.status_code == 503
-    assert response.json()["detail"] == "Falha de auditoria"
-    assert "refresh_token=" not in response.headers.get("set-cookie", "")
-    assert "auth_session=" not in response.headers.get("set-cookie", "")
 
 
 def test_signup_rejects_malformed_email(client):

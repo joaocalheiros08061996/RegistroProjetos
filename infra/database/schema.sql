@@ -46,42 +46,7 @@ create table if not exists time_entries (
     end_time timestamptz null
 );
 
-create table if not exists auth_privacy_acknowledgements (
-    id bigserial primary key,
-    user_id text not null,
-    policy_version text not null,
-    status text not null check (status in ('ACKNOWLEDGED', 'LEGACY_PENDING')),
-    source text not null check (source in ('SIGNUP', 'ADMIN_CSV')),
-    email_hash text not null,
-    ip_hash text null,
-    acknowledged_at timestamptz null,
-    recorded_at timestamptz not null default now(),
-    administrative_reason text null,
-
-    unique (user_id, policy_version),
-
-    check (
-        (
-            status = 'ACKNOWLEDGED'
-            and source = 'SIGNUP'
-            and acknowledged_at is not null
-            and ip_hash is not null
-            and administrative_reason is null
-        )
-        or
-        (
-            status = 'LEGACY_PENDING'
-            and source = 'ADMIN_CSV'
-            and acknowledged_at is null
-            and ip_hash is null
-            and administrative_reason is not null
-        )
-    )
-);
-
 -- Índices
 create index if not exists idx_projects_user_id on projects(user_id);
 create index if not exists idx_tasks_project_user on tasks(project_id, user_id);
 create index if not exists idx_time_entries_task_start on time_entries(task_id, start_time);
-create index if not exists idx_auth_privacy_ack_user on auth_privacy_acknowledgements(user_id);
-create index if not exists idx_auth_privacy_ack_policy on auth_privacy_acknowledgements(policy_version);
