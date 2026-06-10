@@ -48,6 +48,12 @@ def test_project_task_form_has_description_field():
     assert 'src="pages/project.js?v=20260609"' in html
 
 
+def test_project_page_explains_large_task_lists_are_filtered():
+    html = (FRONTEND_DIR / "project.html").read_text(encoding="utf-8")
+
+    assert "Projetos com mais de 10 tarefas exibem nesta lista somente tarefas não concluídas." in html
+
+
 def test_projects_form_has_project_description_field():
     html = (FRONTEND_DIR / "projects.html").read_text(encoding="utf-8")
 

@@ -63,8 +63,11 @@ async function loadTask() {
   timeEntries.innerHTML = "";
 
   try {
-    const task = await apiFetch(`/projects/${projectIdPath}/tasks/${encodeURIComponent(decodedTaskName)}`);
-    const entries = await apiFetch(`/projects/${projectIdPath}/tasks/${encodeURIComponent(decodedTaskName)}/time-entries`);
+    const encodedTaskName = encodeURIComponent(decodedTaskName);
+    const [task, entries] = await Promise.all([
+      apiFetch(`/projects/${projectIdPath}/tasks/${encodedTaskName}`),
+      apiFetch(`/projects/${projectIdPath}/tasks/${encodedTaskName}/time-entries`),
+    ]);
 
     taskTitle.textContent = task.name;
     taskSubtitle.textContent = `Projeto #${projectId}`;

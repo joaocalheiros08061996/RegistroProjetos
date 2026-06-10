@@ -130,7 +130,7 @@ function renderProjectItem(project) {
 async function loadProjects() {
   listFeedback.textContent = "Carregando projetos...";
   listFeedback.className = "status";
-  projectList.innerHTML = "";
+  projectList.replaceChildren();
 
   try {
     const projects = await apiFetch("/projects/");
@@ -141,9 +141,11 @@ async function loadProjects() {
     }
 
     listFeedback.textContent = `${projects.length} projeto(s) encontrado(s).`;
+    const fragment = document.createDocumentFragment();
     projects.forEach((project) => {
-      projectList.appendChild(renderProjectItem(project));
+      fragment.appendChild(renderProjectItem(project));
     });
+    projectList.replaceChildren(fragment);
   } catch (err) {
     listFeedback.textContent = err.message || "Erro ao carregar projetos.";
     listFeedback.className = "error";

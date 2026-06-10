@@ -2,7 +2,9 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from domain.constants import ENGINEERING_PROCESS_HOURLY_RATE
-from domain.entities import Project, Task, TimeEntry
+from domain.project import Project
+from domain.task import Task
+from domain.time_entry import TimeEntry
 from domain.exceptions import ValidationError
 from domain.enums import MethodClarity, ObjectiveClarity, ProcessClassification, TaskStatus
 from domain.repositories import (
@@ -44,12 +46,63 @@ class InMemoryProjectRepository(IProjectRepository):
             if project.user_id == user_id
         ]
 
+    def list_summary_by_user(self, user_id: str) -> list[dict]:
+        return [
+            self._project_summary(project)
+            for project in self._storage.values()
+            if project.user_id == user_id
+        ]
+
+    def find_detail_summary(self, project_id: int, user_id: str) -> Optional[dict]:
+        project = self.find_by_id(project_id, user_id)
+        if not project:
+            return None
+
+        summary = self._project_summary(project)
+        summary.update(
+            {
+                "fte": project.fte,
+                "severity": project.severity.value,
+                "urgency": project.urgency.value,
+                "trend": project.trend.value,
+                "objective_clarity": project.objective_clarity.value,
+                "method_clarity": project.method_clarity.value,
+                "actual_days": project.actual_days(),
+                "active_tasks": [task.name for task in project.active_tasks()],
+            }
+        )
+        return summary
+
     def delete(self, project_id: int, user_id: str) -> bool:
         project = self._storage.get(project_id)
         if not project or project.user_id != user_id:
             return False
         del self._storage[project_id]
         return True
+
+    def _project_summary(self, project: Project) -> dict:
+        return {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "project_type": project.project_type.value,
+            "process_classification": (
+                project.process_classification.value
+                if project.process_classification
+                else None
+            ),
+            "responsible_login": project.responsible_login,
+            "planned_start": project.planned_start,
+            "planned_end": project.planned_end,
+            "estimated_cost": project.estimated_cost,
+            "task_count": project.task_count,
+            "percent_completed": project.percent_completed,
+            "gut_score": project.gut_score,
+            "priority_level": project.priority_level,
+            "priority_label": project.priority_label,
+            "complexity_score": project.complexity_score,
+            "complexity_label": project.complexity_label,
+        }
 
 
 class InMemoryTaskRepository(ITaskRepository):
@@ -80,6 +133,57 @@ class InMemoryTaskRepository(ITaskRepository):
         if owner is not None and owner != user_id:
             return None
         return self._storage.get(project_id, {}).get(task_id)
+
+    def find_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[Task]:
+        owner = self._project_owners.get(project_id)
+        if owner is not None and owner != user_id:
+            return None
+
+        for task in self._storage.get(project_id, {}).values():
+            if task.name == task_name:
+                return task
+        return None
+
+    def find_id_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[int]:
+        task = self.find_by_name(project_id, user_id, task_name)
+        return task.id if task else None
+
+    def find_summary_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[dict]:
+        task = self.find_by_name(project_id, user_id, task_name)
+        return self._task_summary(task) if task else None
+
+    def list_with_time_summary(
+        self,
+        project_id: int,
+        user_id: str,
+        include_completed: bool = True,
+    ) -> list[dict]:
+        owner = self._project_owners.get(project_id)
+        if owner is not None and owner != user_id:
+            return []
+
+        tasks = sorted(
+            self._storage.get(project_id, {}).values(),
+            key=lambda task: task.id or 0,
+        )
+        if not include_completed:
+            tasks = [task for task in tasks if task.status != TaskStatus.COMPLETED]
+        return [self._task_summary(task) for task in tasks]
 
     def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:
         owner = self._project_owners.get(project_id)
@@ -147,6 +251,19 @@ class InMemoryTaskRepository(ITaskRepository):
         if not task:
             raise ValueError("Task not found")
         return [(e.start, e.end) for e in task.time_entries]
+
+    def _task_summary(self, task: Task) -> dict:
+        return {
+            "name": task.name,
+            "status": task.status.value,
+            "planned_start": task.planned_start,
+            "planned_end": task.planned_end,
+            "cost": task.cost,
+            "description": task.description,
+            "actual_seconds": round(task.actual_time.total_seconds(), 2),
+            "time_entries_count": len(task.time_entries),
+            "percent_completed": task.percent_completed,
+        }
 
     def _find_task(self, task_id: int) -> Optional[Task]:
         for tasks in self._storage.values():

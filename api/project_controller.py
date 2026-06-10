@@ -7,7 +7,6 @@ from api.dtos import (
     ProjectListItemResponseDTO,
     ProjectSummaryResponseDTO,
     ProjectMetricsResponseDTO,
-    TaskResponseDTO,
 )
 from api.deps import get_project_service, get_current_user_id
 
@@ -66,33 +65,8 @@ def list_projects(
     service: ProjectService = Depends(get_project_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    projects = service.list_projects_for_user(user_id)
-
-    return [
-        ProjectListItemResponseDTO(
-            id=project.id,
-            name=project.name,
-            description=project.description,
-            project_type=project.project_type.value,
-            process_classification=(
-                project.process_classification.value
-                if project.process_classification
-                else None
-            ),
-            responsible_login=project.responsible_login,
-            planned_start=project.planned_start,
-            planned_end=project.planned_end,
-            estimated_cost=project.estimated_cost,
-            task_count=project.task_count,
-            percent_completed=project.percent_completed,
-            gut_score=project.gut_score,
-            priority_level=project.priority_level,
-            priority_label=project.priority_label,
-            complexity_score=project.complexity_score,
-            complexity_label=project.complexity_label,
-        )
-        for project in projects
-    ]
+    projects = service.list_project_summaries_for_user(user_id)
+    return [ProjectListItemResponseDTO(**project) for project in projects]
 
 
 # ------------------------------------------------------------------
@@ -139,54 +113,5 @@ def get_project_detail(
     service: ProjectService = Depends(get_project_service),
     user_id: str = Depends(get_current_user_id),
 ):
-    project = service.get_project(project_id, user_id)
-    tasks = project.list_tasks()
-
-    return ProjectDetailResponseDTO(
-        id=project.id,
-        name=project.name,
-        description=project.description,
-        project_type=project.project_type.value,
-        process_classification=(
-            project.process_classification.value
-            if project.process_classification
-            else None
-        ),
-        responsible_login=project.responsible_login,
-        fte=project.fte,
-        planned_start=project.planned_start,
-        planned_end=project.planned_end,
-
-        # classificação GUT
-        severity=project.severity.value,
-        urgency=project.urgency.value,
-        trend=project.trend.value,
-
-        # novos campos
-        objective_clarity=project.objective_clarity.value,
-        method_clarity=project.method_clarity.value,
-
-        estimated_cost=project.estimated_cost,
-
-        # métricas
-        task_count=project.task_count,
-        percent_completed=project.percent_completed,
-        actual_days=project.actual_days(),
-
-        active_tasks=[t.name for t in project.active_tasks()],
-
-        tasks=[
-            TaskResponseDTO(
-                name=task.name,
-                status=task.status.value,
-                planned_start=task.planned_start,
-                planned_end=task.planned_end,
-                cost=task.cost,
-                description=task.description,
-                actual_seconds=round(task.actual_time.total_seconds(), 2),
-                time_entries_count=len(task.time_entries),
-                percent_completed=task.percent_completed,
-            )
-            for task in tasks
-        ],
-    )
+    detail = service.get_project_detail(project_id, user_id)
+    return ProjectDetailResponseDTO(**detail)

@@ -19,6 +19,9 @@ def to_task_response(task) -> TaskResponseDTO:
     """
     Converte entidade Task do domínio em DTO de resposta.
     """
+    if isinstance(task, dict):
+        return TaskResponseDTO(**task)
+
     return TaskResponseDTO(
         name=task.name,
         status=task.status.value,
@@ -89,7 +92,7 @@ def get_task(
     """
     Retorna os dados de uma tarefa específica.
     """
-    task = service.get_task(project_id, user_id, task_name)
+    task = service.get_task_summary(project_id, user_id, task_name)
     return to_task_response(task)
 
 

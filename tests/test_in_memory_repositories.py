@@ -6,7 +6,7 @@ from infra.in_memory_repos import (
     InMemoryTaskRepository,
 )
 from domain.entities import Project, Task, TimeEntry
-from domain.enums import ProjectType
+from domain.enums import ProjectType, TaskStatus
 
 USER_1 = "user-1"
 USER_2 = "user-2"
@@ -86,6 +86,43 @@ def test_list_projects_by_user():
     assert user1_projects[0].name == "Projeto 1"
 
 
+def test_project_summary_methods_return_aggregate_metrics():
+    repo = InMemoryProjectRepository()
+
+    project = Project(
+        user_id=USER_1,
+        name="Projeto Resumo",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="joao",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 31),
+    )
+    repo.save(project)
+
+    task_done = Task(
+        name="Task Concluida",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    task_done._set_status(TaskStatus.COMPLETED)
+    task_active = Task(
+        name="Task Ativa",
+        planned_start=datetime(2026, 1, 6),
+        planned_end=datetime(2026, 1, 7),
+    )
+    project.add_task(task_done)
+    project.add_task(task_active)
+
+    summaries = repo.list_summary_by_user(USER_1)
+    detail = repo.find_detail_summary(project.id, USER_1)
+
+    assert summaries[0]["task_count"] == 2
+    assert summaries[0]["percent_completed"] == 50.0
+    assert detail["task_count"] == 2
+    assert detail["active_tasks"] == ["Task Ativa"]
+
+
 def test_delete_project_by_user():
     repo = InMemoryProjectRepository()
 
@@ -126,6 +163,57 @@ def test_save_task_assigns_id_and_project():
     assert repo.find_by_id(task_id, project_id=1, user_id=USER_1).description == (
         "Descrição salva em memória"
     )
+
+
+def test_find_task_by_name_and_summary_methods():
+    repo = InMemoryTaskRepository()
+
+    task = Task(
+        name="Task Summary",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    entry = TimeEntry(start=datetime(2026, 1, 2, 9, 0))
+    entry.stop(datetime(2026, 1, 2, 10, 0))
+    task._add_time_entry(entry)
+
+    task_id = repo.save(task, project_id=1, user_id=USER_1)
+
+    found = repo.find_by_name(project_id=1, user_id=USER_1, task_name="Task Summary")
+    summary = repo.find_summary_by_name(
+        project_id=1,
+        user_id=USER_1,
+        task_name="Task Summary",
+    )
+
+    assert found is task
+    assert repo.find_id_by_name(1, USER_1, "Task Summary") == task_id
+    assert summary["actual_seconds"] == 3600
+    assert summary["time_entries_count"] == 1
+
+
+def test_list_tasks_with_time_summary_can_filter_completed():
+    repo = InMemoryTaskRepository()
+
+    task_done = Task(
+        name="Task Done",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+    task_done._set_status(TaskStatus.COMPLETED)
+    task_active = Task(
+        name="Task Active",
+        planned_start=datetime(2026, 1, 6),
+        planned_end=datetime(2026, 1, 7),
+    )
+    repo.save(task_done, project_id=1, user_id=USER_1)
+    repo.save(task_active, project_id=1, user_id=USER_1)
+
+    all_tasks = repo.list_with_time_summary(1, USER_1, include_completed=True)
+    active_tasks = repo.list_with_time_summary(1, USER_1, include_completed=False)
+
+    assert [task["name"] for task in all_tasks] == ["Task Done", "Task Active"]
+    assert [task["name"] for task in active_tasks] == ["Task Active"]
 
 
 def test_append_time_entry_to_task():

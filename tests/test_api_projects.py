@@ -4,6 +4,36 @@ import pytest
 AUTH_HEADER = {"Authorization": "Bearer test-user-123"}
 
 
+def _create_project(client, name="Projeto API"):
+    response = client.post(
+        "/projects/",
+        headers=AUTH_HEADER,
+        json={
+            "name": name,
+            "project_type": "LAYOUT",
+            "responsible_login": "user1",
+            "fte": 1.0,
+            "planned_start": "2026-01-01T00:00:00",
+            "planned_end": "2026-01-31T00:00:00",
+        },
+    )
+    assert response.status_code == 200
+    return response.json()["id"]
+
+
+def _create_task(client, project_id, name):
+    response = client.post(
+        f"/projects/{project_id}/tasks/",
+        headers=AUTH_HEADER,
+        json={
+            "name": name,
+            "planned_start": "2026-01-02T00:00:00",
+            "planned_end": "2026-01-05T00:00:00",
+        },
+    )
+    assert response.status_code == 200
+
+
 def test_create_project_api(client):
     response = client.post(
         "/projects/",
@@ -279,6 +309,56 @@ def test_project_detail_api_returns_full_payload(client):
     assert detail["process_classification"] == "Processos novos"
     assert detail["task_count"] == 1
     assert detail["tasks"][0]["name"] == "task-detalhe"
+
+
+def test_project_detail_with_up_to_10_tasks_returns_all_tasks(client):
+    project_id = _create_project(client, "Projeto Até Dez")
+    task_names = [f"task-{index:02d}" for index in range(10)]
+
+    for task_name in task_names:
+        _create_task(client, project_id, task_name)
+
+    for task_name in task_names[:3]:
+        response = client.post(
+            f"/projects/{project_id}/tasks/{task_name}/complete",
+            headers=AUTH_HEADER,
+        )
+        assert response.status_code == 200
+
+    detail_response = client.get(f"/projects/{project_id}/detail", headers=AUTH_HEADER)
+    assert detail_response.status_code == 200
+
+    detail = detail_response.json()
+    returned_names = [task["name"] for task in detail["tasks"]]
+    assert detail["task_count"] == 10
+    assert returned_names == task_names
+
+
+def test_project_detail_with_more_than_10_tasks_returns_only_active_tasks(client):
+    project_id = _create_project(client, "Projeto Mais de Dez")
+    task_names = [f"task-{index:02d}" for index in range(12)]
+    completed_names = set(task_names[:4])
+
+    for task_name in task_names:
+        _create_task(client, project_id, task_name)
+
+    for task_name in completed_names:
+        response = client.post(
+            f"/projects/{project_id}/tasks/{task_name}/complete",
+            headers=AUTH_HEADER,
+        )
+        assert response.status_code == 200
+
+    detail_response = client.get(f"/projects/{project_id}/detail", headers=AUTH_HEADER)
+    assert detail_response.status_code == 200
+
+    detail = detail_response.json()
+    returned_names = [task["name"] for task in detail["tasks"]]
+    assert detail["task_count"] == 12
+    assert returned_names == [
+        task_name for task_name in task_names if task_name not in completed_names
+    ]
+    assert all(task["status"] != "COMPLETED" for task in detail["tasks"])
 
 
 def test_delete_project_api_removes_project_and_tasks(client):

@@ -88,25 +88,7 @@ function renderTaskItem(task) {
   `;
 
   const deleteTaskBtn = card.querySelector(".delete-task-btn");
-  deleteTaskBtn.addEventListener("click", async () => {
-    const confirmed = confirm(`Deseja excluir a tarefa "${task.name}"? Essa ação não pode ser desfeita.`);
-    if (!confirmed) {
-      return;
-    }
-
-    projectFeedback.textContent = "Excluindo tarefa...";
-    projectFeedback.className = "status";
-
-    try {
-      await apiFetch(`/projects/${projectIdPath}/tasks/${encodedTask}`, {
-        method: "DELETE",
-      });
-      await loadProjectDetail();
-    } catch (err) {
-      projectFeedback.textContent = err.message || "Erro ao excluir tarefa.";
-      projectFeedback.className = "error";
-    }
-  });
+  deleteTaskBtn.dataset.taskName = task.name;
 
   return card;
 }
@@ -115,7 +97,7 @@ async function loadProjectDetail() {
   projectFeedback.textContent = "Carregando projeto...";
   projectFeedback.className = "status";
   projectMetrics.innerHTML = "";
-  taskList.innerHTML = "";
+  taskList.replaceChildren();
 
   try {
     const detail = await apiFetch(`/projects/${projectIdPath}/detail`);
@@ -133,20 +115,59 @@ async function loadProjectDetail() {
       metricItem("Início", formatDateTime(detail.planned_start)) +
       metricItem("Fim", formatDateTime(detail.planned_end));
 
+    const fragment = document.createDocumentFragment();
     if (!detail.tasks.length) {
-      taskList.innerHTML = `<article class="item"><p class="item-subtitle">Nenhuma tarefa cadastrada.</p></article>`;
+      const emptyItem = document.createElement("article");
+      emptyItem.className = "item";
+      const emptyText = Number(detail.task_count || 0) > 10
+        ? "Nenhuma tarefa não concluída."
+        : "Nenhuma tarefa cadastrada.";
+      emptyItem.innerHTML = `<p class="item-subtitle">${escapeHtml(emptyText)}</p>`;
+      fragment.appendChild(emptyItem);
     } else {
       detail.tasks.forEach((task) => {
-        taskList.appendChild(renderTaskItem(task));
+        fragment.appendChild(renderTaskItem(task));
       });
     }
+    taskList.replaceChildren(fragment);
 
-    projectFeedback.textContent = "";
+    if (Number(detail.task_count || 0) > 10) {
+      projectFeedback.textContent = "Exibindo somente tarefas não concluídas.";
+      projectFeedback.className = "status";
+    } else {
+      projectFeedback.textContent = "";
+    }
   } catch (err) {
     projectFeedback.textContent = err.message || "Erro ao carregar projeto.";
     projectFeedback.className = "error";
   }
 }
+
+taskList.addEventListener("click", async (event) => {
+  const deleteTaskBtn = event.target.closest(".delete-task-btn");
+  if (!deleteTaskBtn || !taskList.contains(deleteTaskBtn)) {
+    return;
+  }
+
+  const taskName = deleteTaskBtn.dataset.taskName || "";
+  const confirmed = confirm(`Deseja excluir a tarefa "${taskName}"? Essa ação não pode ser desfeita.`);
+  if (!confirmed) {
+    return;
+  }
+
+  projectFeedback.textContent = "Excluindo tarefa...";
+  projectFeedback.className = "status";
+
+  try {
+    await apiFetch(`/projects/${projectIdPath}/tasks/${encodeURIComponent(taskName)}`, {
+      method: "DELETE",
+    });
+    await loadProjectDetail();
+  } catch (err) {
+    projectFeedback.textContent = err.message || "Erro ao excluir tarefa.";
+    projectFeedback.className = "error";
+  }
+});
 
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();

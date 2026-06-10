@@ -1,6 +1,8 @@
 import unicodedata
 
-from domain.entities import Project, Task, TimeEntry
+from domain.project import Project
+from domain.task import Task
+from domain.time_entry import TimeEntry
 from domain.enums import (
     MethodClarity,
     ObjectiveClarity,
@@ -26,6 +28,11 @@ def _normalize_enum_token(raw_value) -> str:
 
 
 class SupabaseProjectRepository(IProjectRepository):
+    _COMPLETED_STATUS_SQL = (
+        "replace(replace(upper(trim(status)), '-', '_'), ' ', '_') "
+        "in ('COMPLETED', 'COMPLETE')"
+    )
+
     @staticmethod
     def _coerce_enum(enum_cls, raw_value):
         """
@@ -196,6 +203,101 @@ class SupabaseProjectRepository(IProjectRepository):
 
             return projects
 
+    def list_summary_by_user(self, user_id: str) -> list[dict]:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    f"""
+                    with scoped_tasks as (
+                        select
+                            project_id,
+                            {self._COMPLETED_STATUS_SQL} as is_completed
+                        from tasks
+                        where user_id = %s
+                    ),
+                    task_counts as (
+                        select
+                            project_id,
+                            count(*)::int as task_count,
+                            count(*) filter (where is_completed)::int
+                                as completed_task_count
+                        from scoped_tasks
+                        group by project_id
+                    )
+                    select
+                        p.*,
+                        coalesce(tc.task_count, 0)::int as task_count,
+                        coalesce(tc.completed_task_count, 0)::int
+                            as completed_task_count
+                    from projects p
+                    left join task_counts tc on tc.project_id = p.id
+                    where p.user_id = %s
+                    order by p.created_at
+                    """,
+                    (user_id, user_id),
+                )
+                rows = cur.fetchall()
+
+        return [self._build_project_summary(row) for row in rows]
+
+    def find_detail_summary(self, project_id: int, user_id: str):
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    f"""
+                    with scoped_tasks as (
+                        select
+                            id,
+                            name,
+                            {self._COMPLETED_STATUS_SQL} as is_completed
+                        from tasks
+                        where project_id = %s and user_id = %s
+                    )
+                    select
+                        p.*,
+                        (select count(*)::int from scoped_tasks) as task_count,
+                        (
+                            select count(*)::int
+                            from scoped_tasks
+                            where is_completed
+                        ) as completed_task_count,
+                        coalesce(
+                            (
+                                select array_agg(name order by id)
+                                from scoped_tasks
+                                where not is_completed
+                            ),
+                            array[]::text[]
+                        ) as active_tasks,
+                        coalesce(
+                            (
+                                select sum(
+                                    greatest(
+                                        extract(
+                                            epoch from (
+                                                coalesce(te.end_time, now())
+                                                - te.start_time
+                                            )
+                                        ),
+                                        0.0
+                                    )
+                                )
+                                from scoped_tasks st
+                                join time_entries te on te.task_id = st.id
+                            ),
+                            0.0
+                        ) as actual_seconds
+                    from projects p
+                    where p.id = %s and p.user_id = %s
+                    """,
+                    (project_id, user_id, project_id, user_id),
+                )
+                row = cur.fetchone()
+
+        if not row:
+            return None
+        return self._build_project_detail_summary(row)
+
     # ============================================================
     # DELETE
     # ============================================================
@@ -255,6 +357,60 @@ class SupabaseProjectRepository(IProjectRepository):
 
         project._set_id(row["id"])
         return project
+
+    def _build_project_summary(self, row: dict) -> dict:
+        project = self._build_project(row)
+        task_count = max(0, int(row.get("task_count") or 0))
+        completed_task_count = max(0, int(row.get("completed_task_count") or 0))
+        completed_task_count = min(completed_task_count, task_count)
+        percent_completed = (
+            round((completed_task_count / task_count) * 100.0, 2)
+            if task_count
+            else 0.0
+        )
+
+        return {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "project_type": project.project_type.value,
+            "process_classification": (
+                project.process_classification.value
+                if project.process_classification
+                else None
+            ),
+            "responsible_login": project.responsible_login,
+            "planned_start": project.planned_start,
+            "planned_end": project.planned_end,
+            "estimated_cost": project.estimated_cost,
+            "task_count": task_count,
+            "percent_completed": percent_completed,
+            "gut_score": project.gut_score,
+            "priority_level": project.priority_level,
+            "priority_label": project.priority_label,
+            "complexity_score": project.complexity_score,
+            "complexity_label": project.complexity_label,
+        }
+
+    def _build_project_detail_summary(self, row: dict) -> dict:
+        project = self._build_project(row)
+        summary = self._build_project_summary(row)
+        actual_seconds = max(0.0, float(row.get("actual_seconds") or 0.0))
+        active_tasks = list(row.get("active_tasks") or [])
+
+        summary.update(
+            {
+                "fte": project.fte,
+                "severity": project.severity.value,
+                "urgency": project.urgency.value,
+                "trend": project.trend.value,
+                "objective_clarity": project.objective_clarity.value,
+                "method_clarity": project.method_clarity.value,
+                "actual_days": actual_seconds / 86400.0,
+                "active_tasks": active_tasks,
+            }
+        )
+        return summary
 
     # ============================================================
     # LOAD TASKS

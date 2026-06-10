@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from datetime import datetime
 
-from .entities import Project, Task, TimeEntry
+from .project import Project
+from .task import Task
+from .time_entry import TimeEntry
 from .routine_activity import RoutineActivity
 
 
@@ -20,6 +22,14 @@ class IProjectRepository(ABC):
         """Lista todos os projetos de um usuário."""
 
     @abstractmethod
+    def list_summary_by_user(self, user_id: str) -> list[dict]:
+        """Lista projetos com métricas agregadas sem hidratar tarefas."""
+
+    @abstractmethod
+    def find_detail_summary(self, project_id: int, user_id: str) -> Optional[dict]:
+        """Retorna dados e métricas agregadas de um projeto."""
+
+    @abstractmethod
     def delete(self, project_id: int, user_id: str) -> bool:
         """Remove um projeto do usuário. Retorna se houve exclusão."""
 
@@ -34,6 +44,32 @@ class ITaskRepository(ABC):
         self, task_id: int, project_id: int, user_id: str
     ) -> Optional[Task]:
         """Retorna a task se pertencer ao projeto e ao usuário."""
+
+    @abstractmethod
+    def find_by_name(self, project_id: int, user_id: str, task_name: str) -> Optional[Task]:
+        """Retorna uma task diretamente pelo projeto, usuário e nome."""
+
+    @abstractmethod
+    def find_id_by_name(self, project_id: int, user_id: str, task_name: str) -> Optional[int]:
+        """Retorna o ID de uma task pelo projeto, usuário e nome."""
+
+    @abstractmethod
+    def find_summary_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[dict]:
+        """Retorna uma task com métricas agregadas pelo projeto, usuário e nome."""
+
+    @abstractmethod
+    def list_with_time_summary(
+        self,
+        project_id: int,
+        user_id: str,
+        include_completed: bool = True,
+    ) -> list[dict]:
+        """Lista tasks com tempo agregado sem hidratar entradas individualmente."""
 
     @abstractmethod
     def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:

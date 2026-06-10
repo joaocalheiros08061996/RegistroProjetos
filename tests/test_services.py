@@ -70,6 +70,52 @@ def test_list_projects_for_user(services):
     assert projects[0].name == "Projeto A"
 
 
+def test_list_project_summaries_uses_aggregate_repository_method():
+    class SummaryOnlyProjectRepository(InMemoryProjectRepository):
+        def __init__(self):
+            super().__init__()
+            self.summary_calls = 0
+
+        def list_by_user(self, user_id: str):
+            raise AssertionError("list_by_user should not be used for summaries")
+
+        def list_summary_by_user(self, user_id: str):
+            self.summary_calls += 1
+            return [
+                {
+                    "id": 1,
+                    "name": "Projeto Resumo",
+                    "description": "",
+                    "project_type": "LAYOUT",
+                    "process_classification": None,
+                    "responsible_login": "User1",
+                    "planned_start": datetime(2026, 1, 1),
+                    "planned_end": datetime(2026, 1, 31),
+                    "estimated_cost": 0.0,
+                    "task_count": 12,
+                    "percent_completed": 25.0,
+                    "gut_score": 1,
+                    "priority_level": 5,
+                    "priority_label": "Prioridade 5",
+                    "complexity_score": 1,
+                    "complexity_label": "Complexidade 1",
+                }
+            ]
+
+    class ExplodingTaskRepository(InMemoryTaskRepository):
+        def list_time_entries(self, task_id: int):
+            raise AssertionError("time_entries should not be loaded for project list")
+
+    project_repo = SummaryOnlyProjectRepository()
+    task_repo = ExplodingTaskRepository()
+    project_service = ProjectService(project_repo, task_repo)
+
+    summaries = project_service.list_project_summaries_for_user(USER_ID)
+
+    assert project_repo.summary_calls == 1
+    assert summaries[0]["task_count"] == 12
+
+
 def test_project_gut_score_and_priority_level(services):
     project_service, _ = services
 
@@ -135,6 +181,89 @@ def test_add_task_to_project_service(services):
 
     assert task.name == "Tarefa A"
     assert project.task_count == 1
+
+
+def test_get_task_summary_does_not_hydrate_project():
+    project_repo = InMemoryProjectRepository()
+    task_repo = InMemoryTaskRepository()
+    project_service = ProjectService(project_repo, task_repo)
+    task_service = TaskService(project_repo, task_repo)
+
+    project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Tarefa Direta",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 31),
+    )
+    task_service.add_task(
+        user_id=USER_ID,
+        project_id=project.id,
+        name="Abrir Direto",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+
+    def fail_find_by_id(project_id, user_id):
+        raise AssertionError("project should not be hydrated to open a task")
+
+    project_repo.find_by_id = fail_find_by_id
+
+    task = task_service.get_task_summary(project.id, USER_ID, "Abrir Direto")
+
+    assert task["name"] == "Abrir Direto"
+
+
+def test_get_time_entries_resolves_task_id_directly():
+    class TrackingTaskRepository(InMemoryTaskRepository):
+        def __init__(self):
+            super().__init__()
+            self.find_id_calls = []
+
+        def find_by_name(self, project_id: int, user_id: str, task_name: str):
+            raise AssertionError("find_by_name should not be used for time entries")
+
+        def find_id_by_name(self, project_id: int, user_id: str, task_name: str):
+            self.find_id_calls.append((project_id, user_id, task_name))
+            for tasks in self._storage.values():
+                for task in tasks.values():
+                    if task.name == task_name:
+                        return task.id
+            return None
+
+    project_repo = InMemoryProjectRepository()
+    task_repo = TrackingTaskRepository()
+    project_service = ProjectService(project_repo, task_repo)
+    task_service = TaskService(project_repo, task_repo)
+
+    project = project_service.create_project(
+        user_id=USER_ID,
+        name="Projeto Entradas",
+        project_type=ProjectType.LAYOUT,
+        responsible_login="user1",
+        fte=1.0,
+        planned_start=datetime(2026, 1, 1),
+        planned_end=datetime(2026, 1, 31),
+    )
+    task_service.add_task(
+        user_id=USER_ID,
+        project_id=project.id,
+        name="Com Entradas",
+        planned_start=datetime(2026, 1, 2),
+        planned_end=datetime(2026, 1, 5),
+    )
+
+    def fail_find_by_id(project_id, user_id):
+        raise AssertionError("project should not be hydrated for time entries")
+
+    project_repo.find_by_id = fail_find_by_id
+
+    entries = task_service.get_time_entries(project.id, USER_ID, "Com Entradas")
+
+    assert entries == []
+    assert task_repo.find_id_calls == [(project.id, USER_ID, "Com Entradas")]
 
 
 def test_mark_task_completed_service(services):

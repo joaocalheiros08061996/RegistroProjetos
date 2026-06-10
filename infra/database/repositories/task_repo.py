@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from domain.entities import Task, TimeEntry
+from domain.task import Task
+from domain.time_entry import TimeEntry
 from domain.enums import TaskStatus
 from domain.repositories import ITaskRepository
 from infra.database.connection import get_connection
@@ -9,6 +10,11 @@ from psycopg2.extras import RealDictCursor
 
 
 class SupabaseTaskRepository(ITaskRepository):
+    _COMPLETED_STATUS_SQL = (
+        "replace(replace(upper(trim(t.status)), '-', '_'), ' ', '_') "
+        "in ('COMPLETED', 'COMPLETE')"
+    )
+
     @staticmethod
     def _coerce_task_status(raw_value) -> TaskStatus:
         if isinstance(raw_value, TaskStatus):
@@ -93,6 +99,75 @@ class SupabaseTaskRepository(ITaskRepository):
             self._load_time_entries(conn, task)
             return task
 
+    def find_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[Task]:
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    """
+                    select *
+                    from tasks
+                    where project_id = %s and user_id = %s and name = %s
+                    """,
+                    (project_id, user_id, task_name),
+                )
+                row = cur.fetchone()
+                if not row:
+                    return None
+
+            task = self._build_task(row)
+            self._load_time_entries(conn, task)
+            return task
+
+    def find_id_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[int]:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    select id
+                    from tasks
+                    where project_id = %s and user_id = %s and name = %s
+                    """,
+                    (project_id, user_id, task_name),
+                )
+                row = cur.fetchone()
+        return int(row[0]) if row else None
+
+    def find_summary_by_name(
+        self,
+        project_id: int,
+        user_id: str,
+        task_name: str,
+    ) -> Optional[dict]:
+        rows = self._fetch_task_summaries(
+            project_id=project_id,
+            user_id=user_id,
+            task_name=task_name,
+            include_completed=True,
+        )
+        return rows[0] if rows else None
+
+    def list_with_time_summary(
+        self,
+        project_id: int,
+        user_id: str,
+        include_completed: bool = True,
+    ) -> list[dict]:
+        return self._fetch_task_summaries(
+            project_id=project_id,
+            user_id=user_id,
+            include_completed=include_completed,
+        )
+
     def delete_by_name(self, project_id: int, user_id: str, task_name: str) -> bool:
         with get_connection() as conn, conn.cursor() as cur:
             cur.execute(
@@ -118,6 +193,102 @@ class SupabaseTaskRepository(ITaskRepository):
             deleted_count = cur.rowcount
             conn.commit()
         return deleted_count
+
+    def _fetch_task_summaries(
+        self,
+        *,
+        project_id: int,
+        user_id: str,
+        task_name: str | None = None,
+        include_completed: bool = True,
+    ) -> list[dict]:
+        filters = ["t.project_id = %s", "t.user_id = %s"]
+        params: list[object] = [project_id, user_id]
+
+        if task_name is not None:
+            filters.append("t.name = %s")
+            params.append(task_name)
+
+        if not include_completed:
+            filters.append(f"not ({self._COMPLETED_STATUS_SQL})")
+
+        where_clause = " and ".join(filters)
+
+        with get_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    f"""
+                    with scoped_tasks as (
+                        select t.*
+                        from tasks t
+                        where {where_clause}
+                    ),
+                    time_summary as (
+                        select
+                            te.task_id,
+                            count(*)::int as time_entries_count,
+                            sum(
+                                greatest(
+                                    extract(
+                                        epoch from (
+                                            coalesce(te.end_time, now())
+                                            - te.start_time
+                                        )
+                                    ),
+                                    0.0
+                                )
+                            ) as actual_seconds
+                        from time_entries te
+                        join scoped_tasks st on st.id = te.task_id
+                        group by te.task_id
+                    )
+                    select
+                        t.id,
+                        t.name,
+                        t.status,
+                        t.planned_start,
+                        t.planned_end,
+                        t.cost,
+                        t.description,
+                        coalesce(te.actual_seconds, 0.0) as actual_seconds,
+                        coalesce(te.time_entries_count, 0)::int
+                            as time_entries_count
+                    from scoped_tasks t
+                    left join time_summary te on te.task_id = t.id
+                    order by t.id
+                    """,
+                    tuple(params),
+                )
+                rows = cur.fetchall()
+
+        return [self._build_task_summary(row) for row in rows]
+
+    def _build_task(self, row: dict) -> Task:
+        task = Task(
+            name=row["name"],
+            planned_start=row["planned_start"],
+            planned_end=row["planned_end"],
+            cost=row["cost"],
+            description=row.get("description") or "",
+        )
+        task._set_id(row["id"])
+        task._set_status(self._coerce_task_status(row["status"]))
+        return task
+
+    def _build_task_summary(self, row: dict) -> dict:
+        status = self._coerce_task_status(row["status"])
+        actual_seconds = max(0.0, float(row.get("actual_seconds") or 0.0))
+        return {
+            "name": row["name"],
+            "status": status.value,
+            "planned_start": row["planned_start"],
+            "planned_end": row["planned_end"],
+            "cost": row["cost"],
+            "description": row.get("description") or "",
+            "actual_seconds": round(actual_seconds, 2),
+            "time_entries_count": int(row.get("time_entries_count") or 0),
+            "percent_completed": 100.0 if status == TaskStatus.COMPLETED else 0.0,
+        }
 
     def append_time_entry(
         self,
